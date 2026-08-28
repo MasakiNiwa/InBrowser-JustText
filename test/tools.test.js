@@ -13,6 +13,10 @@ import {
   uniqueLines,
 } from '../src/tools/text-tools.js';
 import { listByGroup, listCommands, getCommand, runCommand } from '../src/tools/registry.js';
+import { setLocale } from '../src/i18n/index.js';
+
+// 通知の文言を確かめる箇所があるので、言語を固定しておく
+await setLocale('ja');
 
 /* ---------- JSON ---------- */
 

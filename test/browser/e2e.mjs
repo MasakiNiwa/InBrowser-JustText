@@ -508,6 +508,8 @@ const offlineStatus = await page.evaluate(async () => {
   return document.querySelector('#statusCount').textContent;
 });
 check('オフラインでも編集できる', offlineStatus.includes('7 文字'));
+// 辞書は必要になったときに読み込むため、オフラインでも届くことを確かめる
+check('オフラインでも表示言語が保たれる', (await page.textContent('#btnOpen')) === '開く', await page.textContent('#btnOpen'));
 await context.setOffline(false);
 
 const shared = await page.evaluate(async () => {
@@ -528,17 +530,118 @@ check('通しでブラウザのエラーが出ない', errors.length === 0, erro
 
 /* ---------- 表示言語 ---------- */
 
+// 端末の言語から自動で選ばれること（未対応の言語は英語になること）
+const detection = [
+  ['en-US', 'en', 'Open'],
+  ['fr-FR', 'fr', 'Ouvrir'],
+  ['de-DE', 'de', 'Öffnen'],
+  ['es-ES', 'es', 'Abrir'],
+  ['it-IT', 'it', 'Apri'],
+  ['pt-BR', 'pt-BR', 'Abrir'],
+  ['zh-CN', 'zh-Hans', '打开'],
+  ['zh-TW', 'zh-Hant', '開啟'],
+  ['ko-KR', 'ko', '열기'],
+  ['hi-IN', 'hi', 'खोलें'],
+  ['id-ID', 'id', 'Buka'],
+  ['vi-VN', 'vi', 'Mở'],
+  ['th-TH', 'th', 'เปิด'],
+  ['ar-EG', 'ar', 'فتح'],
+  ['sv-SE', 'en', 'Open'],
+  ['ru-RU', 'en', 'Open'],
+];
+
+const detectionResults = [];
+for (const [browserLocale, expectedCode, expectedOpen] of detection) {
+  const ctx = await browser.newContext({ ...devices['Pixel 7'], locale: browserLocale });
+  const p2 = await ctx.newPage();
+  const localeErrors = [];
+  p2.on('pageerror', (e) => localeErrors.push(e.message));
+  await p2.goto(BASE, { waitUntil: 'networkidle' });
+  await p2.waitForTimeout(400);
+  const r = await p2.evaluate(() => ({
+    lang: document.documentElement.lang,
+    dir: document.documentElement.dir,
+    open: document.querySelector('#btnOpen span').textContent,
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }));
+  detectionResults.push({
+    tag: browserLocale,
+    ok: r.lang === expectedCode && r.open === expectedOpen && r.overflow === 0 && localeErrors.length === 0,
+    detail: `${r.lang} "${r.open}"${localeErrors.length ? ' ERR' : ''}`,
+  });
+  await ctx.close();
+}
+const failedLocales = detectionResults.filter((r) => !r.ok);
+check(
+  '端末の言語から表示言語が決まる',
+  failedLocales.length === 0,
+  failedLocales.map((r) => `${r.tag}: ${r.detail}`).join(' / ') || `${detectionResults.length} 言語を確認`,
+);
+
+// 未対応の言語は英語になること（日本語ではない）
+const svContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'sv-SE' });
+const svPage = await svContext.newPage();
+await svPage.goto(BASE, { waitUntil: 'networkidle' });
+await svPage.waitForTimeout(300);
+check('未対応の言語は英語で開く', (await svPage.textContent('#fileName')) === 'untitled.txt');
+await svContext.close();
+
+// 右から左に書く言語（アラビア語）
+const arContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'ar-EG' });
+const arPage = await arContext.newPage();
+const arErrors = [];
+arPage.on('pageerror', (e) => arErrors.push(e.message));
+await arPage.goto(BASE, { waitUntil: 'networkidle' });
+await arPage.waitForTimeout(400);
+check('アラビア語では画面が右から左になる', (await arPage.getAttribute('html', 'dir')) === 'rtl');
+check('編集面だけは左から右のまま', (await arPage.getAttribute('#editor', 'dir')) === 'ltr');
+
+await arPage.fill('#input', '{\n  "الاسم": "قيمة",\n  "items": ["foo", "bar", "foo"]\n}');
+await arPage.click('#btnSearch');
+await arPage.fill('#searchQuery', 'foo');
+await arPage.waitForTimeout(300);
+await arPage.click('#btnFindNext');
+await arPage.waitForTimeout(300);
+check('右から左でも件数が正しい向きで出る', (await arPage.textContent('#searchCount')) === '1 / 2');
+check('右から左でも数字の並びが崩れない', (await arPage.evaluate(() => getComputedStyle(document.querySelector('#searchCount')).direction)) === 'ltr');
+
+// 位置合わせが書字方向に影響されないこと
+const rtlOverlap = await arPage.evaluate(() => {
+  const ta = document.querySelector('#input');
+  const mark = document.querySelector('#highlightLayer mark.current');
+  const cs = getComputedStyle(ta);
+  const probe = document.createElement('div');
+  for (const prop of ['fontFamily', 'fontSize', 'lineHeight', 'letterSpacing', 'padding', 'whiteSpace', 'overflowWrap', 'tabSize', 'direction']) {
+    probe.style[prop] = cs[prop];
+  }
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  probe.style.width = `${ta.clientWidth}px`;
+  probe.style.boxSizing = 'border-box';
+  const index = ta.value.indexOf('foo');
+  probe.innerHTML = `${ta.value.slice(0, index).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}<span id="p">foo</span>`;
+  ta.parentElement.append(probe);
+  const probeRect = probe.querySelector('#p').getBoundingClientRect();
+  const base = probe.getBoundingClientRect();
+  const markRect = mark.getBoundingClientRect();
+  const taRect = ta.getBoundingClientRect();
+  probe.remove();
+  return {
+    dx: Math.abs((markRect.left - taRect.left) - (probeRect.left - base.left)),
+    dy: Math.abs((markRect.top - taRect.top) - (probeRect.top - base.top)),
+  };
+});
+check('右から左でもハイライトが文字と重なる', rtlOverlap.dx < 1 && rtlOverlap.dy < 1, JSON.stringify(rtlOverlap));
+check('右から左でもエラーが出ない', arErrors.length === 0, arErrors.join(' | '));
+await arContext.close();
+
+// 設定からの切り替えと、その保存
 const enContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'en-US' });
 const enPage = await enContext.newPage();
 const enErrors = [];
 enPage.on('pageerror', (e) => enErrors.push(e.message));
 await enPage.goto(BASE, { waitUntil: 'networkidle' });
 await enPage.waitForTimeout(300);
-
-check('端末の言語が英語なら英語で開く', (await enPage.textContent('#btnOpen')) === 'Open', await enPage.textContent('#btnOpen'));
-check('html の lang も切り替わる', (await enPage.getAttribute('html', 'lang')) === 'en');
-check('既定のファイル名も英語になる', (await enPage.textContent('#fileName')) === 'untitled.txt', await enPage.textContent('#fileName'));
-check('入力欄の案内も英語になる', (await enPage.getAttribute('#input', 'placeholder')).startsWith('Type here'));
 
 await enPage.fill('#input', 'one\ntwo');
 await enPage.waitForTimeout(200);
@@ -547,17 +650,30 @@ check('件数表示も英語になる', (await enPage.textContent('#statusCount'
 await enPage.click('#btnTools');
 await enPage.waitForTimeout(250);
 check('ツールの名前も英語になる', (await enPage.textContent('.tool-item[data-id="json.format2"]')).includes('Format JSON'));
-check('ツールの見出しも英語になる', (await enPage.textContent('.tool-group')).length > 0);
 await enPage.click('.tool-item[data-id="line.sortAsc"]');
 await enPage.waitForTimeout(300);
 check('英語のまま操作できる', (await enPage.inputValue('#input')) === 'one\ntwo');
 
-// 設定から日本語へ切り替える
+// 一覧にすべての言語が並ぶこと
 await enPage.click('#btnSettings');
 await enPage.waitForTimeout(250);
+const options = await enPage.$$eval('#setLanguage option', (els) => els.map((e) => e.value));
+check('設定に 15 言語が並ぶ', options.length === 15, `${options.length} 件: ${options.join(', ')}`);
+for (const code of ['en', 'fr', 'it', 'de', 'es', 'zh-Hans', 'zh-Hant', 'ja', 'ko', 'pt-BR', 'hi', 'id', 'vi', 'th', 'ar']) {
+  if (!options.includes(code)) check(`${code} が一覧にある`, false);
+}
+
+// 何語からでも切り替えられること
+await enPage.selectOption('#setLanguage', 'th');
+await enPage.waitForTimeout(400);
+check('タイ語に切り替わる', (await enPage.textContent('#btnOpen')) === 'เปิด', await enPage.textContent('#btnOpen'));
+await enPage.selectOption('#setLanguage', 'ar');
+await enPage.waitForTimeout(400);
+check('アラビア語に切り替えると向きも変わる', (await enPage.getAttribute('html', 'dir')) === 'rtl');
 await enPage.selectOption('#setLanguage', 'ja');
-await enPage.waitForTimeout(300);
+await enPage.waitForTimeout(400);
 check('選んだ言語にすぐ切り替わる', (await enPage.textContent('#btnOpen')) === '開く', await enPage.textContent('#btnOpen'));
+check('切り替えると向きも戻る', (await enPage.getAttribute('html', 'dir')) === 'ltr');
 check('開いたままの画面も切り替わる', (await enPage.textContent('#settingsTitle')) === '設定');
 await enPage.click('#settingsClose');
 await enPage.waitForTimeout(200);
@@ -568,7 +684,6 @@ await enPage.reload({ waitUntil: 'networkidle' });
 await enPage.waitForTimeout(400);
 check('選んだ言語は次回も残る', (await enPage.textContent('#btnOpen')) === '開く');
 
-// 通知の文言も切り替わること
 await enPage.click('#btnSearch');
 await enPage.fill('#searchQuery', 'zzz');
 await enPage.waitForTimeout(250);

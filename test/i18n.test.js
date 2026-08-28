@@ -4,9 +4,17 @@ import { readFileSync } from 'node:fs';
 
 import ja from '../src/i18n/locales/ja.js';
 import en from '../src/i18n/locales/en.js';
-import { LOCALES, t, setLocale, getLocale, detectLocale, hasLocale, catalogs } from '../src/i18n/index.js';
+import { LOCALES, t, setLocale, getLocale, detectLocale, isSupported, isRtl, normalizeTag, loadCatalog } from '../src/i18n/index.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf-8');
+
+/** すべての言語の辞書を読み込む。 */
+async function allCatalogs() {
+  const entries = await Promise.all(
+    LOCALES.map(async ({ code }) => [code, (await import(`../src/i18n/locales/${code.toLowerCase()}.js`)).default]),
+  );
+  return new Map(entries);
+}
 
 /** HTML から data-i18n="キー" と、その要素の中身を取り出す。 */
 function textKeysInHtml() {
@@ -57,59 +65,131 @@ test('HTML に直接書かれた文言が日本語の辞書と一致する', () 
   assert.deepEqual(mismatches, [], mismatches.join('\n'));
 });
 
-test('すべての言語で同じキーが揃っている', () => {
-  const reference = Object.keys(ja).sort();
-  for (const { code } of LOCALES) {
-    const catalog = catalogs()[code];
-    assert.ok(catalog, `${code} の辞書がありません`);
-    assert.deepEqual(Object.keys(catalog).sort(), reference, `${code} のキーが日本語とずれています`);
+test('すべての言語で同じキーが揃っている', async () => {
+  const catalogs = await allCatalogs();
+  const reference = Object.keys(en).sort();
+  assert.ok(catalogs.size >= 15, `言語が ${catalogs.size} 件しかありません`);
+  for (const [code, catalog] of catalogs) {
+    assert.deepEqual(Object.keys(catalog).sort(), reference, `${code} のキーが英語とずれています`);
   }
 });
 
-test('訳が空文字になっていない', () => {
-  for (const { code } of LOCALES) {
-    for (const [key, value] of Object.entries(catalogs()[code])) {
+test('訳が空文字になっていない', async () => {
+  for (const [code, catalog] of await allCatalogs()) {
+    for (const [key, value] of Object.entries(catalog)) {
       assert.equal(typeof value, 'string', `${code}/${key}`);
-      assert.ok(value.length > 0, `${code}/${key} が空です`);
+      assert.ok(value.trim().length > 0, `${code}/${key} が空です`);
     }
   }
 });
 
-test('差し込み記号が言語間で揃っている', () => {
+test('差し込み記号が言語間で揃っている', async () => {
   const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-  for (const key of Object.keys(ja)) {
-    assert.deepEqual(placeholders(en[key]), placeholders(ja[key]), `${key} の {...} が英語と日本語で違います`);
+  for (const [code, catalog] of await allCatalogs()) {
+    for (const key of Object.keys(en)) {
+      assert.deepEqual(placeholders(catalog[key]), placeholders(en[key]), `${code}/${key} の {...} が英語と違います`);
+    }
   }
 });
 
-test('言語を切り替えると文言が変わる', () => {
-  setLocale('ja');
-  assert.equal(getLocale(), 'ja');
-  assert.equal(t('toolbar.open'), '開く');
-  assert.equal(setLocale('en'), true);
-  assert.equal(t('toolbar.open'), 'Open');
-  assert.equal(setLocale('en'), false, '同じ言語なら何も起きない');
-  assert.equal(setLocale('存在しない言語'), false);
-  setLocale('ja');
+test('英語のまま残っている訳が無い', async () => {
+  // 翻訳漏れ（英語をそのまま貼っただけ）を洗い出す。
+  // 固有名詞や記号だけの項目は、どの言語でも同じになるので除く。
+  const skip = new Set(['group.json', 'search.regex', 'help.title', 'search.position',
+    'newline.lf', 'newline.crlf', 'file.untitled']);
+  // 英語とたまたま同じ綴りになるのが正しい組み合わせ
+  const sameOnPurpose = new Set([
+    'fr:toolbar.region', // フランス語でも Actions
+    'de:group.text', // ドイツ語でも Text
+    'it:group.file', // イタリア語では file をそのまま使う
+  ]);
+  for (const [code, catalog] of await allCatalogs()) {
+    if (code === 'en') continue;
+    const copied = Object.keys(en).filter(
+      (key) => !skip.has(key)
+        && !sameOnPurpose.has(`${code}:${key}`)
+        && catalog[key] === en[key]
+        && /[A-Za-z]{4,}/.test(en[key]),
+    );
+    assert.deepEqual(copied, [], `${code} で英語のままのキー: ${copied.join(', ')}`);
+  }
 });
 
-test('差し込みが働く', () => {
-  setLocale('ja');
+test('言語の一覧が整っている', () => {
+  const codes = LOCALES.map((l) => l.code);
+  assert.equal(new Set(codes).size, codes.length, '言語コードが重複しています');
+  for (const locale of LOCALES) {
+    assert.ok(locale.label.trim().length > 0, `${locale.code} の表示名がありません`);
+    assert.ok(locale.dir === 'ltr' || locale.dir === 'rtl', `${locale.code} の書字方向が不正です`);
+  }
+  // 要望のあった主要言語がすべて入っていること
+  for (const code of ['en', 'fr', 'it', 'de', 'es', 'zh-Hans', 'zh-Hant', 'ja', 'ko',
+    'pt-BR', 'hi', 'id', 'vi', 'th', 'ar']) {
+    assert.ok(codes.includes(code), `${code} がありません`);
+  }
+});
+
+test('アラビア語は右から左と分かる', () => {
+  assert.equal(isRtl('ar'), true);
+  assert.equal(isRtl('en'), false);
+  assert.equal(isRtl('ja'), false);
+});
+
+test('言語を切り替えると文言が変わる', async () => {
+  assert.equal(await setLocale('ja'), true);
+  assert.equal(getLocale(), 'ja');
+  assert.equal(t('toolbar.open'), '開く');
+  assert.equal(await setLocale('ko'), true);
+  assert.equal(t('toolbar.open'), '열기');
+  assert.equal(await setLocale('ko'), false, '同じ言語なら何も起きない');
+  assert.equal(await setLocale('存在しない言語'), false);
+  await setLocale('en');
+});
+
+test('差し込みが働く', async () => {
+  await setLocale('ja');
   assert.equal(t('status.counts', { lines: 12, chars: 345 }), '12 行 / 345 文字');
-  setLocale('en');
-  assert.equal(t('status.counts', { lines: 12, chars: 345 }), '12 lines / 345 chars');
-  setLocale('ja');
+  await setLocale('de');
+  assert.equal(t('status.counts', { lines: 12, chars: 345 }), '12 Zeilen / 345 Zeichen');
+  await setLocale('en');
 });
 
 test('辞書に無いキーはそのまま返す（外部拡張のため）', () => {
   assert.equal(t('外部ツールの名前'), '外部ツールの名前');
 });
 
+test('言語タグを対応言語に読み替える', () => {
+  assert.equal(normalizeTag('ja-JP'), 'ja');
+  assert.equal(normalizeTag('en'), 'en');
+  assert.equal(normalizeTag('fr-CA'), 'fr');
+  assert.equal(normalizeTag('pt'), 'pt-BR');
+  assert.equal(normalizeTag('pt-PT'), 'pt-BR', 'ポルトガル語はブラジル向けの訳に寄せる');
+  assert.equal(normalizeTag('in-ID'), 'id', '古い Android の表記');
+  assert.equal(normalizeTag('id_ID'), 'id', '下線区切りでも読める');
+  assert.equal(normalizeTag('sv-SE'), null, '未対応の言語は null');
+});
+
+test('中国語は簡体と繁体を書き分ける', () => {
+  assert.equal(normalizeTag('zh'), 'zh-Hans');
+  assert.equal(normalizeTag('zh-CN'), 'zh-Hans');
+  assert.equal(normalizeTag('zh-SG'), 'zh-Hans');
+  assert.equal(normalizeTag('zh-Hans-CN'), 'zh-Hans');
+  assert.equal(normalizeTag('zh-TW'), 'zh-Hant');
+  assert.equal(normalizeTag('zh-HK'), 'zh-Hant');
+  assert.equal(normalizeTag('zh-Hant-TW'), 'zh-Hant');
+});
+
 test('利用者の言語を推定する', () => {
   assert.equal(detectLocale(['ja-JP', 'en-US']), 'ja');
-  assert.equal(detectLocale(['en-GB']), 'en');
-  assert.equal(detectLocale(['fr-FR', 'de']), 'en', '未対応の言語は英語に寄せる');
+  assert.equal(detectLocale(['th-TH']), 'th');
+  assert.equal(detectLocale(['ar-EG', 'fr-FR']), 'ar');
+  assert.equal(detectLocale(['sv-SE', 'de-DE']), 'de', '対応している方を選ぶ');
+  assert.equal(detectLocale(['sv-SE']), 'en', '未対応の言語は英語にする');
   assert.equal(detectLocale([]), 'en');
-  assert.equal(hasLocale('ja'), true);
-  assert.equal(hasLocale('xx'), false);
+  assert.equal(isSupported('vi'), true);
+  assert.equal(isSupported('sv'), false);
+});
+
+test('未対応の言語の辞書は読み込まない', async () => {
+  assert.equal(await loadCatalog('sv'), false);
 });
