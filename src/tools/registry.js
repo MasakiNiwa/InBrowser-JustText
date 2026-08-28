@@ -11,18 +11,19 @@
 
 const commands = new Map();
 
+/** label は i18n のキー。辞書に無ければそのまま表示されるので、外部拡張は生の文字列でもよい。 */
 export const GROUPS = [
-  { id: 'text', label: 'テキスト' },
-  { id: 'line', label: '行の操作' },
-  { id: 'json', label: 'JSON' },
-  { id: 'file', label: 'ファイル' },
+  { id: 'text', label: 'group.text' },
+  { id: 'line', label: 'group.line' },
+  { id: 'json', label: 'group.json' },
+  { id: 'file', label: 'group.file' },
 ];
 
 /**
  * コマンドを登録する。
  * @param {object} cmd
  * @param {string} cmd.id      一意な ID
- * @param {string} cmd.label   メニューに出す名前
+ * @param {string} cmd.label   メニューに出す名前（i18n のキー、または生の文字列）
  * @param {string} cmd.group   GROUPS の id
  * @param {string} [cmd.hint]  補足説明
  * @param {(ctx:object)=>void|Promise<void>} [cmd.run]
@@ -30,8 +31,8 @@ export const GROUPS = [
  * @param {(text:string)=>string} [cmd.lineTransform] 選択行（無選択なら全文）を変換する
  */
 export function register(cmd) {
-  if (!cmd?.id) throw new Error('コマンドには id が必要です');
-  if (commands.has(cmd.id)) throw new Error(`コマンド id が重複しています: ${cmd.id}`);
+  if (!cmd?.id) throw new Error('a command needs an id');
+  if (commands.has(cmd.id)) throw new Error(`duplicate command id: ${cmd.id}`);
   commands.set(cmd.id, cmd);
   return cmd;
 }
@@ -55,7 +56,7 @@ export function listByGroup() {
 /** コマンドを実行する。transform / lineTransform は共通処理でくるむ。 */
 export async function runCommand(id, ctx) {
   const cmd = commands.get(id);
-  if (!cmd) throw new Error(`未登録のコマンドです: ${id}`);
+  if (!cmd) throw new Error(`unknown command: ${id}`);
 
   if (cmd.lineTransform) {
     ctx.applyToSelectedLines(cmd.lineTransform, cmd.label);

@@ -18,6 +18,7 @@ import {
   replaceOne,
   SearchError,
 } from '../core/search.js';
+import { t } from '../i18n/index.js';
 import { debounce, formatNumber } from '../util/dom.js';
 
 /** 強調表示に渡す一致件数の上限。 */
@@ -73,7 +74,7 @@ export function createSearchPanel({ elements, editor, notify }) {
       return createMatcher(options());
     } catch (e) {
       if (e instanceof SearchError) {
-        error.textContent = e.message;
+        error.textContent = t(e.code, { detail: e.detail });
         panel.classList.add('has-error');
         return null;
       }
@@ -109,13 +110,15 @@ export function createSearchPanel({ elements, editor, notify }) {
       return;
     }
     if (matches.length === 0) {
-      count.textContent = '0 件';
+      count.textContent = t('search.count', { count: 0 });
       count.classList.add('empty');
       return;
     }
     count.classList.remove('empty');
     const total = truncated ? `${formatNumber(matches.length)}+` : formatNumber(matches.length);
-    count.textContent = current >= 0 ? `${current + 1} / ${total}` : `${total} 件`;
+    count.textContent = current >= 0
+      ? t('search.position', { index: current + 1, total })
+      : t('search.count', { count: total });
   }
 
   /** 一致位置へ移動する。 */
@@ -135,7 +138,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     if (!re) return;
     if (matches.length === 0) refresh({ keepCurrent: false });
     if (matches.length === 0) {
-      notify('見つかりませんでした');
+      notify(t('search.notFound'));
       return;
     }
     const from = current >= 0 ? matches[current].end : anchorFrom('end');
@@ -156,7 +159,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     if (!re) return;
     if (matches.length === 0) refresh({ keepCurrent: false });
     if (matches.length === 0) {
-      notify('見つかりませんでした');
+      notify(t('search.notFound'));
       return;
     }
     const from = current >= 0 ? matches[current].start : anchorFrom('start');
@@ -196,7 +199,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     editor.setText(result.text, {
       selectionStart: result.end,
       selectionEnd: result.end,
-      label: '置換',
+      label: 'search.replace',
     });
     anchor = result.end;
     current = -1;
@@ -210,19 +213,19 @@ export function createSearchPanel({ elements, editor, notify }) {
     const rep = prepareReplacement(replacement.value, optRegex.checked);
     const result = replaceAll(editor.getText(), re, rep);
     if (result.count === 0) {
-      notify('置換対象が見つかりませんでした');
+      notify(t('search.noReplaceTarget'));
       return;
     }
     const caret = Math.min(anchorFrom('start'), result.text.length);
     editor.setText(result.text, {
       selectionStart: caret,
       selectionEnd: caret,
-      label: 'すべて置換',
+      label: 'search.replaceAll',
     });
     anchor = caret;
     current = -1;
     refresh({ keepCurrent: false });
-    notify(`${formatNumber(result.count)} 件を置換しました`);
+    notify(t('search.replaced', { count: formatNumber(result.count) }));
   }
 
   /* ---------- イベント ---------- */

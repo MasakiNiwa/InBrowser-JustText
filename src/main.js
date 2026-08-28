@@ -5,9 +5,13 @@
  * 編集機能を増やすときは src/tools/ にコマンドを足すのが基本。
  */
 
+import { looksBinary } from './core/binary.js';
 import { ENCODINGS, encodingLabel } from './core/encoding.js';
 import { canEncode } from './core/encoder.js';
-import { NEWLINES, newlineLabel } from './core/newline.js';
+import { NEWLINES, newlineShort } from './core/newline.js';
+import { LOCALES, applyTranslations, detectLocale, getLocale, hasLocale, setLocale, t } from './i18n/index.js';
+import { copyText } from './io/clipboard.js';
+import { canPickSaveLocation, pickSaveLocation, writeToHandle } from './io/file-system.js';
 import { buildDocument, readFile, emptyDocument, LARGE_FILE_BYTES } from './io/open.js';
 import { buildFileBytes, downloadBytes, guessMimeType, suggestCopyName } from './io/save.js';
 import { hasSharePayload, clearShareFlag, takeSharedFile } from './io/share-target.js';
@@ -24,7 +28,10 @@ import { $, formatBytes, formatNumber, rafThrottle } from './util/dom.js';
 /* ---------- 状態 ---------- */
 
 const settings = loadSettings();
-let doc = emptyDocument();
+if (!hasLocale(settings.language)) settings.language = detectLocale();
+setLocale(settings.language);
+
+let doc = emptyDocument(t('file.untitled'));
 let savedText = '';
 
 const notify = createToast($('#toastArea'));
@@ -58,7 +65,7 @@ const search = createSearchPanel({
   notify,
 });
 
-/* ---------- 設定の反映 ---------- */
+/* ---------- 表示の反映 ---------- */
 
 function applySettings() {
   document.documentElement.dataset.theme = settings.theme;
@@ -69,6 +76,20 @@ function applySettings() {
   saveSettings(settings);
 }
 
+/** 言語を切り替えて、画面上の文言をすべて置き換える。 */
+function applyLanguage(code) {
+  if (!setLocale(code)) return;
+  settings.language = code;
+  saveSettings(settings);
+  applyTranslations();
+  buildToolList();
+  // 名前をまだ付けていない書類は、その言語の既定名に付け替える
+  if (doc.untitled) doc = { ...doc, name: t('file.untitled') };
+  updateFileInfo();
+  updateStatus();
+  search.refresh();
+}
+
 /* ---------- ステータス表示 ---------- */
 
 const isDirty = () => editor.getText() !== savedText;
@@ -77,7 +98,7 @@ function updateFileInfo() {
   $('#fileName').textContent = doc.name;
   $('#dirtyMark').hidden = !isDirty();
   $('#statusEncoding').textContent = encodingLabel(doc.encoding);
-  $('#statusNewline').textContent = newlineLabel(doc.newline).split(' ')[0];
+  $('#statusNewline').textContent = newlineShort(doc.newline);
 }
 
 const updateStatus = rafThrottle(() => {
@@ -85,7 +106,10 @@ const updateStatus = rafThrottle(() => {
   const { start } = editor.getSelection();
   const index = editor.lineIndex;
   $('#statusPos').textContent = `${index.lineAt(start)} : ${index.columnAt(start)}`;
-  $('#statusCount').textContent = `${formatNumber(index.lineCount)} 行 / ${formatNumber(text.length)} 文字`;
+  $('#statusCount').textContent = t('status.counts', {
+    lines: formatNumber(index.lineCount),
+    chars: formatNumber(text.length),
+  });
   $('#btnUndo').disabled = !editor.canUndo;
   $('#btnRedo').disabled = !editor.canRedo;
   $('#dirtyMark').hidden = !isDirty();
@@ -93,6 +117,17 @@ const updateStatus = rafThrottle(() => {
 
 editor.on('change', updateStatus);
 editor.on('selection', updateStatus);
+
+/* ---------- ダイアログの小道具 ---------- */
+
+/** ダイアログを開き、閉じたときの returnValue を返す。 */
+function askDialog(dialog) {
+  return new Promise((resolve) => {
+    dialog.returnValue = '';
+    dialog.addEventListener('close', () => resolve(dialog.returnValue), { once: true });
+    dialog.showModal();
+  });
+}
 
 /* ---------- ドキュメントの読み書き ---------- */
 
@@ -103,36 +138,49 @@ function loadDocument(next, { announce = true } = {}) {
   updateFileInfo();
   updateStatus();
   if (announce) {
-    const size = doc.bytes.length ? `・${formatBytes(doc.bytes.length)}` : '';
-    notify(`${doc.name} を開きました（${encodingLabel(doc.encoding)}${size}）`);
+    notify(t('file.opened', {
+      name: doc.name,
+      encoding: encodingLabel(doc.encoding),
+      size: formatBytes(doc.bytes.length),
+    }));
   }
 }
 
 /** 未保存の変更があれば確認する。 */
-function confirmDiscard(message) {
+function confirmDiscard(messageKey) {
   if (!isDirty()) return true;
-  return window.confirm(message);
+  return window.confirm(t(messageKey));
 }
 
-async function openFromFile(file) {
+async function openFromFile(file, { handle = null } = {}) {
   if (!file) return;
-  if (!confirmDiscard('未保存の変更があります。破棄して開きますか？')) return;
+  if (!confirmDiscard('file.discardOpen')) return;
   if (file.size > LARGE_FILE_BYTES) {
-    const ok = window.confirm(
-      `${formatBytes(file.size)} と大きなファイルです。動作が重くなることがあります。開きますか？`,
-    );
-    if (!ok) return;
+    if (!window.confirm(t('file.largeConfirm', { size: formatBytes(file.size) }))) return;
   }
+
+  let next;
   try {
-    loadDocument(await readFile(file));
+    next = await readFile(file, { fallbackName: t('file.untitled') });
   } catch (e) {
-    notify(`読み込みに失敗しました: ${e.message}`, 'error');
+    notify(t('file.openFailed', { detail: e.message }), 'error');
+    return;
   }
+
+  // 画像などをテキストとして開くと内容が壊れるので、先に知らせる
+  const binary = looksBinary(next.bytes, next.text, next.encoding);
+  if (binary.binary) {
+    const reason = t(`file.binaryReason${binary.reason[0].toUpperCase()}${binary.reason.slice(1)}`);
+    if (!window.confirm(t('file.binaryConfirm', { reason }))) return;
+  }
+
+  next.handle = handle;
+  loadDocument(next);
 }
 
 function newDocument() {
-  if (!confirmDiscard('未保存の変更があります。破棄して新規作成しますか？')) return;
-  loadDocument(emptyDocument(), { announce: false });
+  if (!confirmDiscard('file.discardNew')) return;
+  loadDocument(emptyDocument(t('file.untitled')), { announce: false });
   editor.focus();
 }
 
@@ -159,54 +207,156 @@ function openSaveDialog() {
     ...NEWLINES.map((n) => {
       const option = document.createElement('option');
       option.value = n.name;
-      option.textContent = n.label;
+      option.textContent = t(`newline.${n.name}`);
       return option;
     }),
   );
   $('#saveNewline').value = doc.newline;
   $('#saveBom').checked = doc.bom;
+
+  // 上書きできるのは、書き込み先を掴んでいるときだけ
+  const overwrite = $('#saveOverwrite');
+  overwrite.hidden = !doc.handle;
+  if (doc.handle) overwrite.title = t('save.overwriteHint', { name: doc.handle.name });
+  $('#savePick').hidden = !canPickSaveLocation();
+
   updateSaveNote();
+  saveDialog.returnValue = '';
   saveDialog.showModal();
 }
 
 function updateSaveNote() {
   const encoding = $('#saveEncoding').value;
   const note = [];
-  if (encoding !== 'utf-8') note.push(`${encodingLabel(encoding)} で書き出します`);
+  if (encoding !== 'utf-8') note.push(t('save.noteEncoding', { encoding: encodingLabel(encoding) }));
   if (doc.encoding !== encoding && doc.encoding !== 'utf-8') {
-    note.push(`元は ${encodingLabel(doc.encoding)} でした`);
+    note.push(t('save.noteOriginal', { encoding: encodingLabel(doc.encoding) }));
   }
-  note.push(`${formatNumber(editor.getText().length)} 文字`);
+  note.push(t('save.noteChars', { chars: formatNumber(editor.getText().length) }));
   $('#saveNote').textContent = note.join(' / ');
 }
 
-function performSave() {
-  const name = $('#saveName').value.trim() || '無題.txt';
-  const encoding = $('#saveEncoding').value;
+/** 保存できない文字があるとき、どうするかを尋ねる。 */
+function askAboutLostCharacters(encoding, unencodable) {
+  const chars = [...unencodable.keys()];
+  $('#lossBody').textContent = t('loss.body', { encoding: encodingLabel(encoding) });
+  const shown = chars.slice(0, 12).join(' ');
+  $('#lossChars').textContent = chars.length > 12
+    ? `${shown}  （${t('loss.more', { count: chars.length - 12 })}）`
+    : shown;
+  return askDialog($('#lossDialog'));
+}
+
+/**
+ * 実際に書き出す。
+ * @param {'download'|'pick'|'overwrite'} mode
+ * @returns {Promise<{ok:boolean, name?:string, handle?:object}>}
+ */
+async function writeOut(mode, { name, bytes }) {
+  if (mode === 'download') {
+    downloadBytes(bytes, name, guessMimeType(name));
+    notify(t('save.done', { name }));
+    return { ok: true, name };
+  }
+
+  if (mode === 'pick') {
+    const handle = await pickSaveLocation({ suggestedName: name, mime: guessMimeType(name) });
+    if (!handle) {
+      notify(t('save.cancelled'));
+      return { ok: false };
+    }
+    if (!(await writeToHandle(handle, bytes))) {
+      notify(t('save.permissionDenied'), 'error');
+      return { ok: false };
+    }
+    notify(t('save.savedTo', { name: handle.name }));
+    return { ok: true, name: handle.name, handle };
+  }
+
+  // 上書きは元に戻せないので、必ず確認してから書き込む
+  const target = doc.handle;
+  if (!target) return { ok: false };
+  if (!window.confirm(t('save.overwriteConfirm', { name: target.name }))) {
+    notify(t('save.cancelled'));
+    return { ok: false };
+  }
+  if (!(await writeToHandle(target, bytes))) {
+    notify(t('save.permissionDenied'), 'error');
+    return { ok: false };
+  }
+  notify(t('save.overwritten', { name: target.name }));
+  return { ok: true, name: target.name, handle: target };
+}
+
+/** 保存の一連の流れ。文字が失われる場合は書き出す前に止める。 */
+async function performSave(mode) {
+  const requestedName = $('#saveName').value.trim();
   const newline = $('#saveNewline').value;
   const bom = $('#saveBom').checked;
   const text = editor.getText();
+  let encoding = $('#saveEncoding').value;
+  let name = mode === 'overwrite' ? doc.handle.name : requestedName || t('file.untitled');
 
   let result;
   try {
     result = buildFileBytes(text, { encoding, bom, newline });
   } catch (e) {
-    notify(`保存できませんでした: ${e.message}`, 'error');
-    return;
+    notify(t('save.failed', { detail: e.message }), 'error');
+    return false;
   }
-
-  downloadBytes(result.bytes, name, guessMimeType(name));
-
-  savedText = text;
-  doc = { ...doc, name, encoding, newline, bom };
-  updateFileInfo();
 
   if (result.unencodable.size > 0) {
-    const chars = [...result.unencodable.keys()].slice(0, 8).join(' ');
-    notify(`${encodingLabel(encoding)} で表せない文字を ? に置き換えました: ${chars}`, 'error');
-  } else {
-    notify(`${name} をダウンロードしました`);
+    const choice = await askAboutLostCharacters(encoding, result.unencodable);
+    if (choice !== 'replace' && choice !== 'utf8') {
+      notify(t('save.cancelled'));
+      return false;
+    }
+    if (choice === 'utf8') {
+      encoding = 'utf-8';
+      result = buildFileBytes(text, { encoding, bom, newline });
+    }
   }
+
+  let outcome;
+  try {
+    outcome = await writeOut(mode, { name, bytes: result.bytes });
+  } catch (e) {
+    notify(t('save.failed', { detail: e.message }), 'error');
+    return false;
+  }
+  if (!outcome.ok) return false;
+
+  savedText = text;
+  doc = {
+    ...doc,
+    name: outcome.name ?? name,
+    handle: outcome.handle ?? doc.handle,
+    encoding,
+    newline,
+    bom,
+    untitled: false,
+  };
+  updateFileInfo();
+  return true;
+}
+
+/* ---------- クリップボード ---------- */
+
+async function copyToClipboard() {
+  const sel = editor.getSelection();
+  const whole = editor.getText();
+  const selected = sel.end > sel.start;
+  const text = selected ? whole.slice(sel.start, sel.end) : whole;
+  if (!text) {
+    notify(t('copy.empty'));
+    return;
+  }
+  const ok = await copyText(text);
+  if (!ok) {
+    notify(t('copy.failed'), 'error');
+    return;
+  }
+  notify(t(selected ? 'copy.selection' : 'copy.all', { chars: formatNumber(text.length) }));
 }
 
 /* ---------- コマンドから使う文脈 ---------- */
@@ -220,7 +370,7 @@ const context = {
   setSelection: (start, end, opts) => editor.setSelection(start, end, opts),
   applyToSelectedLines: (fn, label) => {
     const changed = editor.applyToSelectedLines(fn, label);
-    if (!changed) notify('変更はありませんでした');
+    if (!changed) notify(t('common.noChange'));
     return changed;
   },
   notify,
@@ -234,41 +384,41 @@ const context = {
 
 const toolsDialog = $('#toolsDialog');
 
+/** 登録簿に載らない、アプリ側の操作。 */
+const APP_COMMANDS = [
+  { id: 'app.goto', label: 'cmd.app.goto', run: () => openGotoDialog() },
+  { id: 'app.reopen', label: 'cmd.app.reopen', run: () => openReopenDialog() },
+  { id: 'app.copy', label: 'cmd.app.copy', run: () => copyToClipboard() },
+];
+
+function toolButton(cmd) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'tool-item';
+  button.dataset.id = cmd.id;
+  const label = document.createElement('span');
+  label.className = 'tool-label';
+  label.textContent = t(cmd.label);
+  button.append(label);
+  if (cmd.hint) {
+    const hint = document.createElement('span');
+    hint.className = 'tool-hint';
+    hint.textContent = t(cmd.hint);
+    button.append(hint);
+  }
+  return button;
+}
+
 function buildToolList() {
   const list = $('#toolList');
   list.replaceChildren();
-  for (const group of listByGroup()) {
+  const groups = [...listByGroup(), { id: 'other', label: 'group.other', commands: APP_COMMANDS }];
+  for (const group of groups) {
     const heading = document.createElement('h3');
     heading.className = 'tool-group';
-    heading.textContent = group.label;
+    heading.textContent = t(group.label);
     list.append(heading);
-    for (const cmd of group.commands) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'tool-item';
-      button.dataset.id = cmd.id;
-      button.innerHTML = `<span class="tool-label"></span>${cmd.hint ? '<span class="tool-hint"></span>' : ''}`;
-      button.querySelector('.tool-label').textContent = cmd.label;
-      if (cmd.hint) button.querySelector('.tool-hint').textContent = cmd.hint;
-      list.append(button);
-    }
-  }
-  // 登録簿に載らない、アプリ側の操作
-  const heading = document.createElement('h3');
-  heading.className = 'tool-group';
-  heading.textContent = 'その他';
-  list.append(heading);
-  for (const [id, label] of [
-    ['app.goto', '行へ移動'],
-    ['app.reopen', '文字コードを指定して開き直す'],
-  ]) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'tool-item';
-    button.dataset.id = id;
-    button.innerHTML = '<span class="tool-label"></span>';
-    button.querySelector('.tool-label').textContent = label;
-    list.append(button);
+    for (const cmd of group.commands) list.append(toolButton(cmd));
   }
 }
 
@@ -278,11 +428,11 @@ $('#toolList').addEventListener('click', async (e) => {
   const id = button.dataset.id;
   toolsDialog.close();
   try {
-    if (id === 'app.goto') openGotoDialog();
-    else if (id === 'app.reopen') openReopenDialog();
+    const appCommand = APP_COMMANDS.find((c) => c.id === id);
+    if (appCommand) await appCommand.run();
     else await runCommand(id, context);
   } catch (err) {
-    notify(`実行できませんでした: ${err.message}`, 'error');
+    notify(t('common.commandFailed', { detail: err.message }), 'error');
   }
 });
 
@@ -298,7 +448,7 @@ function openGotoDialog() {
 
 function openReopenDialog() {
   if (doc.bytes.length === 0) {
-    notify('開き直せるファイルがありません');
+    notify(t('file.noReopen'));
     return;
   }
   fillEncodingSelect($('#reopenEncoding'), { onlyEncodable: false });
@@ -309,6 +459,15 @@ function openReopenDialog() {
 /* ---------- 設定画面 ---------- */
 
 function openSettingsDialog() {
+  $('#setLanguage').replaceChildren(
+    ...LOCALES.map((locale) => {
+      const option = document.createElement('option');
+      option.value = locale.code;
+      option.textContent = locale.label;
+      return option;
+    }),
+  );
+  $('#setLanguage').value = getLocale();
   $('#setTheme').value = settings.theme;
   $('#fontValue').value = String(settings.fontSize);
   $('#setTabSize').value = String(settings.tabSize);
@@ -339,6 +498,7 @@ installKeymap({ editor, actions, settings });
 $('#btnOpen').addEventListener('click', actions.openFile);
 $('#btnSave').addEventListener('click', actions.openSave);
 $('#btnNew').addEventListener('click', newDocument);
+$('#btnCopy').addEventListener('click', copyToClipboard);
 $('#btnSearch').addEventListener('click', () => search.toggle());
 $('#btnTools').addEventListener('click', () => toolsDialog.showModal());
 $('#btnSettings').addEventListener('click', openSettingsDialog);
@@ -364,16 +524,20 @@ $('#statusNewline').addEventListener('click', () => {
   const order = NEWLINES.map((n) => n.name);
   doc = { ...doc, newline: order[(order.indexOf(doc.newline) + 1) % order.length] };
   updateFileInfo();
-  notify(`保存時の改行コードを ${newlineLabel(doc.newline)} にしました`);
+  notify(t('file.newlineChanged', { newline: t(`newline.${doc.newline}`) }));
 });
 
-/* 保存ダイアログ */
+/* 保存ダイアログ: 押したボタンの value が保存方法になる */
 $('#saveCancel').addEventListener('click', () => saveDialog.close());
 $('#saveEncoding').addEventListener('change', updateSaveNote);
 $('#saveRename').addEventListener('click', () => {
-  $('#saveName').value = suggestCopyName($('#saveName').value.trim() || '無題.txt');
+  $('#saveName').value = suggestCopyName($('#saveName').value.trim() || t('file.untitled'));
 });
-$('#saveForm').addEventListener('submit', () => performSave());
+saveDialog.addEventListener('close', async () => {
+  const mode = saveDialog.returnValue;
+  if (mode !== 'download' && mode !== 'pick' && mode !== 'overwrite') return;
+  await performSave(mode);
+});
 
 /* ツール / 設定 / その他ダイアログ */
 $('#toolsClose').addEventListener('click', () => toolsDialog.close());
@@ -389,12 +553,15 @@ $('#gotoForm').addEventListener('submit', () => {
 
 $('#reopenForm').addEventListener('submit', () => {
   const encoding = $('#reopenEncoding').value;
-  if (!confirmDiscard('未保存の変更があります。破棄して開き直しますか？')) return;
-  loadDocument(buildDocument(doc.bytes, doc.name, encoding), { announce: false });
-  notify(`${encodingLabel(encoding)} として読み直しました`);
+  if (!confirmDiscard('file.discardReopen')) return;
+  const next = buildDocument(doc.bytes, doc.name, encoding);
+  next.handle = doc.handle;
+  loadDocument(next, { announce: false });
+  notify(t('file.reopened', { encoding: encodingLabel(encoding) }));
 });
 
 /* 設定の変更を即時反映 */
+$('#setLanguage').addEventListener('change', (e) => applyLanguage(e.target.value));
 $('#setTheme').addEventListener('change', (e) => {
   settings.theme = e.target.value;
   applySettings();
@@ -455,17 +622,17 @@ window.addEventListener('beforeunload', (e) => {
 /* ---------- 起動処理 ---------- */
 
 async function boot() {
+  applyTranslations();
   applySettings();
   buildToolList();
-  loadDocument(emptyDocument(), { announce: false });
+  loadDocument(emptyDocument(t('file.untitled')), { announce: false });
   editor.refresh();
 
   // Android の共有メニューから渡されたファイル
   if (hasSharePayload()) {
     clearShareFlag();
     const shared = await takeSharedFile();
-    if (shared) loadDocument(buildDocument(shared.bytes, shared.name));
-    else notify('共有されたファイルを取得できませんでした', 'error');
+    if (shared) loadDocument(buildDocument(shared.bytes, shared.name ?? t('file.untitled')));
   }
 
   // PWA として「このアプリで開く」を選んだとき
@@ -473,7 +640,7 @@ async function boot() {
     window.launchQueue.setConsumer(async (params) => {
       const handle = params.files?.[0];
       if (!handle) return;
-      await openFromFile(await handle.getFile());
+      await openFromFile(await handle.getFile(), { handle });
     });
   }
 

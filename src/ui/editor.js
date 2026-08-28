@@ -55,8 +55,9 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
    * 内容を差し替える。履歴に 1 手として積む。
    * @param {string} text
    * @param {{selectionStart?:number, selectionEnd?:number, label?:string}} [opts]
+   *   label は履歴をまとめる単位を分けるための名前で、画面には出ない。
    */
-  function setText(text, { selectionStart, selectionEnd, label = '編集' } = {}) {
+  function setText(text, { selectionStart, selectionEnd, label = 'edit' } = {}) {
     const prev = getSelection();
     textarea.value = text;
     const start = Math.min(selectionStart ?? prev.start, text.length);
@@ -70,7 +71,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   }
 
   /** 範囲を置き換える。カーソルは置換後の末尾へ。 */
-  function replaceRange(start, end, replacement, { label = '編集', select = false } = {}) {
+  function replaceRange(start, end, replacement, { label = 'edit', select = false } = {}) {
     const text = getText();
     const next = text.slice(0, start) + replacement + text.slice(end);
     setText(next, {
@@ -81,7 +82,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   }
 
   /** カーソル位置に文字を挿入する（Tab や自動インデント用）。 */
-  function insertAtCursor(str, { label = '入力' } = {}) {
+  function insertAtCursor(str, { label = 'insert' } = {}) {
     const { start, end } = getSelection();
     replaceRange(start, end, str, { label });
   }
@@ -90,7 +91,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
    * 選択中の行（無選択なら全文）にテキスト変換を適用する。
    * 変換後も同じ範囲を選択したままにする。
    */
-  function applyToSelectedLines(fn, label = '整形') {
+  function applyToSelectedLines(fn, label = 'transform') {
     const text = getText();
     const sel = getSelection();
     const hasSelection = sel.start !== sel.end;

@@ -6,9 +6,16 @@
  */
 
 export class SearchError extends Error {
-  constructor(message) {
+  /**
+   * @param {string} message 開発者向けの説明
+   * @param {string} detail 画面に出す補足（ブラウザからのメッセージ）
+   */
+  constructor(message, detail = message) {
     super(message);
     this.name = 'SearchError';
+    /** 画面側で翻訳するためのキー。 */
+    this.code = 'search.invalidRegex';
+    this.detail = detail;
   }
 }
 
@@ -40,7 +47,7 @@ export function createMatcher({ query, useRegex = false, caseSensitive = false, 
   try {
     return new RegExp(wholeWord ? wrapWholeWord(base, false) : base, flags);
   } catch (e) {
-    throw new SearchError(useRegex ? `正規表現が不正です: ${e.message}` : e.message);
+    throw new SearchError(`invalid pattern: ${e.message}`, e.message);
   }
 }
 

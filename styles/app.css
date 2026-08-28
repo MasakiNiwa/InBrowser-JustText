@@ -422,6 +422,20 @@ body {
   min-height: 28px;
 }
 .status-btn:hover { border-color: var(--border); background: var(--panel); }
+/*
+ * 文字コードと改行コードは押して変えられる。
+ * ただの表示に見えないよう、枠と小さな印を付けておく。
+ */
+.status-menu {
+  border-color: var(--border);
+  background: var(--panel);
+}
+.status-menu::after {
+  content: '▾';
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.7;
+}
 
 /* ---------- ダイアログ ---------- */
 
@@ -445,8 +459,21 @@ body {
 }
 .sheet-title { margin: 0; font-size: 16px; font-weight: 600; }
 .sheet-note { margin: 0; font-size: 12px; color: var(--fg-dim); line-height: 1.6; }
+/* 保存できない文字の一覧 */
+.loss-chars {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-sub);
+  font-family: var(--editor-font);
+  font-size: 16px;
+  line-height: 1.7;
+  word-break: break-all;
+}
 .sheet-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
@@ -483,6 +510,11 @@ body {
   border-color: var(--accent);
   color: var(--accent-fg);
   font-weight: 600;
+}
+/* 元に戻せない操作。押し間違いを避けたいので色で区別する */
+.btn.warn {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 .btn:active { transform: scale(0.97); }
 
@@ -568,9 +600,10 @@ body {
 
 /* ---------- 狭い画面向けの微調整（後勝ちにするため末尾に置く） ---------- */
 
-@media (max-width: 380px) {
+/* 多くのスマートフォン（360〜399px）でツールバーが収まるようにする */
+@media (max-width: 400px) {
   .icon-btn { width: 36px; }
-  .toolbar { padding-left: 2px; padding-right: 2px; }
+  .toolbar { gap: 0; padding-left: 2px; padding-right: 2px; }
   .tbtn { min-width: 42px; padding: 4px 4px; font-size: 10px; }
   .tsep { margin-left: 2px; margin-right: 2px; }
   .topbar { gap: 6px; padding-left: 6px; padding-right: 6px; }
