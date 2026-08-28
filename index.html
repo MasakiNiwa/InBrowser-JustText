@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>InBrowser JustText</title>
+<meta name="description" content="ブラウザだけでテキストファイルを開いて編集し、別名で保存（ダウンロード）できるツール。検索と置換、文字コードの自動判別に対応。">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#11151a">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./assets/icon-192.png">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+
+<svg class="icon-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4.5 4.5"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 24 24"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3m14.4-6.4-1.6 1.6M8.2 15.8l-1.6 1.6m0-11.8 1.6 1.6m7.6 7.6 1.6 1.6"/></symbol>
+    <symbol id="i-new" viewBox="0 0 24 24"><path d="M14 3v5h5M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M12 11v6m-3-3h6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 10 6 6 6-6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.4"/><path d="M12 17h.01"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand" title="InBrowser JustText">
+      <span class="brand-mark" aria-hidden="true">JT</span>
+      <span class="brand-text"><b>InBrowser</b> JustText</span>
+    </div>
+    <div class="file-chip" id="fileChip" title="編集中のファイル">
+      <span class="file-name" id="fileName">無題.txt</span>
+      <span class="dirty" id="dirtyMark" hidden aria-label="未保存の変更あり">●</span>
+    </div>
+    <button type="button" class="icon-btn" id="btnSettings" aria-label="設定">
+      <svg class="icon"><use href="#i-settings"/></svg>
+    </button>
+    <button type="button" class="icon-btn" id="btnHelp" aria-label="使い方">
+      <svg class="icon"><use href="#i-help"/></svg>
+    </button>
+  </header>
+
+  <nav class="toolbar" aria-label="操作">
+    <button type="button" class="tbtn" id="btnOpen"><svg class="icon"><use href="#i-open"/></svg><span>開く</span></button>
+    <button type="button" class="tbtn accent" id="btnSave"><svg class="icon"><use href="#i-save"/></svg><span>保存</span></button>
+    <span class="tsep" role="separator"></span>
+    <button type="button" class="tbtn" id="btnUndo" disabled><svg class="icon"><use href="#i-undo"/></svg><span>戻す</span></button>
+    <button type="button" class="tbtn" id="btnRedo" disabled><svg class="icon"><use href="#i-redo"/></svg><span>進む</span></button>
+    <span class="tsep" role="separator"></span>
+    <button type="button" class="tbtn" id="btnSearch"><svg class="icon"><use href="#i-search"/></svg><span>検索</span></button>
+    <button type="button" class="tbtn" id="btnTools"><svg class="icon"><use href="#i-tools"/></svg><span>ツール</span></button>
+    <button type="button" class="tbtn" id="btnNew"><svg class="icon"><use href="#i-new"/></svg><span>新規</span></button>
+  </nav>
+
+  <section class="searchbar" id="searchPanel" hidden aria-label="検索と置換">
+    <div class="search-row">
+      <input type="search" id="searchQuery" class="field" placeholder="検索する文字列" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <span class="search-count" id="searchCount" aria-live="polite"></span>
+      <button type="button" class="icon-btn" id="btnFindPrev" aria-label="前を検索"><svg class="icon"><use href="#i-up"/></svg></button>
+      <button type="button" class="icon-btn" id="btnFindNext" aria-label="次を検索"><svg class="icon"><use href="#i-down"/></svg></button>
+      <button type="button" class="icon-btn" id="btnSearchClose" aria-label="検索を閉じる"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="search-row">
+      <input type="text" id="searchReplace" class="field" placeholder="置換後の文字列" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button type="button" class="sbtn" id="btnReplace">置換</button>
+      <button type="button" class="sbtn" id="btnReplaceAll">すべて</button>
+    </div>
+    <div class="search-opts">
+      <label class="chk"><input type="checkbox" id="optCase"><span>Aa 区別</span></label>
+      <label class="chk"><input type="checkbox" id="optWord"><span>単語単位</span></label>
+      <label class="chk"><input type="checkbox" id="optRegex"><span>正規表現</span></label>
+      <span class="search-error" id="searchError" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <main class="editor" id="editor">
+    <div class="gutter" id="gutter" aria-hidden="true" hidden><div class="gutter-inner" id="gutterInner"></div></div>
+    <div class="editor-body" id="editorBody">
+      <div class="layer" id="highlightLayer" aria-hidden="true" hidden></div>
+      <div class="layer measure" id="measureLayer" aria-hidden="true" hidden></div>
+      <textarea id="input" class="input"
+        placeholder="ここにテキストを入力するか、「開く」からファイルを読み込んでください。"
+        spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"
+        wrap="soft" aria-label="テキスト編集"></textarea>
+    </div>
+    <div class="drop-overlay" id="dropOverlay" hidden><span>ドロップしてファイルを開く</span></div>
+  </main>
+
+  <footer class="statusbar">
+    <button type="button" class="status-btn" id="statusPos" title="行へ移動">1 : 1</button>
+    <span class="status-item" id="statusCount">0 行 / 0 文字</span>
+    <span class="status-spacer"></span>
+    <button type="button" class="status-btn" id="statusEncoding" title="文字コードを指定して開き直す">UTF-8</button>
+    <button type="button" class="status-btn" id="statusNewline" title="保存時の改行コード">LF</button>
+  </footer>
+
+</div>
+
+<div class="toast-area" id="toastArea" aria-live="polite"></div>
+<input type="file" id="filePicker" class="visually-hidden" accept="text/*,.txt,.text,.json,.jsonl,.md,.markdown,.csv,.tsv,.log,.ini,.cfg,.conf,.env,.yml,.yaml,.toml,.xml,.html,.htm,.css,.js,.mjs,.ts,.py,.rb,.sh,.sql,.srt,.vtt,.gpx,.svg">
+
+<!-- 保存 -->
+<dialog class="sheet" id="saveDialog" aria-labelledby="saveTitle">
+  <form method="dialog" class="sheet-body" id="saveForm">
+    <h2 class="sheet-title" id="saveTitle">名前を付けて保存</h2>
+    <div class="field-row">
+      <span class="field-label">ファイル名</span>
+      <span class="field-with-btn">
+        <input type="text" id="saveName" class="field" required autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="btn small" id="saveRename" title="末尾に連番を付ける">別名</button>
+      </span>
+    </div>
+    <label class="field-row">
+      <span class="field-label">文字コード</span>
+      <select id="saveEncoding" class="field"></select>
+    </label>
+    <label class="field-row">
+      <span class="field-label">改行コード</span>
+      <select id="saveNewline" class="field"></select>
+    </label>
+    <label class="chk chk-row"><input type="checkbox" id="saveBom"><span>BOM を付ける</span></label>
+    <p class="sheet-note" id="saveNote"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="saveCancel">キャンセル</button>
+      <button type="submit" class="btn accent" id="saveConfirm">ダウンロード</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ツール -->
+<dialog class="sheet" id="toolsDialog" aria-labelledby="toolsTitle">
+  <div class="sheet-body">
+    <h2 class="sheet-title" id="toolsTitle">ツール</h2>
+    <div class="tool-list" id="toolList"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="toolsClose">閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 設定 -->
+<dialog class="sheet" id="settingsDialog" aria-labelledby="settingsTitle">
+  <div class="sheet-body">
+    <h2 class="sheet-title" id="settingsTitle">設定</h2>
+    <label class="field-row">
+      <span class="field-label">テーマ</span>
+      <select id="setTheme" class="field">
+        <option value="auto">端末に合わせる</option>
+        <option value="light">ライト</option>
+        <option value="dark">ダーク</option>
+      </select>
+    </label>
+    <div class="field-row">
+      <span class="field-label">文字サイズ</span>
+      <div class="stepper">
+        <button type="button" class="btn" id="fontSmaller" aria-label="小さく">−</button>
+        <output id="fontValue">15</output>
+        <button type="button" class="btn" id="fontLarger" aria-label="大きく">＋</button>
+      </div>
+    </div>
+    <label class="field-row">
+      <span class="field-label">タブ幅</span>
+      <select id="setTabSize" class="field">
+        <option value="2">2</option>
+        <option value="4">4</option>
+        <option value="8">8</option>
+      </select>
+    </label>
+    <label class="chk chk-row"><input type="checkbox" id="setWrap"><span>長い行を折り返す</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setGutter"><span>行番号を表示（折り返しオフのとき）</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setInsertSpaces"><span>Tab キーでスペースを入力</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setAutoIndent"><span>改行時にインデントを引き継ぐ</span></label>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="settingsClose">閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 文字コードを指定して開き直す -->
+<dialog class="sheet" id="reopenDialog" aria-labelledby="reopenTitle">
+  <form method="dialog" class="sheet-body" id="reopenForm">
+    <h2 class="sheet-title" id="reopenTitle">文字コードを指定して開き直す</h2>
+    <p class="sheet-note">読み込んだファイルを、選んだ文字コードで解釈し直します。編集内容は破棄されます。</p>
+    <label class="field-row">
+      <span class="field-label">文字コード</span>
+      <select id="reopenEncoding" class="field"></select>
+    </label>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="reopenCancel">キャンセル</button>
+      <button type="submit" class="btn accent">開き直す</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 行へ移動 -->
+<dialog class="sheet" id="gotoDialog" aria-labelledby="gotoTitle">
+  <form method="dialog" class="sheet-body" id="gotoForm">
+    <h2 class="sheet-title" id="gotoTitle">行へ移動</h2>
+    <label class="field-row">
+      <span class="field-label">行番号</span>
+      <input type="number" id="gotoLine" class="field" min="1" step="1" inputmode="numeric" required>
+    </label>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="gotoCancel">キャンセル</button>
+      <button type="submit" class="btn accent">移動</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 使い方 -->
+<dialog class="sheet" id="helpDialog" aria-labelledby="helpTitle">
+  <div class="sheet-body">
+    <h2 class="sheet-title" id="helpTitle">InBrowser JustText</h2>
+    <p class="sheet-note">ブラウザだけでテキストをいじって保存するツールです。ファイルは端末の外に出ません。</p>
+    <ul class="help-list">
+      <li><b>開く</b> — 端末内のテキストファイルを読み込みます。文字コードは自動判別します。</li>
+      <li><b>保存</b> — 編集後の内容を別ファイルとしてダウンロードします。元のファイルは変更しません。</li>
+      <li><b>検索</b> — 検索と置換。正規表現・単語単位・大文字小文字の区別を切り替えられます。</li>
+      <li><b>ツール</b> — JSON の整形や行の並べ替えなど。</li>
+      <li>ホーム画面に追加するとアプリとして起動でき、オフラインでも使えます。</li>
+      <li>Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開けます。</li>
+    </ul>
+    <p class="sheet-note">キーボード操作: Ctrl+O 開く / Ctrl+S 保存 / Ctrl+F 検索 / Ctrl+G 行へ移動 / Ctrl+Z 戻す / Ctrl+Shift+Z 進む</p>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="helpClose">閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<noscript><p style="padding:1rem">このツールは JavaScript を有効にしてお使いください。</p></noscript>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
