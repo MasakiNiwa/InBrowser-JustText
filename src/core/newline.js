@@ -6,9 +6,9 @@
  */
 
 export const NEWLINES = [
-  { name: 'lf', label: 'LF (Unix)', value: '\n' },
-  { name: 'crlf', label: 'CRLF (Windows)', value: '\r\n' },
-  { name: 'cr', label: 'CR (旧Mac)', value: '\r' },
+  { name: 'lf', short: 'LF', value: '\n' },
+  { name: 'crlf', short: 'CRLF', value: '\r\n' },
+  { name: 'cr', short: 'CR', value: '\r' },
 ];
 
 /** 最も多く使われている改行コードを返す。改行が無ければ 'lf'。 */
@@ -46,6 +46,7 @@ export function applyNewline(text, name) {
   return nl === '\n' ? text : text.replace(/\n/g, nl);
 }
 
-export function newlineLabel(name) {
-  return NEWLINES.find((n) => n.name === name)?.label ?? name;
+/** 画面の狭い場所に出す短縮名（LF / CRLF / CR）。どの言語でも同じ。 */
+export function newlineShort(name) {
+  return NEWLINES.find((n) => n.name === name)?.short ?? name;
 }

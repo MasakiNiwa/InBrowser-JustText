@@ -6,6 +6,7 @@
 const KEY = 'justtext.settings.v1';
 
 export const DEFAULTS = {
+  language: null, // null なら端末の言語から推定する
   theme: 'auto', // auto | light | dark
   fontSize: 15,
   wrap: true,

@@ -21,7 +21,8 @@ export function clearShareFlag() {
 
 /**
  * 共有されたファイルを取り出す。取り出したら Cache からは消す。
- * @returns {Promise<{name:string, bytes:Uint8Array}|null>}
+ * 名前が分からない場合は name を null で返し、呼び出し側で既定名を付ける。
+ * @returns {Promise<{name:string|null, bytes:Uint8Array}|null>}
  */
 export async function takeSharedFile() {
   if (!('caches' in window)) return null;
@@ -35,11 +36,11 @@ export async function takeSharedFile() {
     if (!response) return null;
     // ファイル名は非 ASCII を含むため URL エンコードして渡してある
     const encoded = response.headers.get('x-justtext-filename') || '';
-    let name = '共有されたテキスト.txt';
+    let name = null;
     try {
       if (encoded) name = decodeURIComponent(encoded);
     } catch {
-      /* 壊れていれば既定名のまま */
+      /* 壊れていれば呼び出し側の既定名に任せる */
     }
     const buffer = await response.arrayBuffer();
     return { name, bytes: new Uint8Array(buffer) };

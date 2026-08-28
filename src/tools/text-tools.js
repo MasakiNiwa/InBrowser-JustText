@@ -63,62 +63,62 @@ export function outdentLines(text, unit = '  ') {
 register({
   id: 'text.trimTrailing',
   group: 'text',
-  label: '行末の空白を削除',
+  label: 'cmd.text.trimTrailing',
   lineTransform: trimTrailing,
 });
 
 register({
   id: 'text.removeEmptyLines',
   group: 'line',
-  label: '空行を削除',
+  label: 'cmd.text.removeEmptyLines',
   lineTransform: removeEmptyLines,
 });
 
 register({
   id: 'line.sortAsc',
   group: 'line',
-  label: '行を昇順で並べ替え',
+  label: 'cmd.line.sortAsc',
   lineTransform: (text) => sortLines(text, { numeric: true }),
 });
 
 register({
   id: 'line.sortDesc',
   group: 'line',
-  label: '行を降順で並べ替え',
+  label: 'cmd.line.sortDesc',
   lineTransform: (text) => sortLines(text, { descending: true, numeric: true }),
 });
 
 register({
   id: 'line.unique',
   group: 'line',
-  label: '重複行を削除',
+  label: 'cmd.line.unique',
   lineTransform: uniqueLines,
 });
 
 register({
   id: 'text.tabsToSpaces',
   group: 'text',
-  label: 'タブ → 空白',
-  run: (ctx) => ctx.applyToSelectedLines((t) => tabsToSpaces(t, ctx.settings.tabSize), 'タブ → 空白'),
+  label: 'cmd.text.tabsToSpaces',
+  run: (ctx) => ctx.applyToSelectedLines((t) => tabsToSpaces(t, ctx.settings.tabSize), 'cmd.text.tabsToSpaces'),
 });
 
 register({
   id: 'text.spacesToTabs',
   group: 'text',
-  label: '行頭の空白 → タブ',
-  run: (ctx) => ctx.applyToSelectedLines((t) => spacesToTabs(t, ctx.settings.tabSize), '空白 → タブ'),
+  label: 'cmd.text.spacesToTabs',
+  run: (ctx) => ctx.applyToSelectedLines((t) => spacesToTabs(t, ctx.settings.tabSize), 'cmd.text.spacesToTabs'),
 });
 
 register({
   id: 'text.indent',
   group: 'text',
-  label: 'インデントを深くする',
-  run: (ctx) => ctx.applyToSelectedLines((t) => indentLines(t, ctx.indentUnit()), 'インデント'),
+  label: 'cmd.text.indent',
+  run: (ctx) => ctx.applyToSelectedLines((t) => indentLines(t, ctx.indentUnit()), 'cmd.text.indent'),
 });
 
 register({
   id: 'text.outdent',
   group: 'text',
-  label: 'インデントを浅くする',
-  run: (ctx) => ctx.applyToSelectedLines((t) => outdentLines(t, ctx.indentUnit()), 'アンインデント'),
+  label: 'cmd.text.outdent',
+  run: (ctx) => ctx.applyToSelectedLines((t) => outdentLines(t, ctx.indentUnit()), 'cmd.text.outdent'),
 });

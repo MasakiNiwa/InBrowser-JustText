@@ -23,7 +23,7 @@ export function installKeymap({ editor, actions, settings }) {
       } else if (multiline) {
         actions.indent();
       } else {
-        editor.insertAtCursor(indentUnit(), { label: 'インデント' });
+        editor.insertAtCursor(indentUnit(), { label: 'indent' });
       }
       return;
     }
@@ -38,7 +38,7 @@ export function installKeymap({ editor, actions, settings }) {
       const indent = (/^[ \t]*/.exec(head) ?? [''])[0];
       if (!indent) return;
       e.preventDefault();
-      editor.insertAtCursor(`\n${indent}`, { label: '改行' });
+      editor.insertAtCursor(`\n${indent}`, { label: 'newline' });
       return;
     }
 

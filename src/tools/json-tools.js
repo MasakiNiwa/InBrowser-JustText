@@ -2,6 +2,7 @@
  * JSON 用のコマンド。整形・最小化・検証。
  */
 
+import { t } from '../i18n/index.js';
 import { register } from './registry.js';
 
 /** エラー位置（"position 123" 等）をメッセージから拾う。 */
@@ -84,7 +85,7 @@ function applyJson(ctx, fn, label) {
   const result = fn(ctx.getText());
   if (!result.ok) {
     if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
-    ctx.notify(`JSON として解析できません: ${result.message}`, 'error');
+    ctx.notify(t('json.parseFailed', { detail: result.message }), 'error');
     return false;
   }
   ctx.setText(result.text, { label });
@@ -94,52 +95,52 @@ function applyJson(ctx, fn, label) {
 register({
   id: 'json.format2',
   group: 'json',
-  label: 'JSON を整形（スペース 2）',
+  label: 'cmd.json.format2',
   run: (ctx) => {
-    if (applyJson(ctx, (t) => formatJson(t, 2), 'JSON 整形')) ctx.notify('JSON を整形しました');
+    if (applyJson(ctx, (t) => formatJson(t, 2), 'cmd.json.format2')) ctx.notify(t('json.formatted'));
   },
 });
 
 register({
   id: 'json.format4',
   group: 'json',
-  label: 'JSON を整形（スペース 4）',
+  label: 'cmd.json.format4',
   run: (ctx) => {
-    if (applyJson(ctx, (t) => formatJson(t, 4), 'JSON 整形')) ctx.notify('JSON を整形しました');
+    if (applyJson(ctx, (t) => formatJson(t, 4), 'cmd.json.format2')) ctx.notify(t('json.formatted'));
   },
 });
 
 register({
   id: 'json.formatTab',
   group: 'json',
-  label: 'JSON を整形（タブ）',
+  label: 'cmd.json.formatTab',
   run: (ctx) => {
-    if (applyJson(ctx, (t) => formatJson(t, '\t'), 'JSON 整形')) ctx.notify('JSON を整形しました');
+    if (applyJson(ctx, (t) => formatJson(t, '\t'), 'cmd.json.format2')) ctx.notify(t('json.formatted'));
   },
 });
 
 register({
   id: 'json.minify',
   group: 'json',
-  label: 'JSON を最小化',
-  hint: '改行と空白を取り除く',
+  label: 'cmd.json.minify',
+  hint: 'cmd.json.minifyHint',
   run: (ctx) => {
-    if (applyJson(ctx, minifyJson, 'JSON 最小化')) ctx.notify('JSON を最小化しました');
+    if (applyJson(ctx, minifyJson, 'cmd.json.minify')) ctx.notify(t('json.minified'));
   },
 });
 
 register({
   id: 'json.validate',
   group: 'json',
-  label: 'JSON を検証',
-  hint: '内容は変えずに構文だけ確認する',
+  label: 'cmd.json.validate',
+  hint: 'cmd.json.validateHint',
   run: (ctx) => {
     const result = parseJson(ctx.getText());
     if (result.ok) {
-      ctx.notify('JSON として正しい形式です');
+      ctx.notify(t('json.valid'));
       return;
     }
     if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
-    ctx.notify(`JSON エラー: ${result.message}`, 'error');
+    ctx.notify(t('json.error', { detail: result.message }), 'error');
   },
 });

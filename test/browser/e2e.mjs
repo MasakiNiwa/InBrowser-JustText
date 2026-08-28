@@ -59,7 +59,7 @@ writeFileSync(sjisPath, encodeText('{\r\n  "設定": "日本語の設定ファ�
 /* ---------- 本体 ---------- */
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ ...devices['Pixel 7'], acceptDownloads: true });
+const context = await browser.newContext({ ...devices['Pixel 7'], acceptDownloads: true, locale: 'ja-JP' });
 const page = await context.newPage();
 
 const errors = [];
@@ -257,15 +257,159 @@ check('Shift_JIS・CRLF で保存される', new TextDecoder('shift_jis').decode
 await page.waitForTimeout(300);
 check('保存後に未保存マークが消える', !(await page.locator('#dirtyMark').isVisible()));
 
-await page.fill('#input', 'ABC漢字');
+/* ---------- 保存できない文字があるときは、書き出す前に止める ---------- */
+
+async function openSaveWithLoss() {
+  await page.click('#btnSave');
+  await page.waitForTimeout(200);
+  await page.fill('#saveName', 'ascii.txt');
+  await page.selectOption('#saveEncoding', 'windows-1252');
+  await page.click('#saveConfirm');
+  await page.waitForTimeout(300);
+}
+
+await page.fill('#input', 'ABC漢字テスト');
+await page.waitForTimeout(150);
+
+// 1) 取りやめれば、保存もされず未保存のままであること
+await openSaveWithLoss();
+check('保存前に確認が出る', await page.locator('#lossDialog').isVisible());
+check('失われる文字が示される', (await page.textContent('#lossChars')).includes('漢'), await page.textContent('#lossChars'));
+await page.click('#lossDialog button[value="cancel"]');
+await page.waitForTimeout(300);
+check('取りやめると保存されない', await page.locator('#dirtyMark').isVisible(), '未保存マークが残る');
+check('取りやめを知らせる', (await page.textContent('#toastArea')).length > 0);
+
+// 2) UTF-8 に切り替えれば、文字が失われないこと
+await openSaveWithLoss();
+const [dlUtf8] = await Promise.all([page.waitForEvent('download'), page.click('#lossDialog button[value="utf8"]')]);
+await dlUtf8.saveAs(join(WORK, 'as-utf8.txt'));
+await page.waitForTimeout(300);
+check('UTF-8 で保存すれば文字が残る', readFileSync(join(WORK, 'as-utf8.txt'), 'utf-8') === 'ABC漢字テスト');
+check('保存後は未保存マークが消える', !(await page.locator('#dirtyMark').isVisible()));
+check('文字コード表示が UTF-8 に変わる', (await page.textContent('#statusEncoding')) === 'UTF-8');
+
+// 3) 承知のうえなら ? に置き換えて保存できること
+await page.fill('#input', 'ABC漢字テスト');
+await page.waitForTimeout(150);
+await openSaveWithLoss();
+const [dlReplace] = await Promise.all([page.waitForEvent('download'), page.click('#lossDialog button[value="replace"]')]);
+await dlReplace.saveAs(join(WORK, 'as-ascii.txt'));
+await page.waitForTimeout(300);
+check('承知すれば ? に置き換えて保存する', readFileSync(join(WORK, 'as-ascii.txt'), 'latin1') === 'ABC?????');
+
+/* ---------- 保存先を選ぶ / 上書き保存（対応環境のみ） ---------- */
+
+// File System Access API は Playwright から操作できないため、偽の掴み手を差し込んで確かめる
+await page.evaluate(() => {
+  window.__written = null;
+  window.__pickCount = 0;
+  window.showSaveFilePicker = async (options) => {
+    window.__pickCount++;
+    return {
+      name: options?.suggestedName ?? 'picked.txt',
+      queryPermission: async () => 'granted',
+      requestPermission: async () => 'granted',
+      createWritable: async () => ({
+        async write(data) {
+          window.__written = [...new Uint8Array(await new Blob([data]).arrayBuffer())];
+        },
+        async close() {},
+      }),
+    };
+  };
+});
+
+await page.fill('#input', '保存先を選ぶ試験');
+await page.waitForTimeout(150);
 await page.click('#btnSave');
 await page.waitForTimeout(200);
-await page.fill('#saveName', 'ascii.txt');
-await page.selectOption('#saveEncoding', 'windows-1252');
-const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#saveConfirm')]);
-await dl2.saveAs(join(WORK, 'ascii.txt'));
+check('対応環境では保存先を選べる', await page.locator('#savePick').isVisible());
+check('掴んでいないうちは上書きは出さない', !(await page.locator('#saveOverwrite').isVisible()));
+await page.fill('#saveName', 'picked.txt');
+await page.selectOption('#saveEncoding', 'utf-8');
+await page.selectOption('#saveNewline', 'lf');
+await page.click('#savePick');
+await page.waitForTimeout(400);
+const written = await page.evaluate(() => window.__written);
+check('選んだ先へ書き込まれる', new TextDecoder().decode(new Uint8Array(written)) === '保存先を選ぶ試験', JSON.stringify(written?.length));
+check('保存後は未保存マークが消える（保存先指定）', !(await page.locator('#dirtyMark').isVisible()));
+
+await page.fill('#input', '上書きの試験');
+await page.waitForTimeout(150);
+await page.click('#btnSave');
+await page.waitForTimeout(200);
+check('保存先を掴んだ後は上書きできる', await page.locator('#saveOverwrite').isVisible());
+await page.click('#saveOverwrite');
+await page.waitForTimeout(400);
+const overwritten = await page.evaluate(() => window.__written);
+check('同じ先へ上書きされる', new TextDecoder().decode(new Uint8Array(overwritten)) === '上書きの試験');
+check('上書きでは選び直さない', (await page.evaluate(() => window.__pickCount)) === 1);
+check('上書き後も未保存マークが消える', !(await page.locator('#dirtyMark').isVisible()));
+
+// 確認で取り消したら書き換えないこと
+await page.evaluate(() => { window.confirm = () => false; });
+await page.fill('#input', '取り消される内容');
+await page.waitForTimeout(150);
+await page.click('#btnSave');
+await page.waitForTimeout(200);
+await page.click('#saveOverwrite');
+await page.waitForTimeout(400);
+check('確認を断れば上書きしない', new TextDecoder().decode(new Uint8Array(await page.evaluate(() => window.__written))) === '上書きの試験');
+check('断った場合は未保存のまま', await page.locator('#dirtyMark').isVisible());
+await page.evaluate(() => { window.confirm = () => true; });
+
+/* ---------- クリップボード ---------- */
+
+await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+await page.fill('#input', 'コピーの試験\n2 行目');
+await page.waitForTimeout(150);
+await page.click('#btnCopy');
 await page.waitForTimeout(300);
-check('変換できない文字を警告する', (await page.textContent('#toastArea')).includes('?'));
+check('全文をコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験\n2 行目');
+check('コピーを知らせる', (await page.textContent('#toastArea')).includes('コピー'));
+
+await page.evaluate(() => {
+  const ta = document.querySelector('#input');
+  ta.focus();
+  ta.setSelectionRange(0, 6);
+});
+await page.waitForTimeout(150);
+await page.click('#btnCopy');
+await page.waitForTimeout(300);
+check('選択範囲だけコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験');
+
+/* ---------- バイナリらしいファイルの警告 ---------- */
+
+// 未保存の確認には「はい」、バイナリの警告には「いいえ」と答える
+await page.evaluate(() => {
+  window.__confirms = [];
+  window.confirm = (message) => {
+    window.__confirms.push(message);
+    return !message.includes('バイナリ');
+  };
+});
+await page.setInputFiles('#filePicker', join(import.meta.dirname, '../../assets/icon-192.png'));
+await page.waitForTimeout(500);
+const asked = await page.evaluate(() => window.__confirms);
+const binaryAsked = asked.find((m) => m.includes('バイナリ')) ?? '';
+check('バイナリらしいファイルは警告する', binaryAsked.length > 0, asked.join(' / ').slice(0, 80));
+check('断れば読み込まない', (await page.textContent('#fileName')) !== 'icon-192.png', await page.textContent('#fileName'));
+await page.evaluate(() => { window.confirm = () => true; });
+
+/* ---------- 文字コード・改行コードが押せると分かること ---------- */
+
+const affordance = await page.evaluate(() => {
+  const el = document.querySelector('#statusEncoding');
+  return {
+    tag: el.tagName,
+    marker: getComputedStyle(el, '::after').content,
+    border: getComputedStyle(el).borderTopWidth,
+    title: el.title,
+  };
+});
+check('文字コードはボタンとして示される', affordance.tag === 'BUTTON' && affordance.marker.includes('▾'), JSON.stringify(affordance));
+check('押せることが説明されている', affordance.title.includes('押す'), affordance.title);
 
 /* ---------- 行番号 ---------- */
 
@@ -381,6 +525,59 @@ check('ファイル名も引き継がれる', (await page.textContent('#fileName
 check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
 
 check('通しでブラウザのエラーが出ない', errors.length === 0, errors.slice(0, 3).join(' | '));
+
+/* ---------- 表示言語 ---------- */
+
+const enContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'en-US' });
+const enPage = await enContext.newPage();
+const enErrors = [];
+enPage.on('pageerror', (e) => enErrors.push(e.message));
+await enPage.goto(BASE, { waitUntil: 'networkidle' });
+await enPage.waitForTimeout(300);
+
+check('端末の言語が英語なら英語で開く', (await enPage.textContent('#btnOpen')) === 'Open', await enPage.textContent('#btnOpen'));
+check('html の lang も切り替わる', (await enPage.getAttribute('html', 'lang')) === 'en');
+check('既定のファイル名も英語になる', (await enPage.textContent('#fileName')) === 'untitled.txt', await enPage.textContent('#fileName'));
+check('入力欄の案内も英語になる', (await enPage.getAttribute('#input', 'placeholder')).startsWith('Type here'));
+
+await enPage.fill('#input', 'one\ntwo');
+await enPage.waitForTimeout(200);
+check('件数表示も英語になる', (await enPage.textContent('#statusCount')) === '2 lines / 7 chars', await enPage.textContent('#statusCount'));
+
+await enPage.click('#btnTools');
+await enPage.waitForTimeout(250);
+check('ツールの名前も英語になる', (await enPage.textContent('.tool-item[data-id="json.format2"]')).includes('Format JSON'));
+check('ツールの見出しも英語になる', (await enPage.textContent('.tool-group')).length > 0);
+await enPage.click('.tool-item[data-id="line.sortAsc"]');
+await enPage.waitForTimeout(300);
+check('英語のまま操作できる', (await enPage.inputValue('#input')) === 'one\ntwo');
+
+// 設定から日本語へ切り替える
+await enPage.click('#btnSettings');
+await enPage.waitForTimeout(250);
+await enPage.selectOption('#setLanguage', 'ja');
+await enPage.waitForTimeout(300);
+check('選んだ言語にすぐ切り替わる', (await enPage.textContent('#btnOpen')) === '開く', await enPage.textContent('#btnOpen'));
+check('開いたままの画面も切り替わる', (await enPage.textContent('#settingsTitle')) === '設定');
+await enPage.click('#settingsClose');
+await enPage.waitForTimeout(200);
+check('既定のファイル名も付け替わる', (await enPage.textContent('#fileName')) === '無題.txt');
+check('件数表示も日本語になる', (await enPage.textContent('#statusCount')) === '2 行 / 7 文字');
+
+await enPage.reload({ waitUntil: 'networkidle' });
+await enPage.waitForTimeout(400);
+check('選んだ言語は次回も残る', (await enPage.textContent('#btnOpen')) === '開く');
+
+// 通知の文言も切り替わること
+await enPage.click('#btnSearch');
+await enPage.fill('#searchQuery', 'zzz');
+await enPage.waitForTimeout(250);
+await enPage.click('#btnFindNext');
+await enPage.waitForTimeout(300);
+check('通知の文言も選んだ言語になる', (await enPage.textContent('#toastArea')).includes('見つかりません'), await enPage.textContent('#toastArea'));
+
+check('言語切り替えでエラーが出ない', enErrors.length === 0, enErrors.join(' | '));
+await enContext.close();
 
 /* ---------- 後片付け ---------- */
 

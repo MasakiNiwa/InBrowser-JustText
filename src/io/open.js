@@ -29,17 +29,25 @@ export function buildDocument(bytes, name, forcedEncoding) {
     newline,
     detectionReason: detected.reason,
     text: normalizeToLf(raw),
+    /** File System Access API で掴んでいるファイル（上書き保存に使う）。 */
+    handle: null,
+    /** 名前がまだ決まっていない（言語を変えたら付け直してよい）か。 */
+    untitled: false,
   };
 }
 
-/** File / Blob を読み込んでドキュメントにする。 */
-export async function readFile(file, forcedEncoding) {
+/**
+ * File / Blob を読み込んでドキュメントにする。
+ * @param {File|Blob} file
+ * @param {string} fallbackName 名前を持たない Blob のときに使う名前
+ */
+export async function readFile(file, { forcedEncoding, fallbackName = 'untitled.txt' } = {}) {
   const buffer = await file.arrayBuffer();
-  return buildDocument(new Uint8Array(buffer), file.name || '無題.txt', forcedEncoding);
+  return buildDocument(new Uint8Array(buffer), file.name || fallbackName, forcedEncoding);
 }
 
 /** 空のドキュメント。 */
-export function emptyDocument(name = '無題.txt') {
+export function emptyDocument(name) {
   return {
     name,
     bytes: new Uint8Array(0),
@@ -48,5 +56,7 @@ export function emptyDocument(name = '無題.txt') {
     newline: 'lf',
     detectionReason: 'new',
     text: '',
+    handle: null,
+    untitled: true,
   };
 }

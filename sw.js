@@ -6,7 +6,7 @@
  *     Cache に置いてから ?share=1 付きでアプリへ転送する
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 
@@ -17,12 +17,18 @@ const APP_SHELL = [
   './styles/app.css',
   './assets/icon.svg',
   './src/main.js',
+  './src/core/binary.js',
   './src/core/encoding.js',
   './src/core/encoder.js',
   './src/core/newline.js',
   './src/core/search.js',
   './src/core/history.js',
   './src/core/position.js',
+  './src/i18n/index.js',
+  './src/i18n/locales/ja.js',
+  './src/i18n/locales/en.js',
+  './src/io/clipboard.js',
+  './src/io/file-system.js',
   './src/io/open.js',
   './src/io/save.js',
   './src/io/share-target.js',
@@ -75,11 +81,12 @@ async function handleShare(request) {
     let name;
     if (files.length > 0) {
       blob = files[0];
-      name = files[0].name || '共有されたファイル.txt';
+      name = files[0].name || 'shared.txt';
     } else {
       const parts = ['title', 'text', 'url'].map((k) => form.get(k)).filter(Boolean);
       blob = new Blob([parts.join('\n')], { type: 'text/plain' });
-      name = '共有されたテキスト.txt';
+      // 本文だけが共有されたとき。画面の言語が分からないので中立な名前にする
+      name = 'shared.txt';
     }
 
     const cache = await caches.open(SHARE_CACHE);

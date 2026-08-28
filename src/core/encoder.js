@@ -117,7 +117,8 @@ export function encodeText(text, encoding = 'utf-8', { bom = false } = {}) {
     case 'utf-16be':
       return { bytes: encodeUtf16(text, false, bom), unencodable: new Map() };
     case 'iso-2022-jp':
-      throw new Error('ISO-2022-JP での保存には対応していません');
+      // 画面では選べないようにしてあるので、ここに来るのは呼び出し側の誤り
+      throw new Error('ISO-2022-JP is read-only and cannot be written');
     default:
       return encodeLegacy(text, encoding);
   }
