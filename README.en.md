@@ -30,12 +30,34 @@ Your files never leave the device — reading and saving both happen inside the 
   existing file (with a confirmation)
 - **Copy** — puts the whole document (or the selection) on the clipboard in one tap
 - **Tools** — format, minify and validate JSON, sort lines, remove duplicates, trim trailing spaces
-- **English / 日本語** — follows the device language and can be changed at any time in settings
+- **15 languages** — follows the device language, changeable at any time in settings, including right-to-left layouts
 - **Works offline** — add it to your home screen and it starts without a connection
 - **Opens from Share** — on Android, share a file to this app to open it directly
 
 Saving downloads a new file by default, so the original is never touched.
 Overwriting only happens when you explicitly ask for it.
+
+## Languages
+
+The interface follows your device language and can be changed at any time in settings.
+Anything not listed falls back to English.
+
+| | | |
+| --- | --- | --- |
+| English | Français | Deutsch |
+| Italiano | Español | Português (Brasil) |
+| 日本語 | 简体中文 | 繁體中文 |
+| 한국어 | हिन्दी | Bahasa Indonesia |
+| Tiếng Việt | ไทย | العربية |
+
+<p><img src="docs/screenshot-ar.png" alt="The interface in Arabic, mirrored right to left" width="300"></p>
+
+In Arabic the interface mirrors right to left. The editing area stays left to right,
+so that line numbers and search highlights keep lining up with the text regardless of
+the interface direction.
+
+Translations other than Japanese and English started from machine translation.
+If something reads badly, please correct the matching file in `src/i18n/locales/`.
 
 ## Using it
 
@@ -138,7 +160,7 @@ src/
     history.js          undo and redo
     position.js         offset ⇔ line and column
     binary.js           "does this look binary?"
-  i18n/               language switching and the string catalogs
+  i18n/               language switching and the string catalogs (one file per language in locales/)
   io/                 reading, saving, share target, clipboard
   ui/                 editor, search panel, settings and the rest of the screen
   tools/              editing commands and their registry
@@ -197,12 +219,27 @@ so it is still available offline.
 
 ### Adding a language
 
-1. Copy `src/i18n/locales/ja.js` to `src/i18n/locales/xx.js` and translate the values, keeping the keys
-2. Add it to `LOCALES` and `CATALOGS` in `src/i18n/index.js`
+1. Copy `src/i18n/locales/en.js` to `src/i18n/locales/xx.js` and translate the values, keeping the keys
+   - Name the file after the language code in lowercase (`pt-BR` becomes `pt-br.js`)
+2. Add one line to `LOCALES` in `src/i18n/index.js`
+
+   ```js
+   { code: 'sv', label: 'Svenska', dir: 'ltr' },
+   ```
+
+   `label` is the language's own name for itself; `dir` is its writing direction (`'rtl'` if it
+   reads right to left).
 3. Add the file to `APP_SHELL` in `sw.js` and bump `VERSION`
 
-`npm test` checks that every catalog has the same keys, that the `{name}` placeholders match,
-and that the text written in the HTML agrees with the Japanese catalog.
+Catalogs load on demand, so adding languages does not slow down startup.
+
+`npm test` checks that:
+
+- every language has the same keys as English
+- placeholders such as `{name}` match across languages
+- the text written directly in the HTML agrees with the Japanese catalog
+- no string was left as a copy of the English original
+
 A missing key falls back to English, then to the key itself, so a partial translation
 still leaves a working screen.
 
@@ -220,6 +257,9 @@ still leaves a working screen.
   the browser can roll back the `textarea` selection, and replacing must not depend on that
 - The file picker does not filter by extension, so `.properties` and extensionless files can be
   opened. Instead, files that look binary are flagged when they are read
+- Even in right-to-left languages the editing area stays left to right. Changing the writing
+  direction would break the alignment between the mirror layer, the line numbers and the text —
+  the same choice most code editors make
 
 ## License
 

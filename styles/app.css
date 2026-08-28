@@ -432,7 +432,7 @@ body {
 }
 .status-menu::after {
   content: '▾';
-  margin-left: 4px;
+  margin-inline-start: 4px;
   font-size: 10px;
   opacity: 0.7;
 }
@@ -557,7 +557,7 @@ body {
 
 .help-list {
   margin: 0;
-  padding-left: 1.2em;
+  padding-inline-start: 1.2em;
   font-size: 13px;
   line-height: 1.8;
   color: var(--fg-dim);
@@ -600,11 +600,23 @@ body {
 
 /* ---------- 狭い画面向けの微調整（後勝ちにするため末尾に置く） ---------- */
 
-/* 多くのスマートフォン（360〜399px）でツールバーが収まるようにする */
-@media (max-width: 400px) {
+/* スマートフォンの幅では、ツールバーが収まるよう詰めて並べる */
+@media (max-width: 520px) {
   .icon-btn { width: 36px; }
   .toolbar { gap: 0; padding-left: 2px; padding-right: 2px; }
   .tbtn { min-width: 42px; padding: 4px 4px; font-size: 10px; }
   .tsep { margin-left: 2px; margin-right: 2px; }
   .topbar { gap: 6px; padding-left: 6px; padding-right: 6px; }
+}
+
+/* ---------- 右から左に書く言語 ---------- */
+
+/*
+ * 画面の並びは dir="rtl" で自動的に反転する。
+ * ただし編集面は index.html で dir="ltr" に固定してある
+ * （行番号や強調表示の位置合わせが書字方向に左右されないようにするため）。
+ */
+[dir='rtl'] #btnUndo .icon,
+[dir='rtl'] #btnRedo .icon {
+  transform: scaleX(-1); /* 「戻す・進む」の矢印も向きを合わせる */
 }

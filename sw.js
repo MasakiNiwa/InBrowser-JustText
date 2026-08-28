@@ -6,7 +6,7 @@
  *     Cache に置いてから ?share=1 付きでアプリへ転送する
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 
@@ -25,8 +25,21 @@ const APP_SHELL = [
   './src/core/history.js',
   './src/core/position.js',
   './src/i18n/index.js',
-  './src/i18n/locales/ja.js',
+  './src/i18n/locales/ar.js',
+  './src/i18n/locales/de.js',
   './src/i18n/locales/en.js',
+  './src/i18n/locales/es.js',
+  './src/i18n/locales/fr.js',
+  './src/i18n/locales/hi.js',
+  './src/i18n/locales/id.js',
+  './src/i18n/locales/it.js',
+  './src/i18n/locales/ja.js',
+  './src/i18n/locales/ko.js',
+  './src/i18n/locales/pt-br.js',
+  './src/i18n/locales/th.js',
+  './src/i18n/locales/vi.js',
+  './src/i18n/locales/zh-hans.js',
+  './src/i18n/locales/zh-hant.js',
   './src/io/clipboard.js',
   './src/io/file-system.js',
   './src/io/open.js',

@@ -23,7 +23,7 @@
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4.5 4.5"/></symbol>
     <symbol id="i-tools" viewBox="0 0 24 24"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></symbol>
-    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3m14.4-6.4-1.6 1.6M8.2 15.8l-1.6 1.6m0-11.8 1.6 1.6m7.6 7.6 1.6 1.6"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10.13 2.38 A9.8 9.8 0 0 1 13.87 2.38 L13.93 5.27 A7 7 0 0 1 15.39 5.88 L17.48 3.88 A9.8 9.8 0 0 1 20.12 6.52 L18.12 8.61 A7 7 0 0 1 18.73 10.07 L21.62 10.13 A9.8 9.8 0 0 1 21.62 13.87 L18.73 13.93 A7 7 0 0 1 18.12 15.39 L20.12 17.48 A9.8 9.8 0 0 1 17.48 20.12 L15.39 18.12 A7 7 0 0 1 13.93 18.73 L13.87 21.62 A9.8 9.8 0 0 1 10.13 21.62 L10.07 18.73 A7 7 0 0 1 8.61 18.12 L6.52 20.12 A9.8 9.8 0 0 1 3.88 17.48 L5.88 15.39 A7 7 0 0 1 5.27 13.93 L2.38 13.87 A9.8 9.8 0 0 1 2.38 10.13 L5.27 10.07 A7 7 0 0 1 5.88 8.61 L3.88 6.52 A9.8 9.8 0 0 1 6.52 3.88 L8.61 5.88 A7 7 0 0 1 10.07 5.27 Z"/><circle cx="12" cy="12" r="3.4"/></symbol>
     <symbol id="i-new" viewBox="0 0 24 24"><path d="M14 3v5h5M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M12 11v6m-3-3h6"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
     <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></symbol>
@@ -67,7 +67,7 @@
   <section class="searchbar" id="searchPanel" hidden data-i18n-aria-label="search.region" aria-label="検索と置換">
     <div class="search-row">
       <input type="search" id="searchQuery" class="field" data-i18n-placeholder="search.query" placeholder="検索する文字列" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
-      <span class="search-count" id="searchCount" aria-live="polite"></span>
+      <span class="search-count" id="searchCount" dir="ltr" aria-live="polite"></span>
       <button type="button" class="icon-btn" id="btnFindPrev" data-i18n-aria-label="search.prev" aria-label="前を検索"><svg class="icon"><use href="#i-up"/></svg></button>
       <button type="button" class="icon-btn" id="btnFindNext" data-i18n-aria-label="search.next" aria-label="次を検索"><svg class="icon"><use href="#i-down"/></svg></button>
       <button type="button" class="icon-btn" id="btnSearchClose" data-i18n-aria-label="search.close" aria-label="検索を閉じる"><svg class="icon"><use href="#i-close"/></svg></button>
@@ -85,7 +85,8 @@
     </div>
   </section>
 
-  <main class="editor" id="editor">
+  <!-- 編集面は表示言語に関わらず左から右。行番号と強調表示の位置合わせを崩さないため -->
+  <main class="editor" id="editor" dir="ltr">
     <div class="gutter" id="gutter" aria-hidden="true" hidden><div class="gutter-inner" id="gutterInner"></div></div>
     <div class="editor-body" id="editorBody">
       <div class="layer" id="highlightLayer" aria-hidden="true" hidden></div>
@@ -99,7 +100,7 @@
   </main>
 
   <footer class="statusbar">
-    <button type="button" class="status-btn" id="statusPos" data-i18n-title="status.goToLine" title="行へ移動">1 : 1</button>
+    <button type="button" class="status-btn" id="statusPos" dir="ltr" data-i18n-title="status.goToLine" title="行へ移動">1 : 1</button>
     <span class="status-item" id="statusCount">0 行 / 0 文字</span>
     <span class="status-spacer"></span>
     <button type="button" class="status-btn status-menu" id="statusEncoding" data-i18n-title="status.encodingHint" title="文字コード（押すと指定して開き直せます）">UTF-8</button>

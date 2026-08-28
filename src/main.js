@@ -9,7 +9,7 @@ import { looksBinary } from './core/binary.js';
 import { ENCODINGS, encodingLabel } from './core/encoding.js';
 import { canEncode } from './core/encoder.js';
 import { NEWLINES, newlineShort } from './core/newline.js';
-import { LOCALES, applyTranslations, detectLocale, getLocale, hasLocale, setLocale, t } from './i18n/index.js';
+import { LOCALES, applyTranslations, detectLocale, getLocale, isSupported, setLocale, t } from './i18n/index.js';
 import { copyText } from './io/clipboard.js';
 import { canPickSaveLocation, pickSaveLocation, writeToHandle } from './io/file-system.js';
 import { buildDocument, readFile, emptyDocument, LARGE_FILE_BYTES } from './io/open.js';
@@ -28,9 +28,9 @@ import { $, formatBytes, formatNumber, rafThrottle } from './util/dom.js';
 /* ---------- 状態 ---------- */
 
 const settings = loadSettings();
-if (!hasLocale(settings.language)) settings.language = detectLocale();
-setLocale(settings.language);
+if (!isSupported(settings.language)) settings.language = detectLocale();
 
+// 起動直後は英語の辞書しか無い。選ばれた言語は boot() で読み込んで切り替える。
 let doc = emptyDocument(t('file.untitled'));
 let savedText = '';
 
@@ -77,8 +77,8 @@ function applySettings() {
 }
 
 /** 言語を切り替えて、画面上の文言をすべて置き換える。 */
-function applyLanguage(code) {
-  if (!setLocale(code)) return;
+async function applyLanguage(code) {
+  if (!(await setLocale(code))) return;
   settings.language = code;
   saveSettings(settings);
   applyTranslations();
@@ -561,7 +561,9 @@ $('#reopenForm').addEventListener('submit', () => {
 });
 
 /* 設定の変更を即時反映 */
-$('#setLanguage').addEventListener('change', (e) => applyLanguage(e.target.value));
+$('#setLanguage').addEventListener('change', (e) => {
+  applyLanguage(e.target.value);
+});
 $('#setTheme').addEventListener('change', (e) => {
   settings.theme = e.target.value;
   applySettings();
@@ -622,6 +624,8 @@ window.addEventListener('beforeunload', (e) => {
 /* ---------- 起動処理 ---------- */
 
 async function boot() {
+  // 選ばれた言語の辞書を読み込む。読み込めなければ英語のまま動かす。
+  await setLocale(settings.language);
   applyTranslations();
   applySettings();
   buildToolList();
