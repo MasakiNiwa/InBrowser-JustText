@@ -1,208 +1,222 @@
 # InBrowser JustText
 
-**▶ [https://masakiniwa.github.io/InBrowser-JustText/](https://masakiniwa.github.io/InBrowser-JustText/) — ブラウザで開いてすぐ使えます**
+**▶ [https://masakiniwa.github.io/InBrowser-JustText/](https://masakiniwa.github.io/InBrowser-JustText/) — open it in a browser and start typing**
 
-日本語 | [English](README.en.md)
+English | [日本語](README.ja.md)
 
-ブラウザだけでテキストをいじって保存する、それだけのツール。
+Edit text in your browser and save it. Nothing more.
 
-Android の標準機能では JSON や設定ファイルのようなテキストを編集できないことが多く、
-そのためだけにアプリを入れたくない、という動機で作っています。
-ファイルは端末の外に出ません。読み込みも保存もすべてブラウザの中で完結します。
+It exists because Android has no built-in way to edit a JSON or config file,
+and installing an app just for that is a lot to ask.
+Your files never leave the device — reading and saving both happen inside the browser.
 
 <p>
-  <img src="docs/screenshot-light.png" alt="ライトテーマの画面" width="300">
-  <img src="docs/screenshot-dark.png" alt="ダークテーマの画面" width="300">
+  <img src="docs/screenshot-en.png" alt="The editor in English" width="300">
+  <img src="docs/screenshot-dark.png" alt="Dark theme" width="300">
 </p>
 
-## できること
+## What it does
 
-- **開く** — 端末内のテキストファイルを読み込む。文字コードは自動判別（UTF-8 / Shift_JIS / EUC-JP / ISO-2022-JP / UTF-16 / Windows-1252）。バイナリらしいファイルは開く前に注意する
-- **編集** — 元に戻す・やり直す、行番号、折り返しの切り替え、Tab でのインデント、改行時のインデント引き継ぎ
-- **検索と置換** — 大文字小文字の区別、単語単位、正規表現（`$1` などの後方参照つき）、一致件数の表示と該当箇所の強調
-- **保存** — 別ファイルとしてダウンロード。文字コードと改行コード（LF / CRLF / CR）、BOM の有無を選べる。保存できない文字があるときは、書き出す前に止めて選び直せる
-- **上書き保存** — 対応しているブラウザでは、保存先を選んで既存のファイルへ上書きもできる（確認あり）
-- **コピー** — 全文（選択中ならその範囲）をワンタップでクリップボードへ
-- **自動保存と復元** — 編集中の内容を端末内に控え、次の起動時に復元するか尋ねる
-- **ツール** — JSON の整形・最小化・検証、行の並べ替え、重複行の削除、行末の空白削除など
-- **15 言語対応** — 端末の言語で自動的に切り替わり、設定からいつでも変更できる（アラビア語では画面が右から左になる）
-- **オフライン動作** — ホーム画面に追加すれば、通信がなくても起動する
-- **共有から起動** — Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開ける
+- **Open** — loads a text file from your device. The encoding is detected automatically
+  (UTF-8 / Shift_JIS / EUC-JP / ISO-2022-JP / UTF-16 / Windows-1252), and files that look
+  binary are flagged before they are opened
+- **Edit** — undo and redo, line numbers, word wrap, Tab indentation, indent carried to the next line
+- **Find and replace** — case-sensitive and whole-word matching, regular expressions with
+  back references such as `$1`, a match counter and highlighted matches
+- **Save** — downloads a separate file. You choose the encoding, the line ending (LF / CRLF / CR)
+  and whether to add a BOM. If a character cannot be written in the chosen encoding, saving stops
+  first and lets you decide
+- **Overwrite** — where the browser supports it, you can pick a location and overwrite an
+  existing file (with a confirmation)
+- **Copy** — puts the whole document (or the selection) on the clipboard in one tap
+- **Autosave and restore** — keeps a copy of your edits on the device and offers to bring them back
+- **Tools** — format, minify and validate JSON, sort lines, remove duplicates, trim trailing spaces
+- **15 languages** — follows the device language and can be changed at any time in settings (the interface mirrors right to left in Arabic)
+- **Works offline** — add it to your home screen and it starts without a connection
+- **Opens from Share** — on Android, share a file to this app to open it directly
 
-既定ではダウンロード保存なので、元のファイルは変更されません。
-上書きしたいときだけ、明示的に上書き保存を選びます。
+Saving downloads a new file by default, so the original is never touched.
+Overwriting only happens when you explicitly ask for it.
 
-## 対応言語
+## Languages
 
-端末の言語に合わせて自動で選ばれ、設定からいつでも変更できます。
-対応していない言語の場合は英語で表示します。
+The interface follows your device language and can be changed at any time in settings.
+Anything not listed falls back to English.
 
 | | | |
 | --- | --- | --- |
 | English | Français | Deutsch |
-| Italiano | Español | Português (Brasil) |
+| Italiano | Español | Português |
 | 日本語 | 简体中文 | 繁體中文 |
 | 한국어 | हिन्दी | Bahasa Indonesia |
 | Tiếng Việt | ไทย | العربية |
 
-<p><img src="docs/screenshot-ar.png" alt="アラビア語表示（右から左）" width="300"></p>
+<p><img src="docs/screenshot-ar.png" alt="The interface in Arabic, mirrored right to left" width="300"></p>
 
-アラビア語では**画面（UI）が右から左に反転します**。
-編集面は言語に関わらず左から右のままです。書字方向が変わると行番号や検索の強調表示の
-位置合わせが崩れるためで、多くのコードエディタと同じ扱いです。
-つまり対応しているのは「UI の RTL 化」であって、本文を右から左に組む機能ではありません。
+In Arabic **the interface mirrors right to left**. The editing area stays left to right
+whatever the language: changing its writing direction would break the alignment between the
+text, the line numbers and the search highlights — the same choice most code editors make.
+So what is supported is a right-to-left *interface*, not right-to-left text layout in the
+document itself.
 
-**訳はすべて AI（Claude）が作成したものです。** 日本語を含め、人手による校正は入っていません。
-おかしな言い回しを見つけたら `src/i18n/locales/` の該当ファイルを直してください。
+**Every translation here was written by AI (Claude), Japanese included**, without human review.
+If something reads badly, please correct the matching file in `src/i18n/locales/`.
 
-## 使い方
+The repository itself is written in English — code, comments, tests and docs. Japanese is kept
+alongside it as a second language for the documentation: [README.ja.md](README.ja.md) and
+[CHANGELOG.ja.md](CHANGELOG.ja.md) track this page and the changelog. The other fourteen
+languages live in the app's own catalogs, not in the documentation.
 
-### Android で使う
+## Using it
 
-1. 上のリンクを Chrome で開く
-2. メニューから **ホーム画面に追加** を選ぶと、アプリとして起動できるようになります（オフラインでも動きます）
-3. ファイル管理アプリなどでテキストファイルの **共有** から「JustText」を選ぶと、そのファイルを直接開けます
+### On Android
 
-保存すると端末のダウンロードフォルダに保存されます。
-同名のファイルがあれば `名前 (1).json` のように別名で保存されます。
+1. Open the link above in Chrome
+2. Choose **Add to Home screen** from the menu — it then launches like an app and works offline
+3. In a file manager, **share** a text file and pick “JustText” to open it directly
 
-### 自分で公開する（GitHub Pages）
+Saved files go to your Downloads folder. If a file with the same name exists,
+it is saved as `name (1).json`.
 
-ビルドは不要です。リポジトリをそのまま配信すれば動きます。
+### Publishing your own copy (GitHub Pages)
 
-1. GitHub のリポジトリの **Settings → Pages** を開く
-2. **Source** を「Deploy from a branch」、**Branch** を `main` / `/ (root)` にして保存
-3. 数分後に `https://<ユーザー名>.github.io/<リポジトリ名>/` で開けるようになる
+No build step. Serving the repository as-is is enough.
 
-### 手元で動かす
+1. Open **Settings → Pages** in the GitHub repository
+2. Set **Source** to “Deploy from a branch” and **Branch** to `main` / `/ (root)`, then save
+3. After a few minutes it is available at `https://<user>.github.io/<repo>/`
 
-ES モジュールを使っているため `file://` では動きません。付属の簡易サーバを使ってください。
+### Running it locally
+
+ES modules do not load over `file://`, so use the bundled dev server.
 
 ```
 npm run serve      # http://localhost:8080/
 ```
 
-## キーボード操作
+## Keyboard
 
-| 操作 | キー |
+| Action | Keys |
 | --- | --- |
-| 開く | `Ctrl` + `O` |
-| 保存 | `Ctrl` + `S` |
-| 検索 | `Ctrl` + `F` |
-| 行へ移動 | `Ctrl` + `G` |
-| 元に戻す / やり直す | `Ctrl` + `Z` / `Ctrl` + `Shift` + `Z` |
-| 次を検索 / 前を検索 | 検索欄で `Enter` / `Shift` + `Enter` |
-| インデント / 逆インデント | `Tab` / `Shift` + `Tab` |
-| 検索を閉じる | `Esc` |
+| Open | `Ctrl` + `O` |
+| Save | `Ctrl` + `S` |
+| Find | `Ctrl` + `F` |
+| Go to line | `Ctrl` + `G` |
+| Undo / Redo | `Ctrl` + `Z` / `Ctrl` + `Shift` + `Z` |
+| Find next / previous | `Enter` / `Shift` + `Enter` in the search box |
+| Indent / outdent | `Tab` / `Shift` + `Tab` |
+| Close find | `Esc` |
 
-ソフトキーボードには `Ctrl` がないため、主要な操作はすべて画面のボタンからも実行できます。
+Soft keyboards have no `Ctrl`, so every important action also has an on-screen button.
 
-## 文字コードについて
+## About encodings
 
-読み込み時は BOM、エスケープシーケンス、バイト列の妥当性、日本語らしさの度合いを順に見て判定します。
-判定を間違えたときは、画面下部の `UTF-8 ▾` を押して指定し直せます（隣の `LF ▾` は保存時の改行コードです）。
+When reading, the BOM, escape sequences, byte validity and how much the result looks like
+real text are checked in that order. If the guess is wrong, tap `UTF-8 ▾` at the bottom of
+the screen to reopen with another encoding (`LF ▾` next to it is the line ending used when saving).
 
-保存できる文字コードは UTF-8 / UTF-16 / Shift_JIS / EUC-JP / Windows-1252 です。
-ブラウザ内蔵の変換表から逆引き表を組み立てているため、変換表のずれは起きません。
-選んだ文字コードで表せない文字があるときは、**保存する前に**その文字を一覧で示し、
-「UTF-8 で保存」「? に置き換えて保存」「キャンセル」から選べます。
+Files can be written as UTF-8, UTF-16, Shift_JIS, EUC-JP or Windows-1252.
+The reverse tables are built from the browser's own decoder, so they cannot drift out of sync.
+If the chosen encoding cannot represent some characters, they are listed **before** anything is
+written, and you can choose “Save as UTF-8”, “Save with ?” or “Cancel”.
 
-ISO-2022-JP は読み込みのみ対応しています（保存時は他の文字コードを選んでください）。
+ISO-2022-JP can be read but not written — pick another encoding when saving.
 
-## 上書き保存について
+## About overwriting
 
-既定は「別ファイルとしてダウンロード」です。元のファイルは触りません。
+The default is “download as a separate file”. The original file is left alone.
 
-ブラウザが [File System Access API](https://developer.mozilla.org/docs/Web/API/File_System_API) に
-対応している場合（主にパソコンの Chrome / Edge）は、保存ダイアログに次の 2 つが増えます。
+If the browser supports the
+[File System Access API](https://developer.mozilla.org/docs/Web/API/File_System_API)
+(mainly Chrome and Edge on the desktop), two more buttons appear in the save dialog:
 
-- **保存先を選ぶ** — 場所とファイル名を選んで保存します。既存のファイルを選べば上書きになります
-- **上書き保存** — 一度保存先を選んだあとに出ます。同じファイルへ直接書き込みます
+- **Choose location** — pick a folder and file name. Picking an existing file overwrites it
+- **Overwrite** — appears once a location has been chosen; writes straight back to the same file
 
-上書きは元に戻せないため、実行前に必ず確認を挟みます。
-対応していない環境（Android の Chrome など）では、これらのボタンは出ません。
+Overwriting cannot be undone, so it always asks for confirmation first.
+On browsers without the API (Chrome on Android, for example) these buttons are not shown.
 
-## 自動保存と復元
+## Autosave and restore
 
-編集中の内容は、入力が落ち着いたところで端末内（IndexedDB）に自動で控えられます。
-タブを閉じた、端末がブラウザを終了させた、といった場合でも、
-次に開いたときに「前回の続きがあります」と尋ねます。
+Shortly after you stop typing, your edits are copied to on-device storage (IndexedDB).
+If the tab closes, or the system shuts the browser down, the next launch offers to bring
+that work back.
 
-- 控えが残るのは**未保存の変更があるあいだだけ**です。保存が済むと消えます
-- 控えは端末の中だけに置かれ、外には出ません
-- 保存できない環境（プライベートモードや容量不足）では黙って諦めます。
-  あくまで保険なので、確実に残したいときは保存してください
+- The copy exists **only while there are unsaved changes**; saving clears it
+- It never leaves the device
+- Where storage is unavailable (private browsing, no quota) it quietly gives up.
+  It is a safety net, not a substitute for saving
 
-## 開発
+## Development
 
-依存パッケージはありません。Node.js 22 以降で動きます。
+No dependencies. Node.js 22 or newer.
 
 ```
-npm test                     # 単体テスト
-npm run serve                # 開発用サーバ
-npm run test:browser         # ブラウザでの通し確認（要 Playwright / Chromium）
-npm run test:browser:firefox # 同上を Firefox で
-npm run test:browser:webkit  # 同上を WebKit で
+npm test                     # unit tests
+npm run serve                # dev server
+npm run test:browser         # full run in a browser (needs Playwright / Chromium)
+npm run test:browser:firefox # the same run in Firefox
+npm run test:browser:webkit  # the same run in WebKit
 ```
 
-通し確認は Chromium・Firefox・WebKit で動かしています。
-ブラウザが対応していない次の 2 つは、その場合だけ飛ばします。
+The browser run covers Chromium, Firefox and WebKit. Two checks are skipped where the
+browser does not support the feature:
 
-- **共有ターゲット** — Chromium 系（主に Android）だけの仕組みで、Safari には無い
-- **オフラインの再現** — WebKit では自動操作から通信断を作れない
+- **Share target** — a Chromium (mainly Android) capability that Safari does not implement
+- **Offline emulation** — automation cannot cut the connection in WebKit
 
-iOS Safari の実機、実機での共有、画面読み上げは自動では確かめられないため、
-変更したときは実機でも触って確かめてください。
+Real iOS Safari, sharing on a real device and screen readers are outside what automation
+reaches, so try changes on a device as well.
 
-ブラウザ側の確認には Playwright が必要です。
+The browser run needs Playwright:
 
 ```
 npm i -D playwright && npx playwright install chromium
 ```
 
-### 構成
+### Layout
 
 ```
-index.html            画面の骨格
-styles/app.css        見た目
-sw.js                 Service Worker（オフライン動作・共有の受け取り）
-manifest.webmanifest  ホーム画面への追加、共有ターゲットの定義
+index.html            page skeleton
+styles/app.css        styling
+sw.js                 service worker (offline support, receiving shared files)
+manifest.webmanifest  home-screen install and the share target
 src/
-  core/               DOM に依存しない処理。単体テストの対象
-    encoding.js         文字コードの判別とデコード
-    encoder.js          テキスト → バイト列（保存用）
-    newline.js          改行コードの判別と変換
-    search.js           検索と置換
-    history.js          元に戻す / やり直す
-    position.js         オフセット ⇔ 行・桁
-    binary.js           バイナリらしさの判定
-  i18n/               表示言語の切り替えと辞書（locales/ に言語ごとのファイル）
-  io/                 ファイルの読み込み・保存・共有の受け取り・クリップボード・自動保存
-  ui/                 画面まわり（エディタ、検索パネル、設定など）
-  tools/              編集コマンドと、その登録簿
-  util/               小さな道具
+  core/               DOM-free logic, covered by the unit tests
+    encoding.js         encoding detection and decoding
+    encoder.js          text → bytes, for saving
+    newline.js          line-ending detection and conversion
+    search.js           find and replace
+    history.js          undo and redo
+    position.js         offset ⇔ line and column
+    binary.js           "does this look binary?"
+  i18n/               language switching and the string catalogs (one file per language in locales/)
+  io/                 reading, saving, share target, clipboard, autosave
+  ui/                 editor, search panel, settings and the rest of the screen
+  tools/              editing commands and their registry
+  util/               small helpers
 ```
 
-`core/` は DOM を触らないため、Node からそのまま読み込んでテストできます。
-機能を足すときも、判断のいる処理はここに置くと確認が楽になります。
+Everything under `core/` avoids the DOM, so Node can import it directly in tests.
+When adding a feature, putting the decisions there keeps them easy to verify.
 
-### 編集機能を足す
+### Adding an editing command
 
-コマンドは `src/tools/registry.js` に登録すると、ツールメニューに自動で並びます。
-用途に応じて 3 通りの書き方があります。
+Commands registered in `src/tools/registry.js` show up in the Tools menu automatically.
+There are three shapes, depending on what the command needs:
 
 ```js
 import { register } from './registry.js';
 
-// 1. 選択行（無選択なら全文）を変換する
+// 1. transform the selected lines (or the whole document when nothing is selected)
 register({
   id: 'text.upper',
   group: 'text',
-  label: 'cmd.text.upper', // 辞書のキー。辞書に無ければそのまま表示される
+  label: 'cmd.text.upper', // a catalog key; unknown keys are shown as-is
   lineTransform: (text) => text.toUpperCase(),
 });
 
-// 2. 全文を変換する
+// 2. transform the whole document
 register({
   id: 'text.reverse',
   group: 'text',
@@ -210,73 +224,78 @@ register({
   transform: (text) => text.split('\n').reverse().join('\n'),
 });
 
-// 3. カーソル移動や通知など、細かく制御する
+// 3. take full control — move the cursor, show a message, and so on
 register({
   id: 'text.count',
   group: 'text',
   label: 'cmd.text.count',
-  run: (ctx) => ctx.notify(`${ctx.getText().length} 文字`),
+  run: (ctx) => ctx.notify(`${ctx.getText().length} characters`),
 });
 ```
 
-`ctx` から使えるもの:
+What `ctx` offers:
 
-| 名前 | 内容 |
+| Name | Purpose |
 | --- | --- |
-| `getText()` / `setText(text, opts)` | 本文の取得と差し替え（差し替えは履歴に 1 手として積まれる） |
-| `getSelection()` / `setSelection(start, end, { reveal })` | 選択範囲。`reveal` を付けるとその位置まで移動する |
-| `applyToSelectedLines(fn, label)` | 選択行だけに変換をかける |
-| `notify(message, type)` | 画面下部にメッセージを出す（`type` に `'error'` を指定可） |
-| `settings` / `indentUnit()` | タブ幅などの設定 |
-| `document` | 開いているファイルの情報（名前、文字コード、改行コード） |
+| `getText()` / `setText(text, opts)` | read and replace the document (a replacement becomes one undo step) |
+| `getSelection()` / `setSelection(start, end, { reveal })` | the selection; `reveal` also scrolls there |
+| `applyToSelectedLines(fn, label)` | apply a transform to the selected lines only |
+| `notify(message, type)` | show a message at the bottom (`type` may be `'error'`) |
+| `settings` / `indentUnit()` | tab width and related settings |
+| `document` | the open file's name, encoding and line ending |
 
-ファイルを新しく追加したときは、オフラインでも読めるよう `sw.js` の `APP_SHELL` にも追加し、
-`VERSION` を上げてください。
+When you add a new file, list it in `APP_SHELL` in `sw.js` and bump `VERSION`
+so it is still available offline.
 
-### 表示言語を追加する
+### Adding a language
 
-1. `src/i18n/locales/en.js` を写して `src/i18n/locales/xx.js` を作り、値を訳す（キーはそのまま）
-   - ファイル名は言語コードを小文字にしたもの（`pt-BR` なら `pt-br.js`）
-2. `src/i18n/index.js` の `LOCALES` に 1 行足す
+1. Copy `src/i18n/locales/en.js` to `src/i18n/locales/xx.js` and translate the values, keeping the keys
+   - Name the file after the language code in lowercase (`zh-Hans` becomes `zh-hans.js`)
+2. Add one line to `LOCALES` in `src/i18n/index.js`
 
    ```js
    { code: 'sv', label: 'Svenska', dir: 'ltr' },
    ```
 
-   `label` はその言語自身での表記、`dir` は書字方向（右から左なら `'rtl'`）です。
-3. `sw.js` の `APP_SHELL` にファイルを追加し、`VERSION` を上げる
+   `label` is the language's own name for itself; `dir` is its writing direction (`'rtl'` if it
+   reads right to left).
+3. Add the file to `APP_SHELL` in `sw.js` and bump `VERSION`
 
-辞書は選ばれたときに読み込まれるため、言語が増えても起動時の読み込み量は変わりません。
+Catalogs load on demand, so adding languages does not slow down startup.
 
-`npm test` が次を確認します。
+`npm test` checks that:
 
-- どの言語も英語と同じキーが揃っているか
-- `{name}` のような差し込みが言語間でずれていないか
-- 画面に直接書かれた文言と日本語の辞書が一致しているか
-- 英語をそのまま貼っただけの未翻訳が残っていないか
+- every language has the same keys as English
+- placeholders such as `{name}` match across languages
+- the text written directly in the HTML agrees with the English catalog
+- no string was left as a copy of the English original
 
-訳が抜けているキーは英語、それも無ければキー名がそのまま表示されるので、
-途中まででも画面は壊れません。
+A missing key falls back to English, then to the key itself, so a partial translation
+still leaves a working screen.
 
-### 設計上の判断
+### Design notes
 
-- 編集面は素の `<textarea>`。Android の IME・選択ハンドル・カーソル操作をそのまま使えるのが理由です。
-  検索の強調表示は、同じ字送りで文字を重ねた「鏡」レイヤーで行っています
-  （`src/ui/editor.js`。この 2 つの字送りがずれると強調位置がずれるため、CSS では必ず同じ値を使ってください）
-- 行番号は折り返しをオフにしたときだけ表示します。折り返し中は「1 行 = 1 表示行」が崩れ、行番号が揃わないためです
-- 元に戻す操作はブラウザ標準の undo に頼らず自前で持っています。ソフトキーボードには `Ctrl` + `Z` がないためです
-- 検索の現在位置はパネル側で保持しています。フォーカスが検索欄にある間、
-  ブラウザが `textarea` の選択範囲を巻き戻すことがあり、それに影響されないようにするためです
-- ファイル選択で拡張子を絞っていません。`.properties` や拡張子なしのファイルも開けるようにするためで、
-  代わりに読み込み時にバイナリらしさを判定して注意します
-- 右から左に書く言語でも、編集面だけは左から右に固定しています。
-  書字方向が変わると鏡レイヤーと行番号の位置合わせが崩れるためで、
-  多くのコードエディタと同じ扱いです
+- The editing surface is a plain `<textarea>`, so Android's IME, selection handles and caret
+  behave exactly as the platform intends. Search highlighting is drawn on a mirror layer whose
+  text metrics match the textarea character for character (`src/ui/editor.js`) — if those two
+  ever differ, the highlights drift, so keep the CSS values identical
+- Line numbers appear only when wrapping is off. With wrapping on, one line is no longer one
+  visual row, and the numbers cannot line up
+- Undo is implemented in the app rather than relying on the browser's own, because soft
+  keyboards have no `Ctrl` + `Z`
+- The search panel keeps its own idea of the current match. While focus is in the search box,
+  the browser can roll back the `textarea` selection, and replacing must not depend on that
+- The file picker does not filter by extension, so `.properties` and extensionless files can be
+  opened. Instead, files that look binary are flagged when they are read
+- Even in right-to-left languages the editing area stays left to right. Changing the writing
+  direction would break the alignment between the mirror layer, the line numbers and the text —
+  the same choice most code editors make
 
-## そのほか
+## Also here
 
-- [CHANGELOG.md](CHANGELOG.md) — 変更履歴
+- [CHANGELOG.md](CHANGELOG.md) — what changed and when ([日本語](CHANGELOG.ja.md))
+- [README.ja.md](README.ja.md) — this page in Japanese
 
-## ライセンス
+## License
 
 MIT License

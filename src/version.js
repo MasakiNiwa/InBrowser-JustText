@@ -1,5 +1,5 @@
 /**
- * アプリの版。
- * package.json の version と揃える（test/version.test.js で確認している）。
+ * The app's version.
+ * Kept in step with `version` in package.json — test/version.test.js checks it.
  */
-export const APP_VERSION = '0.2.0';
+export const APP_VERSION = '0.3.0';

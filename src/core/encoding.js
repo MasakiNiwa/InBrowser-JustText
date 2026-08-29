@@ -1,12 +1,12 @@
 /**
- * 文字コードの判別とデコード。
+ * Working out which encoding a file uses, and decoding it.
  *
- * DOM に依存しないので Node の単体テストからもそのまま読み込める。
- * デコードはブラウザ / Node 標準の TextDecoder に任せ、
- * ここでは「どの文字コードとして読むか」の判断だけを行う。
+ * Nothing here touches the DOM, so Node can import it directly in tests.
+ * Decoding itself is left to the platform's TextDecoder; what this module
+ * decides is only which encoding to read the bytes as.
  */
 
-/** アプリが扱う文字コード。encodable=false は読み込み専用。 */
+/** The encodings the app knows about. encodable=false means read-only. */
 export const ENCODINGS = [
   { name: 'utf-8', label: 'UTF-8', encodable: true },
   { name: 'utf-16le', label: 'UTF-16 LE', encodable: true },
@@ -23,7 +23,7 @@ const BOMS = [
   { encoding: 'utf-16le', bytes: [0xff, 0xfe] },
 ];
 
-/** 先頭の BOM を調べる。無ければ null。 */
+/** Looks for a byte-order mark at the start. Returns null when there is none. */
 export function detectBom(bytes) {
   for (const bom of BOMS) {
     if (bytes.length < bom.bytes.length) continue;
@@ -35,14 +35,14 @@ export function detectBom(bytes) {
 }
 
 /**
- * 指定の文字コードでデコードする。
- * BOM は TextDecoder が既定で取り除く（ignoreBOM=false）。
+ * Decodes the bytes as the given encoding.
+ * TextDecoder drops the byte-order mark by default (ignoreBOM=false).
  */
 export function decodeText(bytes, encoding) {
   return new TextDecoder(encoding).decode(bytes);
 }
 
-/** その文字コードとして構文的に妥当か（不正バイト列があれば false）。 */
+/** Whether the bytes form a valid sequence in that encoding. */
 export function isValidFor(bytes, encoding) {
   try {
     new TextDecoder(encoding, { fatal: true }).decode(bytes);
@@ -53,8 +53,9 @@ export function isValidFor(bytes, encoding) {
 }
 
 /**
- * デコード結果の「日本語テキストらしさ」を採点する。
- * 文字化けすると制御文字やラテン拡張が大量に出るので、そこを減点する。
+ * Scores how much a decoded string looks like real Japanese text.
+ * Reading bytes with the wrong encoding produces piles of control characters
+ * and Latin-Extended letters, so those count against the candidate.
  */
 export function scoreText(text) {
   const n = Math.min(text.length, 8192);
@@ -63,19 +64,19 @@ export function scoreText(text) {
   for (let i = 0; i < n; i++) {
     const c = text.charCodeAt(i);
     if (c === 0x09 || c === 0x0a || c === 0x0d) score += 1;
-    else if (c < 0x20 || c === 0x7f) score -= 30; // 制御文字は化けの強い証拠
-    else if (c <= 0x7e) score += 1; // ASCII 可読文字
-    else if (c === 0xfffd) score -= 50; // 置換文字
-    else if (c >= 0x3000 && c <= 0x30ff) score += 3; // 句読点・かな
-    else if (c >= 0x4e00 && c <= 0x9fff) score += 3; // 漢字
-    else if (c >= 0xff00 && c <= 0xffef) score += 2; // 全角英数・半角カナ
-    else if (c >= 0x00a0 && c <= 0x024f) score -= 3; // ラテン拡張（化けやすい）
-    else if (c >= 0x2000 && c <= 0x2bff) score -= 1; // 記号類
+    else if (c < 0x20 || c === 0x7f) score -= 30; // control characters are a strong sign of mojibake
+    else if (c <= 0x7e) score += 1; // printable ASCII
+    else if (c === 0xfffd) score -= 50; // replacement character
+    else if (c >= 0x3000 && c <= 0x30ff) score += 3; // punctuation and kana
+    else if (c >= 0x4e00 && c <= 0x9fff) score += 3; // kanji
+    else if (c >= 0xff00 && c <= 0xffef) score += 2; // full-width letters, half-width kana
+    else if (c >= 0x00a0 && c <= 0x024f) score -= 3; // Latin Extended, common in mojibake
+    else if (c >= 0x2000 && c <= 0x2bff) score -= 1; // assorted symbols
   }
   return score / n;
 }
 
-/** ISO-2022-JP のエスケープシーケンスを含むか。 */
+/** Whether the bytes contain an ISO-2022-JP escape sequence. */
 function looksIso2022jp(bytes) {
   const n = Math.min(bytes.length, 8192);
   for (let i = 0; i + 2 < n; i++) {
@@ -88,7 +89,7 @@ function looksIso2022jp(bytes) {
   return false;
 }
 
-/** BOM 無し UTF-16 の推定。NUL バイトの偏りを見る。 */
+/** Guesses UTF-16 without a BOM, from how NUL bytes are spread out. */
 function detectUtf16WithoutBom(bytes) {
   if (bytes.length < 2 || bytes.length % 2 !== 0) return null;
   const n = Math.min(bytes.length, 4096) & ~1;
@@ -106,8 +107,8 @@ function detectUtf16WithoutBom(bytes) {
 }
 
 /**
- * バイト列から文字コードを推定する。
- * 返り値の reason は判定根拠（UI での説明用）。
+ * Works out which encoding the bytes are in.
+ * `reason` says what the decision was based on, for the interface to explain.
  */
 export function detectEncoding(bytes) {
   const bom = detectBom(bytes);
@@ -121,7 +122,8 @@ export function detectEncoding(bytes) {
 
   if (isValidFor(bytes, 'utf-8')) return { encoding: 'utf-8', bom: false, reason: 'valid-utf8' };
 
-  // UTF-8 として壊れている＝レガシー漢字コードの可能性。妥当性 → 得点の順で選ぶ。
+  // Invalid as UTF-8, so likely a legacy Japanese encoding.
+  // Prefer candidates that decode cleanly, then the best-scoring one.
   const candidates = ['shift_jis', 'euc-jp', 'windows-1252'];
   const scored = candidates.map((name) => ({
     name,
@@ -134,7 +136,7 @@ export function detectEncoding(bytes) {
   return { encoding: pool[0].name, bom: false, reason: 'heuristic', candidates: scored };
 }
 
-/** 表示用のラベル。未知の名前はそのまま返す。 */
+/** The label to show. Unknown names are returned unchanged. */
 export function encodingLabel(name) {
   return ENCODINGS.find((e) => e.name === name)?.label ?? name;
 }

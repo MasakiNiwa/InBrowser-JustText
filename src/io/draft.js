@@ -1,10 +1,11 @@
 /**
- * 編集中の内容の自動保存（下書き）。
+ * Autosaved drafts of whatever is being edited.
  *
- * タブが突然閉じたり、OS がアプリを終了させたりしても編集内容が消えないよう、
- * IndexedDB に控えを取り、次の起動時に復元するか尋ねる。
- * あくまで保険なので、保存できない環境（プライベートモードや容量不足）でも
- * 本体の動作には影響しないよう、失敗は黙って諦める。
+ * A copy is kept in IndexedDB so that a tab closing on its own, or the OS
+ * killing the app, does not take the work with it; on the next launch the
+ * reader is asked whether to restore it. This is only ever a safety net, so
+ * when it cannot be written — private browsing, no room left — it gives up
+ * quietly rather than getting in the way.
  */
 
 const DB_NAME = 'justtext';
@@ -12,7 +13,7 @@ const DB_VERSION = 1;
 const STORE = 'drafts';
 const KEY = 'current';
 
-/** 一度でも失敗したら、以降は試さない（毎回の失敗で重くしないため）。 */
+/** After one failure, stop trying: repeated failures only cost time. */
 let unavailable = false;
 
 function openDatabase() {
@@ -32,7 +33,7 @@ function openDatabase() {
 }
 
 /**
- * 保存庫を開いて操作する。
+ * Opens the store and runs one transaction against it.
  * @returns {Promise<{ok:boolean, value?:any}>}
  */
 async function withStore(mode, run) {
@@ -60,23 +61,23 @@ async function withStore(mode, run) {
 }
 
 /**
- * 下書きを書き出す。
+ * Writes the draft out.
  * @param {{name:string, text:string, savedText:string, encoding:string,
  *          newline:string, bom:boolean, bytes:Uint8Array, untitled:boolean}} draft
- * @returns {Promise<boolean>} 保存できたか
+ * @returns {Promise<boolean>} whether it was stored
  */
 export async function saveDraft(draft) {
   const { ok } = await withStore('readwrite', (store) => store.put({ ...draft, at: Date.now() }, KEY));
   return ok;
 }
 
-/** 残っている下書きを読む。無ければ null。 */
+/** Reads back a leftover draft, or null when there is none. */
 export async function loadDraft() {
   const { ok, value } = await withStore('readonly', (store) => store.get(KEY));
   return ok ? (value ?? null) : null;
 }
 
-/** 下書きを消す。 */
+/** Deletes the draft. */
 export async function clearDraft() {
   const { ok } = await withStore('readwrite', (store) => store.delete(KEY));
   return ok;

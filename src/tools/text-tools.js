@@ -1,18 +1,20 @@
 /**
- * テキスト整形コマンド。
+ * Commands that tidy text up.
  *
- * lineTransform を持つコマンドは「選択中の行（無選択なら全文）」に対して
- * 適用される。ここに関数を足せばメニューにも自動で並ぶ。
+ * A command with a lineTransform runs over the selected lines, or over
+ * everything when nothing is selected. Adding a function here is enough to put
+ * it in the menu.
  */
 
+import { getLocale } from '../i18n/index.js';
 import { register } from './registry.js';
 
-/** 各行の末尾の空白を取り除く。 */
+/** Strips the trailing whitespace from every line. */
 export function trimTrailing(text) {
   return text.replace(/[ \t]+$/gm, '');
 }
 
-/** 空行（空白だけの行を含む）を取り除く。 */
+/** Removes blank lines, including ones holding only whitespace. */
 export function removeEmptyLines(text) {
   return text
     .split('\n')
@@ -20,16 +22,20 @@ export function removeEmptyLines(text) {
     .join('\n');
 }
 
-/** 行を並べ替える。numeric=true なら数値として比較する。 */
+/**
+ * Sorts the lines. With `numeric`, digit runs compare as numbers.
+ * The ordering follows the interface language, so each reader gets the one they
+ * would expect.
+ */
 export function sortLines(text, { descending = false, numeric = false } = {}) {
   const lines = text.split('\n');
-  const collator = new Intl.Collator('ja', { numeric, sensitivity: 'variant' });
+  const collator = new Intl.Collator(getLocale(), { numeric, sensitivity: 'variant' });
   lines.sort((a, b) => collator.compare(a, b));
   if (descending) lines.reverse();
   return lines.join('\n');
 }
 
-/** 重複行を取り除く（最初に現れた順序は保つ）。 */
+/** Drops repeated lines, keeping the first of each in place. */
 export function uniqueLines(text) {
   const seen = new Set();
   return text
@@ -38,23 +44,23 @@ export function uniqueLines(text) {
     .join('\n');
 }
 
-/** タブを空白に変換する。 */
+/** Turns tabs into spaces. */
 export function tabsToSpaces(text, width = 2) {
   return text.replace(/\t/g, ' '.repeat(width));
 }
 
-/** 行頭の空白をタブに変換する。 */
+/** Turns leading spaces into tabs. */
 export function spacesToTabs(text, width = 2) {
   const re = new RegExp(` {${width}}`, 'g');
   return text.replace(/^[ \t]+/gm, (indent) => indent.replace(re, '\t'));
 }
 
-/** 各行の先頭にインデントを足す。 */
+/** Indents every line by one step. */
 export function indentLines(text, unit = '  ') {
   return text.replace(/^/gm, unit);
 }
 
-/** 各行の先頭からインデントを 1 段ぶん取り除く。 */
+/** Removes one step of indent from every line. */
 export function outdentLines(text, unit = '  ') {
   const re = new RegExp(`^(?:${unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|\\t| {1,${unit.length}})`, 'gm');
   return text.replace(re, '');

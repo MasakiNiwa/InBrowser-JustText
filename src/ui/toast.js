@@ -1,4 +1,4 @@
-/** 画面下部に短いメッセージを出す。 */
+/** Short messages along the bottom of the screen. */
 
 const INFO_MS = 2600;
 const ERROR_MS = 5000;
@@ -10,7 +10,7 @@ export function createToast(container) {
   /**
    * @param {string} message
    * @param {'info'|'error'} [type]
-   * @param {{label:string, onClick:() => void}} [action] 押せる操作を添える場合
+   * @param {{label:string, onClick:() => void}} [action] optional button to offer
    */
   return function notify(message, type = 'info', action = null) {
     const el = document.createElement('div');
@@ -33,7 +33,7 @@ export function createToast(container) {
 
     container.replaceChildren(el);
     clearTimeout(timer);
-    // 操作を促すものは、押す間もなく消えないよう長めに残す
+    // One that offers an action stays longer, so it cannot vanish before it is pressed.
     const life = action ? ACTION_MS : type === 'error' ? ERROR_MS : INFO_MS;
     timer = setTimeout(() => {
       el.classList.add('leaving');

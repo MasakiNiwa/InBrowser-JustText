@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Ripristina',
   'draft.discard': 'Scarta',
   'draft.restored': 'Le modifiche non salvate sono state ripristinate',
+  'draft.tooLarge': 'Questo documento è troppo grande per tenerne una bozza. Salva tu stesso ogni tanto.',
+  'draft.failed': 'Non è stato possibile scrivere la bozza. Salva tu stesso ogni tanto.',
 
   /* Clipboard */
   'copy.all': 'Documento copiato ({chars} caratteri)',

@@ -1,19 +1,19 @@
 /**
- * キーボード操作。
+ * Keyboard shortcuts.
  *
- * Android のソフトキーボードでは効かないものが多いので、
- * ここでの割り当ては「あると速い」程度の位置づけ。
- * 主要な操作はすべてボタンからも実行できるようにしてある。
+ * Most of these do nothing on an Android soft keyboard, so they are a
+ * convenience for hardware keyboards rather than the way in. Every important
+ * action can also be reached from a button.
  */
 
 export function installKeymap({ editor, actions, settings }) {
   const textarea = editor.el;
 
-  /** 設定に応じたインデント 1 段分の文字列。 */
+  /** One indent step, spaces or a tab depending on the settings. */
   const indentUnit = () => (settings.insertSpaces ? ' '.repeat(settings.tabSize) : '\t');
 
   textarea.addEventListener('keydown', (e) => {
-    /* Tab: フォーカス移動ではなくインデント */
+    /* Tab indents instead of moving focus. */
     if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
       const sel = editor.getSelection();
@@ -28,7 +28,7 @@ export function installKeymap({ editor, actions, settings }) {
       return;
     }
 
-    /* Enter: 直前の行のインデントを引き継ぐ */
+    /* Enter carries the previous line's indent over. */
     if (e.key === 'Enter' && settings.autoIndent && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
       const sel = editor.getSelection();
       if (sel.start !== sel.end) return;
@@ -78,7 +78,7 @@ export function installKeymap({ editor, actions, settings }) {
     }
   });
 
-  /* 検索欄からでも Esc で閉じ、Ctrl+F / Ctrl+S は拾う */
+  /* Esc closes from anywhere, and Ctrl+F / Ctrl+S still work outside the editor. */
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       actions.onEscape();

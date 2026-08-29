@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Restaurer',
   'draft.discard': 'Abandonner',
   'draft.restored': 'Vos modifications non enregistrées ont été restaurées',
+  'draft.tooLarge': 'Ce document est trop volumineux pour en garder un brouillon. Pensez à enregistrer vous-même.',
+  'draft.failed': 'Le brouillon n’a pas pu être écrit. Pensez à enregistrer vous-même.',
 
   /* Clipboard */
   'copy.all': 'Document copié ({chars} caractères)',

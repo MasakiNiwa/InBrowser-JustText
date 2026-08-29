@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Wiederherstellen',
   'draft.discard': 'Verwerfen',
   'draft.restored': 'Ihre nicht gespeicherten Änderungen wurden wiederhergestellt',
+  'draft.tooLarge': 'Dieses Dokument ist zu groß, um einen Entwurf davon zu behalten. Bitte speichern Sie zwischendurch selbst.',
+  'draft.failed': 'Der Entwurf konnte nicht geschrieben werden. Bitte speichern Sie zwischendurch selbst.',
 
   /* Clipboard */
   'copy.all': 'Gesamten Text kopiert ({chars} Zeichen)',

@@ -100,22 +100,68 @@
           ".md",
           ".markdown",
           ".log",
+          ".csv",
+          ".tsv",
           ".ini",
           ".cfg",
           ".conf",
-          ".csv",
-          ".tsv"
+          ".properties",
+          ".env",
+          ".toml",
+          ".sh",
+          ".bash",
+          ".zsh",
+          ".bat",
+          ".cmd",
+          ".ps1",
+          ".py",
+          ".rb",
+          ".pl",
+          ".lua",
+          ".r",
+          ".js",
+          ".mjs",
+          ".cjs",
+          ".ts",
+          ".tsx",
+          ".jsx",
+          ".java",
+          ".kt",
+          ".dart",
+          ".swift",
+          ".go",
+          ".rs",
+          ".php",
+          ".c",
+          ".h",
+          ".cpp",
+          ".hpp",
+          ".cs",
+          ".css",
+          ".scss",
+          ".sql",
+          ".gradle",
+          ".srt",
+          ".vtt",
+          ".gpx"
         ],
         "application/json": [
           ".json",
-          ".jsonl"
+          ".jsonl",
+          ".geojson"
         ],
         "application/xml": [
-          ".xml"
+          ".xml",
+          ".svg",
+          ".plist"
         ],
         "application/yaml": [
           ".yml",
           ".yaml"
+        ],
+        "text/html": [
+          ".html",
+          ".htm"
         ]
       }
     }

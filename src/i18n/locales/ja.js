@@ -1,16 +1,15 @@
 /**
- * 日本語の文言。
- * index.html に書かれている文言は、この辞書と一致している必要がある
- * （test/i18n.test.js で照合している）。
+ * Japanese strings.
+ * Keys must match locales/en.js (checked by test/i18n.test.js).
  */
 export default {
-  /* ヘッダ */
+  /* Header */
   'header.file': '編集中のファイル',
   'header.dirty': '未保存の変更あり',
   'header.settings': '設定',
   'header.help': '使い方',
 
-  /* ツールバー */
+  /* Toolbar */
   'toolbar.region': '操作',
   'toolbar.open': '開く',
   'toolbar.save': '保存',
@@ -21,7 +20,7 @@ export default {
   'toolbar.copy': 'コピー',
   'toolbar.new': '新規',
 
-  /* 検索と置換 */
+  /* Find and replace */
   'search.region': '検索と置換',
   'search.query': '検索する文字列',
   'search.replacement': '置換後の文字列',
@@ -40,18 +39,18 @@ export default {
   'search.replaced': '{count} 件を置換しました',
   'search.invalidRegex': '正規表現が不正です: {detail}',
 
-  /* 編集面 */
+  /* Editor */
   'editor.label': 'テキスト編集',
   'editor.placeholder': 'ここにテキストを入力するか、「開く」からファイルを読み込んでください。',
   'editor.drop': 'ドロップしてファイルを開く',
 
-  /* ステータスバー */
+  /* Status bar */
   'status.goToLine': '行へ移動',
   'status.encodingHint': '文字コード（押すと指定して開き直せます）',
   'status.newlineHint': '保存時の改行コード（押すと切り替わります）',
   'status.counts': '{lines} 行 / {chars} 文字',
 
-  /* ファイル */
+  /* Files */
   'file.untitled': '無題.txt',
   'file.opened': '{name} を開きました（{encoding}・{size}）',
   'file.openFailed': '読み込みに失敗しました: {detail}',
@@ -67,7 +66,7 @@ export default {
   'file.reopened': '{encoding} として読み直しました',
   'file.newlineChanged': '保存時の改行コードを {newline} にしました',
 
-  /* 保存 */
+  /* Saving */
   'save.title': '名前を付けて保存',
   'save.name': 'ファイル名',
   'save.rename': '別名',
@@ -93,7 +92,7 @@ export default {
   'save.permissionDenied': '書き込みの許可が得られませんでした',
   'save.lossyNote': '保存したファイルでは、表せない文字が ? に置き換わっています。',
 
-  /* 保存できない文字 */
+  /* Characters that cannot be saved */
   'loss.title': '保存できない文字があります',
   'loss.body': '{encoding} では次の文字を表せません。',
   'loss.more': 'ほか {count} 文字',
@@ -102,20 +101,22 @@ export default {
   'loss.replace': '? に置き換えて保存',
   'loss.utf8': 'UTF-8 で保存',
 
-  /* 下書きの復元 */
+  /* Restoring a draft */
   'draft.title': '前回の続きがあります',
   'draft.body': '{name}（{time}）の編集内容が残っています。復元しますか？',
   'draft.restore': '復元する',
   'draft.discard': '破棄する',
   'draft.restored': '前回の編集内容を復元しました',
+  'draft.tooLarge': '大きすぎるため、編集内容の自動保存ができません。こまめに保存してください。',
+  'draft.failed': '編集内容の自動保存ができませんでした。こまめに保存してください。',
 
-  /* コピー */
+  /* Clipboard */
   'copy.all': '全文をコピーしました（{chars} 文字）',
   'copy.selection': '選択範囲をコピーしました（{chars} 文字）',
   'copy.empty': 'コピーする内容がありません',
   'copy.failed': 'コピーできませんでした',
 
-  /* ツール */
+  /* Tools */
   'tools.title': 'ツール',
   'tools.close': '閉じる',
   'group.text': 'テキスト',
@@ -150,7 +151,7 @@ export default {
   'json.error': 'JSON エラー: {detail}',
   'json.parseFailed': 'JSON として解析できません: {detail}',
 
-  /* 設定 */
+  /* Settings */
   'settings.title': '設定',
   'settings.language': '言語',
   'settings.theme': 'テーマ',
@@ -167,20 +168,20 @@ export default {
   'settings.autoIndent': '改行時にインデントを引き継ぐ',
   'settings.close': '閉じる',
 
-  /* 文字コードを指定して開き直す */
+  /* Reopen with another encoding */
   'reopen.title': '文字コードを指定して開き直す',
   'reopen.note': '読み込んだファイルを、選んだ文字コードで解釈し直します。編集内容は破棄されます。',
   'reopen.encoding': '文字コード',
   'reopen.cancel': 'キャンセル',
   'reopen.submit': '開き直す',
 
-  /* 行へ移動 */
+  /* Go to line */
   'goto.title': '行へ移動',
   'goto.line': '行番号',
   'goto.cancel': 'キャンセル',
   'goto.submit': '移動',
 
-  /* 使い方 */
+  /* Help */
   'help.title': 'InBrowser JustText',
   'help.lead': 'ブラウザだけでテキストをいじって保存するツールです。ファイルは端末の外に出ません。',
   'help.open': '端末内のテキストファイルを読み込みます。文字コードは自動判別します。',
@@ -195,17 +196,17 @@ export default {
   'help.close': '閉じる',
   'help.version': 'バージョン {version}',
 
-  /* 改行コード */
+  /* Line endings */
   'newline.lf': 'LF (Unix)',
   'newline.crlf': 'CRLF (Windows)',
   'newline.cr': 'CR (旧 Mac)',
 
-  /* 共通 */
+  /* Shared */
   'common.noChange': '変更はありませんでした',
   'common.commandFailed': '実行できませんでした: {detail}',
   'common.noscript': 'このツールは JavaScript を有効にしてお使いください。',
 
-  /* 更新 */
+  /* Updates */
   'update.available': '新しい版があります',
   'update.reload': '再読み込み',
 };

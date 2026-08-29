@@ -1,6 +1,7 @@
 /**
- * English strings.
- * Keys must match locales/ja.js (checked by test/i18n.test.js).
+ * English strings — the reference every other catalog follows.
+ * The defaults written into index.html must match these, and every catalog must
+ * carry the same keys (both checked by test/i18n.test.js).
  */
 export default {
   /* Header */
@@ -107,6 +108,8 @@ export default {
   'draft.restore': 'Restore',
   'draft.discard': 'Discard',
   'draft.restored': 'Restored your unsaved edits',
+  'draft.tooLarge': 'This document is too large to keep a draft of. Please save it yourself now and then.',
+  'draft.failed': 'The draft could not be written. Please save your work yourself now and then.',
 
   /* Clipboard */
   'copy.all': 'Copied the whole document ({chars} characters)',

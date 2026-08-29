@@ -1,8 +1,8 @@
 {
   "name": "inbrowser-justtext",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "ブラウザだけでテキストファイルを開いて編集し、別名でダウンロード保存するツール",
+  "description": "Open a text file in your browser, edit it, and save it back out as a separate download",
   "type": "module",
   "scripts": {
     "test": "node --test \"test/*.test.js\"",

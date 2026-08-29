@@ -1,23 +1,23 @@
 /**
- * File System Access API のごく薄い包み。
+ * A thin wrapper over the File System Access API.
  *
- * 対応している環境（今のところ主にパソコンの Chrome / Edge）では、
- * 保存先を選んで既存のファイルへ上書きできる。
- * 対応していない環境では何も生えないだけで、ダウンロード保存は常に使える。
+ * Where it exists — today that mostly means Chrome and Edge on a computer — the
+ * reader can choose where a file goes and write over an existing one. Where it
+ * does not, those options simply never appear; saving by download always works.
  */
 
-/** 保存先を選ぶ操作が使えるか。 */
+/** Whether choosing a save location is possible here. */
 export function canPickSaveLocation() {
   return typeof globalThis.showSaveFilePicker === 'function';
 }
 
-/** 利用者が操作を取り消したことを表すエラーか。 */
+/** Whether this error just means the reader cancelled. */
 function isAbort(error) {
   return error?.name === 'AbortError';
 }
 
 /**
- * 保存先を選んでもらう。取り消されたら null。
+ * Asks where to save. Returns null when the reader cancels.
  * @returns {Promise<FileSystemFileHandle|null>}
  */
 export async function pickSaveLocation({ suggestedName, mime = 'text/plain', extension }) {
@@ -33,27 +33,27 @@ export async function pickSaveLocation({ suggestedName, mime = 'text/plain', ext
   }
 }
 
-/** 書き込みの許可を確かめる。必要なら利用者に尋ねる。 */
+/** Checks for write permission, asking the reader for it when needed. */
 export async function ensureWritePermission(handle) {
-  if (typeof handle?.queryPermission !== 'function') return true; // 確認の仕組みが無い環境
+  if (typeof handle?.queryPermission !== 'function') return true; // nothing here to ask with
   const options = { mode: 'readwrite' };
   if ((await handle.queryPermission(options)) === 'granted') return true;
   return (await handle.requestPermission(options)) === 'granted';
 }
 
 /**
- * 掴んでいるファイルへ書き込む（上書き）。
- * 許可が下りなければ false を返す。
+ * Writes over the file behind a handle.
+ * Returns false when permission is refused.
  */
 export async function writeToHandle(handle, bytes) {
   if (!(await ensureWritePermission(handle))) return false;
   const writable = await handle.createWritable();
   try {
     await writable.write(bytes);
-    // close() で初めて元のファイルと入れ替わる。ここまで来て初めて確定させる。
+    // Only close() swaps the new contents in, so nothing is final until here.
     await writable.close();
   } catch (error) {
-    // 途中で失敗したときは書き込みを捨てて、元のファイルをそのまま残す
+    // Failing partway through: throw the write away and leave the original alone.
     await writable.abort?.().catch(() => {});
     throw error;
   }

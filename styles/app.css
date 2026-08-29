@@ -1,10 +1,10 @@
 /*
  * InBrowser JustText
  *
- * 重要な前提:
- *   .input（textarea）と .layer（強調表示の鏡）は、
- *   フォント・行送り・余白・折り返し規則を完全に一致させること。
- *   ここがずれると検索のハイライト位置がずれる。
+ * One rule matters above the rest:
+ *   .input (the textarea) and .layer (the mirror the highlights are drawn on)
+ *   must agree exactly on font, line height, padding and wrapping.
+ *   The moment they differ, every search highlight sits in the wrong place.
  */
 
 :root {
@@ -65,9 +65,9 @@
 * { box-sizing: border-box; }
 
 /*
- * hidden 属性を必ず効かせる。
- * UA スタイルの [hidden]{display:none} はクラス指定の display に負けるため、
- * ここで明示的に打ち消しておく。
+ * Make the hidden attribute stick.
+ * The browser's own [hidden]{display:none} loses to any display set on a class,
+ * so it has to be restated here to win.
  */
 [hidden] { display: none !important; }
 
@@ -105,7 +105,7 @@ body {
   white-space: nowrap;
 }
 
-/* ---------- 全体の枠 ---------- */
+/* ---------- The overall frame ---------- */
 
 .app {
   display: flex;
@@ -116,7 +116,7 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* ---------- ヘッダ ---------- */
+/* ---------- Header ---------- */
 
 .topbar {
   display: flex;
@@ -178,7 +178,7 @@ body {
 .icon-btn:hover { background: var(--bg); color: var(--fg); }
 .icon-btn:active { transform: scale(0.94); }
 
-/* ---------- ツールバー ---------- */
+/* ---------- Toolbar ---------- */
 
 .toolbar {
   display: flex;
@@ -221,7 +221,7 @@ body {
 .tbtn:disabled { opacity: 0.35; cursor: default; }
 .tbtn.accent { color: var(--accent); }
 
-/* ---------- 検索バー ---------- */
+/* ---------- Search bar ---------- */
 
 .searchbar {
   padding: 8px 10px;
@@ -261,7 +261,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font: inherit;
-  /* iOS は 16px 未満の入力欄に触れると画面を勝手に拡大するので、下回らないこと */
+  /* iOS zooms the page in on any input below 16px, so never go under it. */
   font-size: 16px;
 }
 .field:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
@@ -284,23 +284,23 @@ body {
 .chk { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .chk input { width: 18px; height: 18px; accent-color: var(--accent); }
 
-/* ---------- キーボード操作 ---------- */
+/* ---------- Keyboard users ---------- */
 
 /*
- * どこを選んでいるかが分かるようにする。
- * :focus-visible なので、指やマウスで押したときには出ない。
+ * Show where the focus is.
+ * :focus-visible, so it never appears for a finger or a mouse.
  */
 :is(button, select, .tool-item, .status-btn, .toast-action):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* ツールバーとステータスバーは横スクロールで枠が切れるため、内側に描く */
+/* The toolbar and status bar scroll sideways and would clip the ring, so draw it inside. */
 .tbtn:focus-visible,
 .status-btn:focus-visible {
   outline-offset: -2px;
 }
 
-/* ---------- 編集面 ---------- */
+/* ---------- The editing surface ---------- */
 
 .editor {
   position: relative;
@@ -332,7 +332,7 @@ body {
   overflow: hidden;
 }
 
-/* textarea と鏡レイヤーで共有する字送り */
+/* The type metrics the textarea and the mirror layer share. */
 .input,
 .layer {
   margin: 0;
@@ -407,7 +407,7 @@ body {
   pointer-events: none;
 }
 
-/* ---------- ステータスバー ---------- */
+/* ---------- Status bar ---------- */
 
 .statusbar {
   display: flex;
@@ -440,8 +440,8 @@ body {
 }
 .status-btn:hover { border-color: var(--border); background: var(--panel); }
 /*
- * 文字コードと改行コードは押して変えられる。
- * ただの表示に見えないよう、枠と小さな印を付けておく。
+ * The encoding and line ending can be changed by pressing them.
+ * A border and a small marker keep them from reading as plain labels.
  */
 .status-menu {
   border-color: var(--border);
@@ -454,7 +454,7 @@ body {
   opacity: 0.7;
 }
 
-/* ---------- ダイアログ ---------- */
+/* ---------- Dialogs ---------- */
 
 .sheet {
   width: min(460px, calc(100vw - 24px));
@@ -476,7 +476,7 @@ body {
 }
 .sheet-title { margin: 0; font-size: 16px; font-weight: 600; }
 .sheet-note { margin: 0; font-size: 12px; color: var(--fg-dim); line-height: 1.6; }
-/* 保存できない文字の一覧 */
+/* The characters that cannot be saved. */
 .loss-chars {
   margin: 0;
   padding: 10px 12px;
@@ -528,7 +528,7 @@ body {
   color: var(--accent-fg);
   font-weight: 600;
 }
-/* 元に戻せない操作。押し間違いを避けたいので色で区別する */
+/* Something that cannot be undone: coloured apart, so it is not pressed by accident. */
 .btn.warn {
   border-color: var(--danger);
   color: var(--danger);
@@ -536,6 +536,8 @@ body {
 .btn:active { transform: scale(0.97); }
 
 .stepper { display: flex; align-items: center; gap: 8px; }
+/* Both steppers keep the same box, whichever sign sits in them. */
+.stepper > .btn { min-width: 2.75em; }
 .stepper output {
   min-width: 2.5em;
   text-align: center;
@@ -581,7 +583,7 @@ body {
 }
 .help-list b { color: var(--fg); }
 
-/* ---------- トースト ---------- */
+/* ---------- Toasts ---------- */
 
 .toast-area {
   position: fixed;
@@ -606,7 +608,7 @@ body {
   animation: toast-in 0.18s ease-out;
 }
 .toast-text { flex: 1; min-width: 0; }
-/* 「再読み込み」のように、その場で押せる操作を添えるとき */
+/* When the toast carries an action, "Reload" and the like. */
 .toast-action {
   flex: none;
   padding: 6px 12px;
@@ -633,9 +635,9 @@ body {
   .tbtn:active, .btn:active, .icon-btn:active { transform: none; }
 }
 
-/* ---------- 狭い画面向けの微調整（後勝ちにするため末尾に置く） ---------- */
+/* ---------- Narrow screens (last, so these rules win) ---------- */
 
-/* スマートフォンの幅では、ツールバーが収まるよう詰めて並べる */
+/* At phone widths the toolbar tightens up so that it still fits. */
 @media (max-width: 520px) {
   .icon-btn { width: 36px; }
   .toolbar { gap: 0; padding-left: 2px; padding-right: 2px; }
@@ -644,14 +646,14 @@ body {
   .topbar { gap: 6px; padding-left: 6px; padding-right: 6px; }
 }
 
-/* ---------- 右から左に書く言語 ---------- */
+/* ---------- Languages written right to left ---------- */
 
 /*
- * 画面の並びは dir="rtl" で自動的に反転する。
- * ただし編集面は index.html で dir="ltr" に固定してある
- * （行番号や強調表示の位置合わせが書字方向に左右されないようにするため）。
+ * dir="rtl" mirrors the layout on its own. The editing surface is pinned to
+ * dir="ltr" in index.html, so that the line numbers and the highlights keep
+ * lining up whichever way the page reads.
  */
 [dir='rtl'] #btnUndo .icon,
 [dir='rtl'] #btnRedo .icon {
-  transform: scaleX(-1); /* 「戻す・進む」の矢印も向きを合わせる */
+  transform: scaleX(-1); /* the undo and redo arrows turn around too */
 }

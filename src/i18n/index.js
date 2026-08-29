@@ -1,20 +1,21 @@
 /**
- * 表示言語の切り替え。
+ * The interface language.
  *
- * 文言はすべて locales/ の辞書に集約し、画面側は data-i18n 属性で参照する。
- * 英語だけは予備として同梱し、それ以外は選ばれたときに読み込む
- * （言語が増えても起動時に読む量が変わらないようにするため）。
+ * Every string lives in a catalog under locales/, and the markup points at one
+ * through a data-i18n attribute. English ships with the app as the fallback;
+ * every other catalog is fetched when it is chosen, so adding languages never
+ * makes the app slower to start.
  *
- * 辞書に無いキーは英語→キー名の順に読み替えるので、
- * 訳が一部抜けていても画面は壊れない。
+ * A key missing from a catalog falls back to English, then to the key itself,
+ * so a half-finished translation still leaves a working screen.
  */
 
 import en from './locales/en.js';
 
 /**
- * 選択肢として並べる言語。
- * label はその言語自身の表記（自分の言語を探しやすくするため）。
- * 並びは英語名のアルファベット順。
+ * The languages on offer.
+ * Each label is written in its own language, so people can find theirs without
+ * reading any other. Ordered by English name.
  */
 export const LOCALES = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
@@ -28,7 +29,7 @@ export const LOCALES = [
   { code: 'it', label: 'Italiano', dir: 'ltr' },
   { code: 'ja', label: '日本語', dir: 'ltr' },
   { code: 'ko', label: '한국어', dir: 'ltr' },
-  { code: 'pt-BR', label: 'Português (Brasil)', dir: 'ltr' },
+  { code: 'pt', label: 'Português', dir: 'ltr' },
   { code: 'es', label: 'Español', dir: 'ltr' },
   { code: 'th', label: 'ไทย', dir: 'ltr' },
   { code: 'vi', label: 'Tiếng Việt', dir: 'ltr' },
@@ -36,18 +37,18 @@ export const LOCALES = [
 
 const FALLBACK = 'en';
 
-/** 読み込み済みの辞書。英語は最初から入れておく。 */
+/** The catalogs loaded so far. English is there from the start. */
 const catalogs = new Map([[FALLBACK, en]]);
 
 let current = FALLBACK;
 const listeners = new Set();
 
-/** {name} 形式の差し込みを埋める。 */
+/** Fills in {name} placeholders. */
 function format(template, params) {
   return template.replace(/\{(\w+)\}/g, (all, name) => (name in params ? String(params[name]) : all));
 }
 
-/** 文言を引く。未知のキーはそのまま返すので、外部の拡張は生の文字列も使える。 */
+/** Looks a string up. An unknown key comes back as itself, so an add-on may pass plain text. */
 export function t(key, params = null) {
   const template = catalogs.get(current)?.[key] ?? catalogs.get(FALLBACK)?.[key] ?? key;
   return params ? format(template, params) : template;
@@ -57,7 +58,7 @@ export function getLocale() {
   return current;
 }
 
-/** 対応している言語か（辞書を読み込んでいるかどうかとは別）。 */
+/** Whether the language is offered at all — not whether its catalog is loaded. */
 export function isSupported(code) {
   return LOCALES.some((locale) => locale.code === code);
 }
@@ -66,14 +67,14 @@ export function localeInfo(code = current) {
   return LOCALES.find((locale) => locale.code === code) ?? LOCALES.find((l) => l.code === FALLBACK);
 }
 
-/** 右から左に書く言語か。 */
+/** Whether the language is written right to left. */
 export function isRtl(code = current) {
   return localeInfo(code).dir === 'rtl';
 }
 
 /**
- * 辞書を読み込む。読み込めなければ false（英語のまま動かす）。
- * ファイル名は言語コードを小文字にしたもの。
+ * Loads a catalog, returning false when it cannot be fetched — in which case
+ * the app carries on in English. The file is the language code, lower-cased.
  */
 export async function loadCatalog(code) {
   if (catalogs.has(code)) return true;
@@ -87,7 +88,7 @@ export async function loadCatalog(code) {
   }
 }
 
-/** 言語を切り替える。切り替わったときだけ true を返す。 */
+/** Switches language, returning true only when something actually changed. */
 export async function setLocale(code) {
   if (!isSupported(code) || code === current) return false;
   if (!(await loadCatalog(code))) return false;
@@ -96,13 +97,13 @@ export async function setLocale(code) {
   return true;
 }
 
-/** 言語が変わったときに呼ばれる処理を登録する。 */
+/** Registers something to run whenever the language changes. */
 export function onLocaleChange(fn) {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
 
-/** 中国語は文字（簡体・繁体）で選ぶ。地域しか分からない場合は地域から推測する。 */
+/** Chinese is chosen by script. With only a region to go on, the region decides. */
 function resolveChinese(tag) {
   if (tag.includes('hant')) return 'zh-Hant';
   if (tag.includes('hans')) return 'zh-Hans';
@@ -110,14 +111,14 @@ function resolveChinese(tag) {
   return parts.some((part) => part === 'tw' || part === 'hk' || part === 'mo') ? 'zh-Hant' : 'zh-Hans';
 }
 
-/** 言語タグを、対応している言語コードに読み替える。合うものが無ければ null。 */
+/** Maps a language tag onto one of the offered codes, or null when none fits. */
 export function normalizeTag(tag) {
   const lower = String(tag).toLowerCase().replace(/_/g, '-');
   const base = lower.split('-')[0];
 
   if (base === 'zh') return resolveChinese(lower);
-  if (base === 'pt') return 'pt-BR'; // ポルトガル語はブラジル向けの訳だけ用意している
-  if (base === 'in') return 'id'; // 古い Android / Java でのインドネシア語の表記
+  if (base === 'pt') return 'pt';
+  if (base === 'in') return 'id'; // what older Android and Java call Indonesian
 
   const exact = LOCALES.find((locale) => locale.code.toLowerCase() === lower);
   if (exact) return exact.code;
@@ -126,8 +127,8 @@ export function normalizeTag(tag) {
 }
 
 /**
- * 利用者の言語を推定する。
- * 対応していない言語のときは、いちばん通じやすい英語にする。
+ * Works out which language to start in.
+ * Anything not on offer falls to English, as the one most likely to be read.
  */
 export function detectLocale(languages = globalThis.navigator?.languages ?? []) {
   for (const tag of languages) {
@@ -143,7 +144,7 @@ const ATTRIBUTE_KEYS = [
   ['data-i18n-aria-label', 'aria-label'],
 ];
 
-/** data-i18n 属性の付いた要素を、今の言語の文言で書き換える。 */
+/** Rewrites every element carrying a data-i18n attribute in the current language. */
 export function applyTranslations(root = document) {
   for (const el of root.querySelectorAll('[data-i18n]')) {
     el.textContent = t(el.dataset.i18n);
@@ -155,13 +156,13 @@ export function applyTranslations(root = document) {
   }
   if (root === document || root === document.documentElement) {
     document.documentElement.lang = current;
-    // 編集面だけは dir="ltr" を保つ（index.html で指定済み）。
-    // 行番号や強調表示の位置合わせが、書字方向に左右されないようにするため。
+    // The editing surface keeps dir="ltr" of its own (set in index.html), so
+    // that line numbers and highlights line up whichever way the page reads.
     document.documentElement.dir = localeInfo().dir;
   }
 }
 
-/** 読み込み済みの辞書（テストと整合性チェック用）。 */
+/** The loaded catalogs, for the tests to check against each other. */
 export function loadedCatalogs() {
   return catalogs;
 }

@@ -1,11 +1,11 @@
 /**
- * クリップボードへのコピー。
+ * Copying to the clipboard.
  *
- * navigator.clipboard は安全な文脈（https / localhost）でしか使えないため、
- * 使えないときは選択してコピーする昔ながらの方法に落とす。
+ * navigator.clipboard only exists in a secure context (https or localhost), so
+ * where it is missing this falls back to the old select-and-copy trick.
  */
 
-/** @returns {Promise<boolean>} コピーできたか */
+/** @returns {Promise<boolean>} whether the text was copied */
 export async function copyText(text) {
   if (!text) return false;
 
@@ -14,7 +14,7 @@ export async function copyText(text) {
       await navigator.clipboard.writeText(text);
       return true;
     } catch {
-      // 許可が下りない場合があるので、下の方法を試す
+      // Permission can be refused; fall through to the older way.
     }
   }
 

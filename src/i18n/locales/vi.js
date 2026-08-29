@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Khôi phục',
   'draft.discard': 'Bỏ đi',
   'draft.restored': 'Đã khôi phục các thay đổi chưa lưu',
+  'draft.tooLarge': 'Tài liệu này quá lớn để giữ bản nháp. Hãy tự lưu thỉnh thoảng.',
+  'draft.failed': 'Không ghi được bản nháp. Hãy tự lưu thỉnh thoảng.',
 
   /* Clipboard */
   'copy.all': 'Đã sao chép toàn bộ ({chars} ký tự)',

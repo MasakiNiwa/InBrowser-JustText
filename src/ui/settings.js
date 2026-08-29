@@ -1,14 +1,15 @@
 /**
- * 表示設定の保存（localStorage）。
- * 保存できない環境（プライベートモード等）でも既定値で動く。
+ * Display settings, kept in localStorage.
+ * Where storage is unavailable — private browsing and the like — the defaults
+ * are used and everything still works.
  */
 
 const KEY = 'justtext.settings.v1';
 
 export const DEFAULTS = {
-  language: null, // null なら端末の言語から推定する
+  language: null, // null means: work it out from the device's language
   theme: 'auto', // auto | light | dark
-  fontSize: 16, // iOS は 16px 未満の入力欄に触れると画面を拡大するので、既定は下回らせない
+  fontSize: 16, // iOS zooms in on any input below 16px, so never default under it
   wrap: true,
   gutter: true,
   tabSize: 2,
@@ -31,6 +32,6 @@ export function saveSettings(settings) {
   try {
     localStorage.setItem(KEY, JSON.stringify(settings));
   } catch {
-    /* 保存できなくても動作には影響しない */
+    /* Failing to save changes nothing about how the app runs. */
   }
 }

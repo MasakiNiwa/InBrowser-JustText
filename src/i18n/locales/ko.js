@@ -107,6 +107,8 @@ export default {
   'draft.restore': '되살리기',
   'draft.discard': '버리기',
   'draft.restored': '저장하지 않았던 편집 내용을 되살렸습니다',
+  'draft.tooLarge': '문서가 너무 커서 임시 저장을 할 수 없습니다. 가끔 직접 저장해 주세요.',
+  'draft.failed': '임시 저장에 실패했습니다. 가끔 직접 저장해 주세요.',
 
   /* Clipboard */
   'copy.all': '전체를 복사했습니다 ({chars}자)',

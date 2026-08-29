@@ -1,15 +1,15 @@
-/** DOM まわりの小さな道具。 */
+/** Small helpers for working with the DOM. */
 
 import { getLocale } from '../i18n/index.js';
 
 export const $ = (selector, root = document) => root.querySelector(selector);
 
-/** HTML に埋め込める形へ最低限のエスケープをする。 */
+/** Escapes just enough to drop text into HTML safely. */
 export function escapeHtml(str) {
   return str.replace(/[&<>]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'));
 }
 
-/** 末尾の呼び出しだけを ms 後に実行する。 */
+/** Runs only the last call, `ms` after the calls stop. */
 export function debounce(fn, ms) {
   let timer = 0;
   const wrapped = (...args) => {
@@ -24,7 +24,7 @@ export function debounce(fn, ms) {
   return wrapped;
 }
 
-/** 1 フレームにつき 1 回だけ実行する。 */
+/** Runs at most once per animation frame. */
 export function rafThrottle(fn) {
   let queued = false;
   let lastArgs = null;
@@ -40,9 +40,9 @@ export function rafThrottle(fn) {
 }
 
 /**
- * 数値を桁区切りで表示する。
- * 区切り記号は表示言語に合わせるが、数字そのものはアラビア数字に固定する
- * （行番号の桁は言語で変えられないため、そちらと見た目を揃える）。
+ * Formats a number with digit grouping.
+ * The separator follows the interface language, but the digits stay Latin: the
+ * line-number gutter cannot switch numeral systems, and these should match it.
  */
 export function formatNumber(n) {
   try {
@@ -52,7 +52,7 @@ export function formatNumber(n) {
   }
 }
 
-/** バイト数を読みやすくする。 */
+/** Formats a byte count for people to read. */
 export function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;

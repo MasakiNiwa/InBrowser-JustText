@@ -7,7 +7,7 @@ on:
 
 jobs:
   unit:
-    name: 単体テスト
+    name: unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +17,7 @@ jobs:
       - run: npm test
 
   browser:
-    name: ブラウザでの通し確認 (chromium)
+    name: browser (chromium)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,10 +28,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
 
-  # Firefox と WebKit。ブラウザが対応していない機能の確認は
-  # 通し確認の中で飛ばしている（test/browser/e2e.mjs を参照）
+  # Firefox and WebKit. Checks for features a browser does not support are
+  # skipped from inside the run itself — see test/browser/e2e.mjs.
   browser-others:
-    name: ブラウザでの通し確認 (${{ matrix.browser }})
+    name: browser (${{ matrix.browser }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
