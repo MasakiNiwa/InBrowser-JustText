@@ -7,24 +7,24 @@ import { APP_VERSION } from '../src/version.js';
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf-8');
 
-test('package.json と画面に出す版が揃っている', () => {
+test('package.json and the version on screen agree', () => {
   assert.equal(pkg.version, APP_VERSION);
 });
 
-test('版の書き方が揃っている', () => {
+test('the version is written the usual way', () => {
   assert.match(APP_VERSION, /^\d+\.\d+\.\d+$/);
 });
 
-test('キャッシュに載せるファイルが実在する', async () => {
+test('every file listed for the cache exists', async () => {
   const listed = [...sw.matchAll(/'\.\/([^']+)'/g)].map((m) => m[1]).filter((p) => p.endsWith('.js') || p.endsWith('.css') || p.endsWith('.html') || p.endsWith('.webmanifest') || p.endsWith('.svg'));
-  assert.ok(listed.length > 30, `${listed.length} 件しか列挙されていません`);
+  assert.ok(listed.length > 30, `only ${listed.length} files are listed`);
   for (const path of listed) {
-    assert.doesNotThrow(() => readFileSync(new URL(`../${path}`, import.meta.url)), `${path} がありません`);
+    assert.doesNotThrow(() => readFileSync(new URL(`../${path}`, import.meta.url)), `${path} is missing`);
   }
 });
 
-test('読み込むモジュールがすべてキャッシュ対象に入っている', async () => {
-  // オフラインで動かなくなるのを防ぐため、src/ 以下の JS はすべて列挙しておく
+test('every module the app loads is in the cache list', async () => {
+  // Everything under src/ has to be listed, or the app breaks offline.
   const { readdirSync } = await import('node:fs');
   const walk = (dir, prefix) => readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })
     .flatMap((entry) => (entry.isDirectory()
@@ -32,5 +32,5 @@ test('読み込むモジュールがすべてキャッシュ対象に入って�
       : entry.name.endsWith('.js') ? [`${prefix}${entry.name}`] : []));
   const files = walk('../src/', 'src/');
   const missing = files.filter((file) => !sw.includes(`'./${file}'`));
-  assert.deepEqual(missing, [], `sw.js の APP_SHELL に無いファイル: ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `missing from APP_SHELL in sw.js: ${missing.join(', ')}`);
 });

@@ -1,16 +1,18 @@
 /**
- * テキスト → バイト列への変換（保存用）。
+ * Turning text into bytes, for saving.
  *
- * TextEncoder は UTF-8 しか出力できないため、Shift_JIS などのレガシー
- * 文字コードは TextDecoder を総当たりして逆引き表をその場で組み立てる。
- * 表データを同梱せずに済み、ブラウザ内蔵の変換表とずれない。
+ * TextEncoder only writes UTF-8, so for legacy encodings such as Shift_JIS the
+ * reverse table is built on the spot by decoding every byte pair with
+ * TextDecoder. No table data has to ship with the app, and it can never drift
+ * out of step with the browser's own.
  */
 
 const tableCache = new Map();
 
 /**
- * 1〜2 バイトで表現できる文字の「文字 → バイト列」表を作る。
- * 不正な並びは U+FFFD になるので、それを除外すれば有効な組だけが残る。
+ * Builds a character-to-bytes table for everything that fits in one or two
+ * bytes. Invalid pairs decode to U+FFFD, so dropping those leaves the real
+ * mappings behind.
  */
 function buildLegacyTable(encoding) {
   const cached = tableCache.get(encoding);
@@ -81,7 +83,8 @@ function encodeLegacy(text, encoding) {
       chunks.push(bytes);
       size += bytes.length;
     } else {
-      // 変換できない文字は '?' に落として、UI 側で警告できるよう記録する。
+      // What cannot be written becomes '?', and is recorded so the
+      // interface can say which characters were lost.
       chunks.push(QUESTION);
       size += 1;
       unencodable.set(ch, (unencodable.get(ch) ?? 0) + 1);
@@ -99,14 +102,14 @@ function encodeLegacy(text, encoding) {
 
 const QUESTION = Uint8Array.of(0x3f);
 
-/** その文字コードで書き出せるか。 */
+/** Whether text can be written in that encoding. */
 export function canEncode(encoding) {
   return encoding !== 'iso-2022-jp';
 }
 
 /**
- * テキストをバイト列にする。
- * 戻り値の unencodable は「変換できず '?' になった文字 → 個数」。
+ * Encodes text as bytes.
+ * `unencodable` maps each character that became '?' to how often it appeared.
  */
 export function encodeText(text, encoding = 'utf-8', { bom = false } = {}) {
   switch (encoding) {
@@ -117,7 +120,7 @@ export function encodeText(text, encoding = 'utf-8', { bom = false } = {}) {
     case 'utf-16be':
       return { bytes: encodeUtf16(text, false, bom), unencodable: new Map() };
     case 'iso-2022-jp':
-      // 画面では選べないようにしてあるので、ここに来るのは呼び出し側の誤り
+      // The interface never offers this, so reaching here is a caller's mistake.
       throw new Error('ISO-2022-JP is read-only and cannot be written');
     default:
       return encodeLegacy(text, encoding);

@@ -1,8 +1,8 @@
 /**
- * 文字オフセット ⇔ 行・桁 の相互変換。
+ * Converting between character offsets and line/column positions.
  *
- * 大きなファイルでもカーソル移動のたびに全走査しないよう、
- * 行頭オフセットの索引を作って二分探索する。
+ * So that moving the caret in a large file does not rescan everything, an index
+ * of line-start offsets is built once and searched with a binary search.
  */
 
 export class LineIndex {
@@ -19,12 +19,12 @@ export class LineIndex {
     this.length = text.length;
   }
 
-  /** 行数（末尾が改行なら、その後ろの空行も 1 行と数える）。 */
+  /** The number of lines. A trailing newline counts the empty line after it. */
   get lineCount() {
     return this.starts.length;
   }
 
-  /** オフセットの行番号（1 始まり）。 */
+  /** The line an offset falls on, counting from 1. */
   lineAt(offset) {
     const o = Math.max(0, Math.min(offset, this.length));
     let lo = 0;
@@ -37,19 +37,19 @@ export class LineIndex {
     return lo + 1;
   }
 
-  /** オフセットの桁（1 始まり）。 */
+  /** The column an offset falls on, counting from 1. */
   columnAt(offset) {
     const line = this.lineAt(offset);
     return Math.max(0, Math.min(offset, this.length)) - this.starts[line - 1] + 1;
   }
 
-  /** 行頭のオフセット（1 始まりの行番号）。 */
+  /** The offset where a line starts, given a 1-based line number. */
   offsetAt(line, column = 1) {
     const l = Math.max(1, Math.min(line, this.starts.length));
     return Math.min(this.starts[l - 1] + Math.max(0, column - 1), this.length);
   }
 
-  /** 行の範囲 [start, end)。end は改行を含まない。 */
+  /** The range of a line, [start, end). The line ending is not included. */
   lineRange(line) {
     const start = this.offsetAt(line);
     const next = line < this.starts.length ? this.starts[line] : this.length + 1;
@@ -58,8 +58,8 @@ export class LineIndex {
 }
 
 /**
- * オフセット範囲を「その範囲を含む行全体」に広げる。
- * 行単位の整形コマンドで使う。
+ * Widens a range to cover the whole of every line it touches.
+ * Used by the commands that work line by line.
  */
 export function expandToLines(text, start, end) {
   let s = start;

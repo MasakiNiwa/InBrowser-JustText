@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""アプリアイコンを生成する（依存ライブラリなし）。
+"""Draws the app icons. No libraries needed.
 
     python3 scripts/make-icons.py
 
-角丸長方形だけで構成した図案を 4x4 スーパーサンプリングで描き、
-PNG として書き出す。図案は assets/icon.svg と同じ。
+The artwork is nothing but rounded rectangles, rendered with 4x4
+supersampling and written out as PNG. It matches assets/icon.svg.
 """
 import struct
 import zlib
@@ -12,13 +12,13 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "assets"
 
-BG = (0x14, 0x59, 0xB8)       # 背景の青
-CARD = (0xFF, 0xFF, 0xFF)     # 紙
-LINE = (0x8A, 0xB4, 0xE8)     # 本文の行
+BG = (0x14, 0x59, 0xB8)       # the blue behind everything
+CARD = (0xFF, 0xFF, 0xFF)     # the sheet of paper
+LINE = (0x8A, 0xB4, 0xE8)     # lines of text
 LINE_STRONG = (0x27, 0x6A, 0xC4)
-CARET = (0xFF, 0xC1, 0x3B)    # 編集カーソル
+CARET = (0xFF, 0xC1, 0x3B)    # the caret
 
-# (x0, y0, x1, y1, radius, color) — 0..1 の相対座標
+# (x0, y0, x1, y1, radius, color) — coordinates run 0..1
 SHAPES = [
     (0.180, 0.150, 0.700, 0.850, 0.060, CARD),
     (0.250, 0.265, 0.620, 0.320, 0.028, LINE_STRONG),
@@ -30,7 +30,7 @@ SHAPES = [
 
 
 def rounded_rect_hit(x, y, x0, y0, x1, y1, r):
-    """点 (x, y) が角丸長方形の内側かどうか。"""
+    """Whether the point (x, y) falls inside the rounded rectangle."""
     if x < x0 or x > x1 or y < y0 or y > y1:
         return False
     r = min(r, (x1 - x0) / 2, (y1 - y0) / 2)
@@ -46,7 +46,7 @@ def blend(dst, src, alpha):
 def render(size, maskable=False):
     samples = 4
     scale = 1.0 / (samples * samples)
-    inset = 0.14 if maskable else 0.0  # maskable は安全領域の内側に収める
+    inset = 0.14 if maskable else 0.0  # a maskable icon stays inside the safe area
     bg_radius = 0.0 if maskable else 0.22
 
     pixels = bytearray()
@@ -55,7 +55,7 @@ def render(size, maskable=False):
         for px in range(size):
             color = (0, 0, 0)
             alpha = 0.0
-            # 背景
+            # background
             cover = 0
             for sy in range(samples):
                 for sx in range(samples):
@@ -66,7 +66,7 @@ def render(size, maskable=False):
             if cover:
                 color = BG
                 alpha = cover * scale
-            # 前景（内側に縮めて配置）
+            # foreground, shrunk to fit inside
             for x0, y0, x1, y1, r, shape_color in SHAPES:
                 if inset:
                     span = 1 - 2 * inset

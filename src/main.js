@@ -1,8 +1,9 @@
 /**
- * InBrowser JustText — 起動と結線。
+ * InBrowser JustText — start-up and wiring.
  *
- * 役割ごとにモジュールを分けてあり、ここは «部品を組み立てる» だけ。
- * 編集機能を増やすときは src/tools/ にコマンドを足すのが基本。
+ * The work is split across modules by what it does; this file only puts the
+ * pieces together. A new editing feature normally means a new command under
+ * src/tools/, not a change here.
  */
 
 import { looksBinary } from './core/binary.js';
@@ -27,12 +28,12 @@ import { loadSettings, saveSettings } from './ui/settings.js';
 import { APP_VERSION } from './version.js';
 import { $, debounce, formatBytes, formatNumber, rafThrottle } from './util/dom.js';
 
-/* ---------- 状態 ---------- */
+/* ---------- State ---------- */
 
 const settings = loadSettings();
 if (!isSupported(settings.language)) settings.language = detectLocale();
 
-// 起動直後は英語の辞書しか無い。選ばれた言語は boot() で読み込んで切り替える。
+// Only the English catalog exists this early; boot() loads the chosen one.
 let doc = emptyDocument(t('file.untitled'));
 let savedText = '';
 
@@ -67,7 +68,7 @@ const search = createSearchPanel({
   notify,
 });
 
-/* ---------- 表示の反映 ---------- */
+/* ---------- Applying settings ---------- */
 
 function applySettings() {
   document.documentElement.dataset.theme = settings.theme;
@@ -78,7 +79,7 @@ function applySettings() {
   saveSettings(settings);
 }
 
-/** 言語を切り替えて、画面上の文言をすべて置き換える。 */
+/** Switches language and rewrites every string on screen. */
 async function applyLanguage(code) {
   if (!(await setLocale(code))) return;
   settings.language = code;
@@ -86,14 +87,14 @@ async function applyLanguage(code) {
   applyTranslations();
   buildToolList();
   $('#helpVersion').textContent = t('help.version', { version: APP_VERSION });
-  // 名前をまだ付けていない書類は、その言語の既定名に付け替える
+  // A document still carrying a placeholder name takes the new language's.
   if (doc.untitled) doc = { ...doc, name: t('file.untitled') };
   updateFileInfo();
   updateStatus();
   search.refresh();
 }
 
-/* ---------- ステータス表示 ---------- */
+/* ---------- The status bar ---------- */
 
 const isDirty = () => editor.getText() !== savedText;
 
@@ -121,9 +122,9 @@ const updateStatus = rafThrottle(() => {
 editor.on('change', updateStatus);
 editor.on('selection', updateStatus);
 
-/* ---------- ダイアログの小道具 ---------- */
+/* ---------- Dialog helpers ---------- */
 
-/** ダイアログを開き、閉じたときの returnValue を返す。 */
+/** Opens a dialog and resolves with the returnValue it closes with. */
 function askDialog(dialog) {
   return new Promise((resolve) => {
     dialog.returnValue = '';
@@ -132,12 +133,15 @@ function askDialog(dialog) {
   });
 }
 
-/* ---------- ドキュメントの読み書き ---------- */
+/* ---------- Opening documents ---------- */
 
 function loadDocument(next, { announce = true } = {}) {
   doc = next;
-  editor.load(next.text);
-  savedText = next.text;
+  // The draft is deliberately left alone here; each caller decides its fate.
+  swapDocument(() => {
+    editor.load(next.text);
+    savedText = next.text;
+  });
   updateFileInfo();
   updateStatus();
   if (announce) {
@@ -149,7 +153,7 @@ function loadDocument(next, { announce = true } = {}) {
   }
 }
 
-/** 未保存の変更があれば確認する。 */
+/** Asks before throwing unsaved changes away. */
 function confirmDiscard(messageKey) {
   if (!isDirty()) return true;
   return window.confirm(t(messageKey));
@@ -170,7 +174,7 @@ async function openFromFile(file, { handle = null } = {}) {
     return;
   }
 
-  // 画像などをテキストとして開くと内容が壊れるので、先に知らせる
+  // Opening an image as text would mangle it, so say so before that happens.
   const binary = looksBinary(next.bytes, next.text, next.encoding);
   if (binary.binary) {
     const reason = t(`file.binaryReason${binary.reason[0].toUpperCase()}${binary.reason.slice(1)}`);
@@ -179,16 +183,17 @@ async function openFromFile(file, { handle = null } = {}) {
 
   next.handle = handle;
   loadDocument(next);
+  abandonDraft(); // the reader agreed to leave any unsaved work behind
 }
 
 function newDocument() {
   if (!confirmDiscard('file.discardNew')) return;
   loadDocument(emptyDocument(t('file.untitled')), { announce: false });
-  clearDraft();
+  abandonDraft();
   editor.focus();
 }
 
-/* ---------- 保存 ---------- */
+/* ---------- Saving ---------- */
 
 const saveDialog = $('#saveDialog');
 
@@ -218,7 +223,7 @@ function openSaveDialog() {
   $('#saveNewline').value = doc.newline;
   $('#saveBom').checked = doc.bom;
 
-  // 上書きできるのは、書き込み先を掴んでいるときだけ
+  // Overwriting is only possible while a handle on the file is held.
   const overwrite = $('#saveOverwrite');
   overwrite.hidden = !doc.handle;
   if (doc.handle) overwrite.title = t('save.overwriteHint', { name: doc.handle.name });
@@ -240,20 +245,20 @@ function updateSaveNote() {
   $('#saveNote').textContent = note.join(' / ');
 }
 
-/** 保存できない文字があるとき、どうするかを尋ねる。 */
+/** Asks what to do about characters the encoding cannot hold. */
 function askAboutLostCharacters(encoding, unencodable) {
   const chars = [...unencodable.keys()];
   $('#lossBody').textContent = t('loss.body', { encoding: encodingLabel(encoding) });
   const shown = chars.slice(0, 12).join(' ');
   $('#lossChars').textContent = chars.length > 12
-    ? `${shown}  （${t('loss.more', { count: chars.length - 12 })}）`
+    ? `${shown}  (${t('loss.more', { count: chars.length - 12 })})`
     : shown;
   return askDialog($('#lossDialog'));
 }
 
 /**
- * 実際に書き出す。
- * 通知の文言は呼び出し側でまとめるため、ここでは結果だけを返す。
+ * Does the writing.
+ * Only reports what happened; the caller decides what to tell the reader.
  * @param {'download'|'pick'|'overwrite'} mode
  * @returns {Promise<{ok:boolean, name?:string, handle?:object, message?:string, type?:string}>}
  */
@@ -272,7 +277,7 @@ async function writeOut(mode, { name, bytes }) {
     return { ok: true, name: handle.name, handle, message: t('save.savedTo', { name: handle.name }) };
   }
 
-  // 上書きは元に戻せないので、必ず確認してから書き込む
+  // Overwriting cannot be undone, so never do it without asking first.
   const target = doc.handle;
   if (!target) return { ok: false };
   if (!window.confirm(t('save.overwriteConfirm', { name: target.name }))) {
@@ -284,7 +289,7 @@ async function writeOut(mode, { name, bytes }) {
   return { ok: true, name: target.name, handle: target, message: t('save.overwritten', { name: target.name }) };
 }
 
-/** 保存の一連の流れ。文字が失われる場合は書き出す前に止める。 */
+/** The whole save. Stops before writing when characters would be lost. */
 async function performSave(mode) {
   const requestedName = $('#saveName').value.trim();
   const newline = $('#saveNewline').value;
@@ -325,10 +330,10 @@ async function performSave(mode) {
     return false;
   }
 
-  // 書き出したバイト列を読み直したものを「いま保存されている内容」とする。
-  //   - 開き直しはこのバイト列を使うので、保存後の内容と食い違わない
-  //   - ? に置き換えて保存した場合は編集中の内容と一致しないため、
-  //     未保存マークが残り、ファイルと手元が違うことが画面から分かる
+  // What counts as "saved" is the bytes read back, not what was on screen.
+  //   - reopening reads those same bytes, so the two can never disagree
+  //   - where characters became '?', the text no longer matches what is being
+  //     edited, so the unsaved mark stays on and the difference is visible
   const written = normalizeToLf(decodeText(result.bytes, encoding));
   savedText = written;
   doc = {
@@ -344,12 +349,18 @@ async function performSave(mode) {
   updateFileInfo();
   updateStatus();
 
+  // Bring the draft in line straight away, so that a crash right after saving
+  // does not bring back the state from before the save.
+  draftSettled = true;
+  scheduleDraftSync.cancel();
+  syncDraft();
+
   const lossy = written !== text;
   notify(lossy ? `${outcome.message} ${t('save.lossyNote')}` : outcome.message);
   return true;
 }
 
-/* ---------- クリップボード ---------- */
+/* ---------- The clipboard ---------- */
 
 async function copyToClipboard() {
   const sel = editor.getSelection();
@@ -368,17 +379,33 @@ async function copyToClipboard() {
   notify(t(selected ? 'copy.selection' : 'copy.all', { chars: formatNumber(text.length) }));
 }
 
-/* ---------- 下書きの自動保存 ---------- */
+/* ---------- Autosaving a draft ---------- */
 
-/** 入力が落ち着いてから控えを取るまでの待ち時間。 */
+/** How long to wait after typing stops before writing the draft. */
 const DRAFT_DELAY_MS = 1500;
 
 /**
- * 控えに元のバイト列まで残す上限。
- * これを超えるファイルでは本文だけを残す（復元後は文字コードの指定し直しができない）。
- * 書き込みが重くなるのを避けるための割り切り。
+ * Above this, the original bytes are left out of the draft.
+ * Reopening with another encoding is then unavailable after a restore,
+ * but writes stay cheap.
  */
 const DRAFT_BYTES_LIMIT = 2 * 1024 * 1024;
+
+/** Above this the text itself is too large to keep a draft of. */
+const DRAFT_TEXT_LIMIT = 4 * 1024 * 1024;
+
+/**
+ * True while the editor content is being swapped programmatically.
+ * Loading a document fires the same change event as typing does, and acting on
+ * it would quietly drop a draft the reader has not been asked about yet.
+ */
+let swappingDocument = false;
+
+/** Set once the reader has been asked what to do with a leftover draft. */
+let draftSettled = false;
+
+/** Whether we have already said that the draft could not be written. */
+let draftProblemReported = false;
 
 function currentDraft() {
   return {
@@ -393,24 +420,75 @@ function currentDraft() {
   };
 }
 
+/** Write the draft, telling the reader once if that is not possible. */
+async function writeDraft() {
+  const draft = currentDraft();
+  if (draft.text.length > DRAFT_TEXT_LIMIT) {
+    if (!draftProblemReported) {
+      draftProblemReported = true;
+      notify(t('draft.tooLarge'), 'error');
+    }
+    return;
+  }
+  const written = await saveDraft(draft);
+  if (!written && !draftProblemReported) {
+    draftProblemReported = true;
+    notify(t('draft.failed'), 'error');
+  }
+}
+
 /**
- * 未保存の変更があるあいだだけ控えを残す。
- * 保存が済んだら消すので、次の起動で古い内容を勧めてしまうことはない。
+ * Bring the stored draft in line with what is on screen right now.
+ * Unsaved work is kept; once everything is saved the draft is dropped.
  */
-const storeDraft = debounce(() => {
-  if (isDirty()) saveDraft(currentDraft());
-  else clearDraft();
+function syncDraft() {
+  if (isDirty()) writeDraft();
+  else if (draftSettled) clearDraft();
+}
+
+/** Called after the reader edits. Programmatic swaps do not come through here. */
+const scheduleDraftSync = debounce(() => {
+  if (swappingDocument) return;
+  syncDraft();
 }, DRAFT_DELAY_MS);
 
-editor.on('change', storeDraft);
-
-// アプリを切り替えたり閉じたりする直前は、待たずに書き出す
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') storeDraft.flush();
+editor.on('change', () => {
+  if (swappingDocument) return;
+  scheduleDraftSync();
 });
-window.addEventListener('pagehide', () => storeDraft.flush());
 
-/** 日時を表示用に整える。 */
+// Just before the app is hidden or closed, write without waiting.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') scheduleDraftSync.flush();
+});
+window.addEventListener('pagehide', () => scheduleDraftSync.flush());
+
+/**
+ * Swap what the editor holds without touching the draft.
+ * Each caller then decides for itself whether the draft should stay.
+ */
+function swapDocument(run) {
+  swappingDocument = true;
+  try {
+    run();
+  } finally {
+    scheduleDraftSync.cancel();
+    swappingDocument = false;
+  }
+}
+
+/**
+ * Drop the draft because the reader chose to leave the work behind.
+ * A draft that has not been offered yet is left alone, so that opening the app
+ * through a shared file does not silently throw away earlier work.
+ */
+function abandonDraft() {
+  if (!draftSettled) return;
+  scheduleDraftSync.cancel();
+  clearDraft();
+}
+
+/** Format a time for display. */
 function formatTime(at) {
   if (!at) return '';
   try {
@@ -421,40 +499,48 @@ function formatTime(at) {
 }
 
 /**
- * 前回の編集内容が残っていれば、復元するか尋ねる。
- * @returns {Promise<boolean>} 復元したか
+ * If work from last time is still around, ask whether to bring it back.
+ * @returns {Promise<boolean>} whether it was restored
  */
 async function offerDraftRestore() {
   const draft = await loadDraft();
-  if (!draft?.text) return false;
+  // An empty document is a perfectly good edit, so only the draft itself
+  // being absent counts as "nothing to restore".
+  if (!draft || typeof draft.text !== 'string') {
+    draftSettled = true;
+    return false;
+  }
 
   $('#draftBody').textContent = t('draft.body', { name: draft.name, time: formatTime(draft.at) });
   const choice = await askDialog($('#draftDialog'));
+  draftSettled = true;
   if (choice !== 'restore') {
     await clearDraft();
     return false;
   }
 
-  doc = {
-    name: draft.name || t('file.untitled'),
-    bytes: draft.bytes ?? new Uint8Array(0),
-    encoding: draft.encoding ?? 'utf-8',
-    bom: draft.bom ?? false,
-    newline: draft.newline ?? 'lf',
-    detectionReason: 'draft',
-    text: draft.text,
-    handle: null, // 書き込み先は持ち越せないので、上書きは選び直しになる
-    untitled: draft.untitled ?? false,
-  };
-  editor.load(draft.text);
-  savedText = draft.savedText ?? draft.text;
+  swapDocument(() => {
+    doc = {
+      name: draft.name || t('file.untitled'),
+      bytes: draft.bytes ?? new Uint8Array(0),
+      encoding: draft.encoding ?? 'utf-8',
+      bom: draft.bom ?? false,
+      newline: draft.newline ?? 'lf',
+      detectionReason: 'draft',
+      text: draft.text,
+      handle: null, // a write target cannot be carried over; overwriting needs picking again
+      untitled: draft.untitled ?? false,
+    };
+    editor.load(draft.text);
+    savedText = draft.savedText ?? draft.text;
+  });
   updateFileInfo();
   updateStatus();
   notify(t('draft.restored'));
   return true;
 }
 
-/* ---------- コマンドから使う文脈 ---------- */
+/* ---------- The context handed to commands ---------- */
 
 const context = {
   settings,
@@ -475,11 +561,11 @@ const context = {
   goToLine: (line) => editor.goToLine(line),
 };
 
-/* ---------- ツール一覧 ---------- */
+/* ---------- The tools list ---------- */
 
 const toolsDialog = $('#toolsDialog');
 
-/** 登録簿に載らない、アプリ側の操作。 */
+/** Actions belonging to the app itself rather than the command register. */
 const APP_COMMANDS = [
   { id: 'app.goto', label: 'cmd.app.goto', run: () => openGotoDialog() },
   { id: 'app.reopen', label: 'cmd.app.reopen', run: () => openReopenDialog() },
@@ -531,7 +617,7 @@ $('#toolList').addEventListener('click', async (e) => {
   }
 });
 
-/* ---------- 行へ移動 / 開き直し ---------- */
+/* ---------- Go to line, and reopening ---------- */
 
 function openGotoDialog() {
   const input = $('#gotoLine');
@@ -551,7 +637,7 @@ function openReopenDialog() {
   $('#reopenDialog').showModal();
 }
 
-/* ---------- 設定画面 ---------- */
+/* ---------- The settings dialog ---------- */
 
 function openSettingsDialog() {
   $('#setLanguage').replaceChildren(
@@ -573,7 +659,7 @@ function openSettingsDialog() {
   $('#settingsDialog').showModal();
 }
 
-/* ---------- 操作の割り当て ---------- */
+/* ---------- Wiring the controls up ---------- */
 
 const actions = {
   openFile: () => $('#filePicker').click(),
@@ -609,7 +695,7 @@ $('#btnRedo').addEventListener('click', () => {
 
 $('#filePicker').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
-  e.target.value = ''; // 同じファイルを連続で選べるように
+  e.target.value = ''; // so the same file can be picked twice in a row
   await openFromFile(file);
 });
 
@@ -622,7 +708,7 @@ $('#statusNewline').addEventListener('click', () => {
   notify(t('file.newlineChanged', { newline: t(`newline.${doc.newline}`) }));
 });
 
-/* 保存ダイアログ: 押したボタンの value が保存方法になる */
+/* In the save dialog, the value of the button pressed is how to save. */
 $('#saveCancel').addEventListener('click', () => saveDialog.close());
 $('#saveEncoding').addEventListener('change', updateSaveNote);
 $('#saveRename').addEventListener('click', () => {
@@ -634,7 +720,7 @@ saveDialog.addEventListener('close', async () => {
   await performSave(mode);
 });
 
-/* ツール / 設定 / その他ダイアログ */
+/* Tools, settings and the rest of the dialogs. */
 $('#toolsClose').addEventListener('click', () => toolsDialog.close());
 $('#settingsClose').addEventListener('click', () => $('#settingsDialog').close());
 $('#helpClose').addEventListener('click', () => $('#helpDialog').close());
@@ -652,10 +738,11 @@ $('#reopenForm').addEventListener('submit', () => {
   const next = buildDocument(doc.bytes, doc.name, encoding);
   next.handle = doc.handle;
   loadDocument(next, { announce: false });
+  abandonDraft();
   notify(t('file.reopened', { encoding: encodingLabel(encoding) }));
 });
 
-/* 設定の変更を即時反映 */
+/* Settings take effect as they are changed. */
 $('#setLanguage').addEventListener('change', (e) => {
   applyLanguage(e.target.value);
 });
@@ -686,7 +773,7 @@ for (const [id, delta] of [['#fontSmaller', -1], ['#fontLarger', 1]]) {
   });
 }
 
-/* ---------- ドラッグ＆ドロップ ---------- */
+/* ---------- Drag and drop ---------- */
 
 const dropOverlay = $('#dropOverlay');
 let dragDepth = 0;
@@ -708,7 +795,7 @@ window.addEventListener('drop', async (e) => {
   await openFromFile(e.dataTransfer?.files?.[0]);
 });
 
-/* ---------- 離脱時の確認 ---------- */
+/* ---------- Warning before leaving ---------- */
 
 window.addEventListener('beforeunload', (e) => {
   if (!isDirty()) return;
@@ -716,10 +803,10 @@ window.addEventListener('beforeunload', (e) => {
   e.returnValue = '';
 });
 
-/* ---------- 起動処理 ---------- */
+/* ---------- Start-up ---------- */
 
 async function boot() {
-  // 選ばれた言語の辞書を読み込む。読み込めなければ英語のまま動かす。
+  // Load the chosen catalog; failing that, carry on in English.
   await setLocale(settings.language);
   applyTranslations();
   applySettings();
@@ -729,7 +816,7 @@ async function boot() {
 
   $('#helpVersion').textContent = t('help.version', { version: APP_VERSION });
 
-  // Android の共有メニューから渡されたファイル
+  // A file handed over by Android's share menu.
   let openedFromShare = false;
   if (hasSharePayload()) {
     clearShareFlag();
@@ -740,10 +827,11 @@ async function boot() {
     }
   }
 
-  // 共有で開いた場合を除き、前回の編集内容が残っていれば尋ねる
+  // A shared file is an explicit request for that file, so the leftover draft is
+  // not raised here. It stays untouched and is offered on the next plain launch.
   if (!openedFromShare) await offerDraftRestore();
 
-  // PWA として「このアプリで開く」を選んだとき
+  // "Open with this app", chosen against the installed PWA.
   if ('launchQueue' in window && typeof LaunchParams !== 'undefined' && 'files' in LaunchParams.prototype) {
     window.launchQueue.setConsumer(async (params) => {
       const handle = params.files?.[0];
@@ -767,7 +855,7 @@ function registerServiceWorker() {
         const installing = registration.installing;
         if (!installing) return;
         installing.addEventListener('statechange', () => {
-          // すでに動いている版がある状態で新しい版が入ったときだけ知らせる
+          // Only worth saying when a version was already running.
           if (installing.state !== 'installed' || !navigator.serviceWorker.controller) return;
           notify(t('update.available'), 'info', {
             label: t('update.reload'),
@@ -777,7 +865,7 @@ function registerServiceWorker() {
       });
     })
     .catch(() => {
-      /* オフライン対応が使えないだけなので無視する */
+      /* Nothing is lost but working offline, so let it go. */
     });
 }
 

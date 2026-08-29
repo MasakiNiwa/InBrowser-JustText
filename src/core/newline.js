@@ -1,8 +1,8 @@
 /**
- * 改行コードの判別と変換。
+ * Detecting and converting line endings.
  *
- * textarea の value は仕様上つねに LF なので、
- * 「読み込み時に LF へ正規化 → 保存時に元の改行へ戻す」という流れにする。
+ * A textarea's value always uses LF, so the flow is: normalise to LF when the
+ * file is read, and put the original line ending back when it is saved.
  */
 
 export const NEWLINES = [
@@ -11,7 +11,7 @@ export const NEWLINES = [
   { name: 'cr', short: 'CR', value: '\r' },
 ];
 
-/** 最も多く使われている改行コードを返す。改行が無ければ 'lf'。 */
+/** The line ending used most often. Falls back to 'lf' when there are none. */
 export function detectNewline(text) {
   let crlf = 0;
   let lf = 0;
@@ -35,18 +35,18 @@ export function detectNewline(text) {
   return 'cr';
 }
 
-/** すべての改行を LF に揃える。 */
+/** Turns every line ending into LF. */
 export function normalizeToLf(text) {
   return text.replace(/\r\n?/g, '\n');
 }
 
-/** LF のテキストを指定の改行コードに変換する。 */
+/** Converts LF text to the given line ending. */
 export function applyNewline(text, name) {
   const nl = NEWLINES.find((n) => n.name === name)?.value ?? '\n';
   return nl === '\n' ? text : text.replace(/\n/g, nl);
 }
 
-/** 画面の狭い場所に出す短縮名（LF / CRLF / CR）。どの言語でも同じ。 */
+/** The short name for tight spaces (LF / CRLF / CR). The same in every language. */
 export function newlineShort(name) {
   return NEWLINES.find((n) => n.name === name)?.short ?? name;
 }

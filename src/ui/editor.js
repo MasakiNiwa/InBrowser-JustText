@@ -1,23 +1,24 @@
 /**
- * 編集面のコントローラ。
+ * The editing surface.
  *
- * 本体は素の <textarea>。Android の IME・選択ハンドル・カーソル操作を
- * そのまま使えるのが理由で、リッチな独自実装よりも壊れにくい。
- * 検索の強調表示は、同じ字送りで文字を重ねた「鏡」レイヤーで行う。
+ * At heart it is a plain <textarea>, so that Android's IME, selection handles
+ * and caret behaviour all keep working — far sturdier than any rich re-creation
+ * of them. Search hits are drawn on a "mirror" layer holding the same text at
+ * the same metrics, sitting behind the transparent textarea.
  *
  *   .editor-body
- *     ├ #highlightLayer  … 検索一致を <mark> で描く（表示のみ）
- *     ├ #measureLayer    … 任意位置の座標を測る作業用
- *     └ <textarea>       … 実際の編集面（背景は透明、文字だけ見える）
+ *     ├ #highlightLayer  … draws search hits as <mark> (display only)
+ *     ├ #measureLayer    … scratch layer for measuring a position
+ *     └ <textarea>       … the real editing surface (transparent background)
  */
 
 import { History } from '../core/history.js';
 import { LineIndex, expandToLines } from '../core/position.js';
 import { escapeHtml, rafThrottle } from '../util/dom.js';
 
-/** これを超える文字数のときは強調表示を諦める（描画コストのため）。 */
+/** Past this many characters, highlighting is dropped — it costs too much. */
 const HIGHLIGHT_LIMIT_CHARS = 2 * 1024 * 1024;
-/** 同時に描く <mark> の上限。 */
+/** How many <mark> elements may be drawn at once. */
 const HIGHLIGHT_LIMIT_MARKS = 3000;
 
 export function createEditor({ body, textarea, highlightLayer, measureLayer, gutter, gutterInner }) {
@@ -34,7 +35,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   const listeners = { change: [], selection: [] };
   const emit = (name, ...args) => listeners[name].forEach((fn) => fn(...args));
 
-  /* ---------- 基本の読み書き ---------- */
+  /* ---------- Reading and writing ---------- */
 
   const getText = () => textarea.value;
   const getSelection = () => ({ start: textarea.selectionStart, end: textarea.selectionEnd });
@@ -52,10 +53,10 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   }
 
   /**
-   * 内容を差し替える。履歴に 1 手として積む。
+   * Replaces the whole text, recording one undo step.
    * @param {string} text
    * @param {{selectionStart?:number, selectionEnd?:number, label?:string}} [opts]
-   *   label は履歴をまとめる単位を分けるための名前で、画面には出ない。
+   *   `label` only names the coalescing unit for the history; it is never shown.
    */
   function setText(text, { selectionStart, selectionEnd, label = 'edit' } = {}) {
     const prev = getSelection();
@@ -70,7 +71,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     afterChange();
   }
 
-  /** 範囲を置き換える。カーソルは置換後の末尾へ。 */
+  /** Replaces a range. The caret lands after the inserted text. */
   function replaceRange(start, end, replacement, { label = 'edit', select = false } = {}) {
     const text = getText();
     const next = text.slice(0, start) + replacement + text.slice(end);
@@ -81,15 +82,15 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     });
   }
 
-  /** カーソル位置に文字を挿入する（Tab や自動インデント用）。 */
+  /** Inserts text at the caret (used by Tab and auto-indent). */
   function insertAtCursor(str, { label = 'insert' } = {}) {
     const { start, end } = getSelection();
     replaceRange(start, end, str, { label });
   }
 
   /**
-   * 選択中の行（無選択なら全文）にテキスト変換を適用する。
-   * 変換後も同じ範囲を選択したままにする。
+   * Applies a text transform to the selected lines, or to everything when
+   * nothing is selected. The same range stays selected afterwards.
    */
   function applyToSelectedLines(fn, label = 'transform') {
     const text = getText();
@@ -109,12 +110,12 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   }
 
   /**
-   * 選択範囲を設定する。
+   * Sets the selection.
    *
-   * reveal=true は「そこへ連れて行く」意図なので編集面にフォーカスを移す。
-   * フォーカスが他所にあるまま選択だけ変えると、Chrome が直前の選択を
-   * 復元してしまい位置が戻ってしまうため、ここは意図的にフォーカスを取る。
-   * 検索パネルからの移動は reveal を使わず、フォーカスを奪わない。
+   * `reveal` means "take me there", so it moves focus into the editor on
+   * purpose: with focus elsewhere, Chrome rolls the textarea selection back to
+   * where it was and the caret jumps away. Moving between search hits does not
+   * use `reveal`, and so never steals focus from the search box.
    */
   function setSelection(start, end = start, { reveal = false } = {}) {
     const len = getText().length;
@@ -126,7 +127,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     emit('selection');
   }
 
-  /* ---------- 履歴 ---------- */
+  /* ---------- Undo history ---------- */
 
   function applyHistoryState(state) {
     if (!state) return false;
@@ -141,7 +142,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   const undo = () => applyHistoryState(history.undo());
   const redo = () => applyHistoryState(history.redo());
 
-  /* ---------- 表示の更新 ---------- */
+  /* ---------- Redrawing ---------- */
 
   function afterChange() {
     renderHighlights();
@@ -150,7 +151,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     emit('selection');
   }
 
-  /** textarea と鏡レイヤーの折り返し幅を揃える。 */
+  /** Keeps the mirror layers wrapping at the same width as the textarea. */
   const syncLayerWidth = rafThrottle(() => {
     const width = textarea.clientWidth;
     for (const layer of [highlightLayer, measureLayer]) {
@@ -166,7 +167,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     renderGutter();
   });
 
-  /** 検索一致を鏡レイヤーに描く。 */
+  /** Draws the search hits on the mirror layer. */
   function renderHighlights() {
     const text = getText();
     const active = highlights.length > 0 && !composing && text.length <= HIGHLIGHT_LIMIT_CHARS;
@@ -179,26 +180,26 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     const parts = [];
     let last = 0;
     shown.forEach((h, i) => {
-      if (h.start < last) return; // 念のため重なりを無視
+      if (h.start < last) return; // ignore overlaps, just in case
       parts.push(escapeHtml(text.slice(last, h.start)));
       const cls = i === currentHighlight ? 'hit current' : 'hit';
       parts.push(`<mark class="${cls}" data-i="${i}">${escapeHtml(text.slice(h.start, h.end)) || '​'}</mark>`);
       last = h.end;
     });
     parts.push(escapeHtml(text.slice(last)));
-    // 末尾の改行だけだと最終行の高さが出ないので番兵を足す
+    // A trailing newline alone gives the last line no height, so add a sentinel.
     highlightLayer.innerHTML = `${parts.join('')}\n`;
     highlightLayer.style.transform = `translate(${-textarea.scrollLeft}px, ${-textarea.scrollTop}px)`;
   }
 
-  /** 検索一致の位置を設定する。 */
+  /** Sets which ranges are highlighted. */
   function setHighlights(ranges, current = -1) {
     highlights = ranges ?? [];
     currentHighlight = current;
     renderHighlights();
   }
 
-  /** 行番号の描画。折り返し中は行と表示行がずれるため出さない。 */
+  /** Draws the line numbers. Hidden while wrapping, where they would drift. */
   function renderGutter() {
     const enabled = showGutter && !wrap;
     gutter.hidden = !enabled;
@@ -218,11 +219,12 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     gutter.style.setProperty('--gutter-digits', String(Math.max(2, String(total).length)));
   }
 
-  /* ---------- 位置の測定とスクロール ---------- */
+  /* ---------- Measuring and scrolling ---------- */
 
   /**
-   * 文字オフセットの画面上の縦位置（レイヤー内座標）を測る。
-   * 強調表示済みならその <mark> を、そうでなければ測定用レイヤーを使う。
+   * Measures where a character offset sits vertically, in layer coordinates.
+   * Uses the current <mark> when the offset is already highlighted, and the
+   * scratch measuring layer otherwise.
    */
   function measureTop(offset) {
     const mark = highlightLayer.hidden ? null : highlightLayer.querySelector('mark.current');
@@ -238,7 +240,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     return top;
   }
 
-  /** 指定オフセットが見えるようにスクロールする（フォーカスは奪わない）。 */
+  /** Scrolls an offset into view, without taking focus. */
   function revealOffset(offset) {
     const top = measureTop(offset);
     const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 20;
@@ -250,17 +252,17 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     syncScroll();
   }
 
-  /** 行番号を指定して移動する。 */
+  /** Jumps to a line number. */
   function goToLine(line) {
     const offset = index().offsetAt(line, 1);
     setSelection(offset, offset, { reveal: true });
   }
 
-  /* ---------- 入力の取り回し ---------- */
+  /* ---------- Input handling ---------- */
 
   textarea.addEventListener('input', (e) => {
     markDirty();
-    // 連続した同種の入力は 1 手にまとめる。改行では区切る。
+    // Runs of the same kind of input collapse into one undo step; a newline breaks the run.
     const key = e.inputType && !String(e.data ?? '').includes('\n') ? e.inputType : null;
     history.record(
       { text: textarea.value, selectionStart: textarea.selectionStart, selectionEnd: textarea.selectionEnd },
@@ -271,7 +273,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
 
   textarea.addEventListener('compositionstart', () => {
     composing = true;
-    renderHighlights(); // 変換中はずれるので一旦消す
+    renderHighlights(); // hits drift while composing, so clear them for now
   });
   textarea.addEventListener('compositionend', () => {
     composing = false;
@@ -293,7 +295,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     window.addEventListener('resize', syncLayerWidth);
   }
 
-  /* ---------- 見た目の設定 ---------- */
+  /* ---------- Appearance ---------- */
 
   function setWrap(on) {
     wrap = on;
@@ -319,7 +321,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
     body.style.setProperty('--editor-tab-size', String(n));
   }
 
-  /** 新しい内容を読み込む（履歴は破棄する）。 */
+  /** Loads new content, discarding the undo history. */
   function load(text) {
     textarea.value = text;
     textarea.setSelectionRange(0, 0);
@@ -333,7 +335,7 @@ export function createEditor({ body, textarea, highlightLayer, measureLayer, gut
   return {
     el: textarea,
     on: (name, fn) => listeners[name].push(fn),
-    /** 編集面自身にフォーカスがあるか（選択位置を信用してよいかの判断に使う）。 */
+    /** Whether the textarea has focus — i.e. whether its selection can be trusted. */
     get hasFocus() {
       return document.activeElement === textarea;
     },

@@ -1,23 +1,24 @@
 /**
- * JSON 用のコマンド。整形・最小化・検証。
+ * JSON commands: format, minify, check.
  */
 
 import { t } from '../i18n/index.js';
 import { register } from './registry.js';
 
 /**
- * JSON を走査して、最初に構文が壊れている位置を返す。壊れていなければ null。
+ * Scans JSON and returns where the syntax first goes wrong, or null when it
+ * does not.
  *
- * JSON.parse のエラーメッセージは、位置の書き方がブラウザごとに違ううえ
- * （Chrome は "at position 18"、Firefox は "at line 3 column 7"、
- * Safari は位置を書かないことがある）、位置を含まない場合もある。
- * どの環境でも同じ場所を指すよう、走査は自前で行う。
+ * The scanning is done here rather than read out of JSON.parse's error, because
+ * every engine words that differently — Chrome says "at position 18", Firefox
+ * "at line 3 column 7", Safari sometimes gives no position at all. Scanning
+ * ourselves points at the same character everywhere.
  */
 export function findErrorOffset(text) {
   let i = 0;
   const n = text.length;
 
-  /** 失敗した位置。null なら成功。 */
+  /** Where it went wrong. A null result means it did not. */
   const fail = (at = i) => Math.min(at, n);
 
   function skipSpace() {
@@ -29,7 +30,7 @@ export function findErrorOffset(text) {
   }
 
   function scanString() {
-    i++; // 開きの "
+    i++; // the opening quote
     while (i < n) {
       const c = text[i];
       if (c === '"') {
@@ -50,11 +51,11 @@ export function findErrorOffset(text) {
         i++;
         continue;
       }
-      // 生の制御文字は文字列に入れられない
+      // A raw control character cannot appear inside a string.
       if (c.charCodeAt(0) < 0x20) return fail();
       i++;
     }
-    return fail(n); // 閉じられていない
+    return fail(n); // never closed
   }
 
   function scanDigits() {
@@ -157,11 +158,11 @@ export function findErrorOffset(text) {
   const result = scanValue();
   if (result !== null) return result;
   skipSpace();
-  return i < n ? fail() : null; // 値のあとに余計なものが続いていないか
+  return i < n ? fail() : null; // anything trailing the value is an error
 }
 
 /**
- * JSON を解析する。失敗時は例外ではなく結果オブジェクトを返す。
+ * Parses JSON, reporting failure as a result rather than an exception.
  * @returns {{ok:true, value:any} | {ok:false, message:string, offset:number|null}}
  */
 export function parseJson(text) {
@@ -172,21 +173,21 @@ export function parseJson(text) {
   }
 }
 
-/** 整形。indent は数値（スペース数）か '\t'。 */
+/** Formats. `indent` is a number of spaces, or '\t'. */
 export function formatJson(text, indent = 2) {
   const parsed = parseJson(text);
   if (!parsed.ok) return parsed;
   return { ok: true, text: JSON.stringify(parsed.value, null, indent) };
 }
 
-/** 最小化（空白を落とす）。 */
+/** Minifies, dropping all the whitespace. */
 export function minifyJson(text) {
   const parsed = parseJson(text);
   if (!parsed.ok) return parsed;
   return { ok: true, text: JSON.stringify(parsed.value) };
 }
 
-/** JSON を扱うコマンドの共通処理。失敗時はエラー位置にカーソルを移す。 */
+/** Shared handling for the JSON commands. On failure the caret goes to the error. */
 function applyJson(ctx, fn, label) {
   const result = fn(ctx.getText());
   if (!result.ok) {

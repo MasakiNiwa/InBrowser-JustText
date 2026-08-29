@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Restaurar',
   'draft.discard': 'Descartar',
   'draft.restored': 'Se restauraron tus cambios sin guardar',
+  'draft.tooLarge': 'Este documento es demasiado grande para guardar un borrador. Guarda tú mismo de vez en cuando.',
+  'draft.failed': 'No se pudo guardar el borrador. Guarda tú mismo de vez en cuando.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',

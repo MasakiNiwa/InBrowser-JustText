@@ -1,7 +1,7 @@
 /**
- * 開発用の簡易静的サーバ。
- *   node scripts/serve.js [ポート]
- * ES モジュールは file:// から読めないので、動作確認にはこれを使う。
+ * A small static server, for development.
+ *   node scripts/serve.js [port]
+ * ES modules will not load over file://, so try the app through this instead.
  */
 
 import { createServer } from 'node:http';
@@ -48,5 +48,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`http://localhost:${PORT}/ で配信中（Ctrl+C で終了）`);
+  console.log(`Serving on http://localhost:${PORT}/ — Ctrl+C to stop`);
 });

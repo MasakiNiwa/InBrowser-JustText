@@ -1,22 +1,22 @@
 /**
- * 保存（ダウンロード）。
+ * Saving, by download.
  *
- * 上書き保存はせず、必ず新しいファイルとして書き出す。
- * 元ファイルを壊さないので、端末側のファイルは常に安全に残る。
+ * This path always writes a new file rather than replacing one, so whatever is
+ * already on the device comes through untouched.
  */
 
 import { encodeText } from '../core/encoder.js';
 import { applyNewline } from '../core/newline.js';
 
 /**
- * 保存するバイト列を作る。
+ * Builds the bytes to save.
  * @returns {{bytes:Uint8Array, unencodable:Map<string,number>}}
  */
 export function buildFileBytes(text, { encoding = 'utf-8', bom = false, newline = 'lf' } = {}) {
   return encodeText(applyNewline(text, newline), encoding, { bom });
 }
 
-/** 拡張子から MIME タイプを推測する（ダウンロード時のヒント）。 */
+/** Guesses a MIME type from the extension, as a hint for the download. */
 export function guessMimeType(filename) {
   const ext = filename.toLowerCase().split('.').pop();
   const map = {
@@ -37,11 +37,11 @@ export function guessMimeType(filename) {
 }
 
 /**
- * バイト列をダウンロードさせる。
- * Android Chrome ではダウンロードフォルダに保存される。
+ * Hands bytes to the browser as a download.
+ * On Android Chrome they land in the Downloads folder.
  */
 export function downloadBytes(bytes, filename, mime = 'application/octet-stream') {
-  // charset を付けない: 実体のバイト列をそのまま渡したいため
+  // No charset: the bytes are to be handed over exactly as they are.
   const blob = new Blob([bytes], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -51,11 +51,11 @@ export function downloadBytes(bytes, filename, mime = 'application/octet-stream'
   document.body.appendChild(a);
   a.click();
   a.remove();
-  // 直後に revoke するとダウンロードが始まらない環境があるので少し待つ
+  // Revoking straight away stops the download from starting in some browsers.
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-/** 「〜 (1).json」のように連番を付けたファイル名を作る。 */
+/** Makes a numbered name, as in "notes (1).json". */
 export function suggestCopyName(filename) {
   const dot = filename.lastIndexOf('.');
   const stem = dot > 0 ? filename.slice(0, dot) : filename;

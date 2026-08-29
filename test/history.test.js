@@ -5,7 +5,7 @@ import { History } from '../src/core/history.js';
 
 const state = (text, caret = text.length) => ({ text, selectionStart: caret, selectionEnd: caret });
 
-test('初期状態では戻せない', () => {
+test('a fresh history has nothing to undo', () => {
   const h = new History();
   h.reset(state('a'));
   assert.equal(h.canUndo, false);
@@ -13,7 +13,7 @@ test('初期状態では戻せない', () => {
   assert.equal(h.undo(), null);
 });
 
-test('記録して戻す / やり直す', () => {
+test('records, undoes and redoes', () => {
   const h = new History();
   h.reset(state('a'));
   h.record(state('ab'), { key: null });
@@ -26,7 +26,7 @@ test('記録して戻す / やり直す', () => {
   assert.equal(h.canRedo, false);
 });
 
-test('連続した同種の入力は 1 手にまとまる', () => {
+test('a run of the same input collapses into one step', () => {
   const h = new History();
   h.reset(state(''));
   h.record(state('a'), { key: 'insertText', now: 1000 });
@@ -36,7 +36,7 @@ test('連続した同種の入力は 1 手にまとまる', () => {
   assert.equal(h.undo().text, '');
 });
 
-test('時間が空くと別の手になる', () => {
+test('a pause starts a new step', () => {
   const h = new History();
   h.reset(state(''));
   h.record(state('a'), { key: 'insertText', now: 1000 });
@@ -45,7 +45,7 @@ test('時間が空くと別の手になる', () => {
   assert.equal(h.undo().text, 'a');
 });
 
-test('種類が変わると別の手になる', () => {
+test('a different kind of input starts a new step', () => {
   const h = new History();
   h.reset(state(''));
   h.record(state('ab'), { key: 'insertText', now: 1000 });
@@ -53,7 +53,7 @@ test('種類が変わると別の手になる', () => {
   assert.equal(h.stack.length, 3);
 });
 
-test('戻した後に編集すると、やり直し分は消える', () => {
+test('editing after an undo throws the redos away', () => {
   const h = new History();
   h.reset(state('a'));
   h.record(state('ab'), { key: null });
@@ -64,7 +64,7 @@ test('戻した後に編集すると、やり直し分は消える', () => {
   assert.deepEqual(h.stack.map((s) => s.text), ['a', 'ab', 'abX']);
 });
 
-test('内容が同じならカーソル位置だけ更新する', () => {
+test('unchanged text only moves the caret', () => {
   const h = new History();
   h.reset(state('abc', 0));
   const recorded = h.record(state('abc', 2), { key: null });
@@ -73,7 +73,7 @@ test('内容が同じならカーソル位置だけ更新する', () => {
   assert.equal(h.current.selectionStart, 2);
 });
 
-test('戻した直後の入力は前の手にまとめない', () => {
+test('typing right after an undo does not join the step before it', () => {
   const h = new History();
   h.reset(state(''));
   h.record(state('a'), { key: 'insertText', now: 1000 });
@@ -82,7 +82,7 @@ test('戻した直後の入力は前の手にまとめない', () => {
   assert.equal(h.undo().text, '');
 });
 
-test('上限を超えると古い履歴から捨てる', () => {
+test('the oldest steps go once the limit is passed', () => {
   const h = new History({ limit: 5 });
   h.reset(state('0'));
   for (let i = 1; i <= 20; i++) h.record(state(String(i)), { key: null });
@@ -91,10 +91,10 @@ test('上限を超えると古い履歴から捨てる', () => {
   assert.equal(h.stack[0].text, '16');
 });
 
-test('総量の上限でも履歴を捨てる', () => {
+test('the size budget drops steps too', () => {
   const h = new History({ budget: 50 });
   h.reset(state(''));
   for (let i = 0; i < 20; i++) h.record(state('x'.repeat(10) + i), { key: null });
-  assert.ok(h.stack.length <= 6, `実際: ${h.stack.length}`);
+  assert.ok(h.stack.length <= 6, `actually ${h.stack.length}`);
   assert.equal(h.current.text.endsWith('19'), true);
 });

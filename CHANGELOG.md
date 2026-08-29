@@ -1,46 +1,72 @@
-# 変更履歴
+# Changelog
 
-日付は公開日です。書き方は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に沿っています。
+Dates are release dates. The layout follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+A Japanese version of this file is kept at [CHANGELOG.ja.md](CHANGELOG.ja.md).
+
+## [0.3.0]
+
+### Changed
+
+- English is now the repository's language. The README, the changelog, every code comment and
+  every test name are written in English; Japanese is kept alongside as a second language for
+  the documentation, in [README.ja.md](README.ja.md) and [CHANGELOG.ja.md](CHANGELOG.ja.md)
+- Portuguese is listed simply as **Português**, with no country beside it. The catalog moved
+  from `pt-br.js` to `pt.js`, and every region of Portuguese reads the same one
+- Sorting lines now follows the interface language rather than always collating as Japanese
+- The browser run drives the app in English, with Japanese checked as the second language
+
+### Fixed
+
+- A draft was not offered back when the document had been emptied. Deleting everything is an
+  edit like any other, and now comes back as the empty document it was
+- Loading a document programmatically — restoring a draft, reopening under another encoding —
+  could schedule the draft for deletion moments later, losing work that had not been saved
+- The draft is now brought in line the instant a save succeeds, so a crash straight afterwards
+  can no longer bring back the state from before it
+- Replace did nothing for a match past the 3,000-highlight cap: the panel now keeps the current
+  match itself rather than an index into the highlighted ones
 
 ## [0.2.0]
 
-### 追加
+### Added
 
-- 表示言語を 15 言語に対応（英語・フランス語・ドイツ語・イタリア語・スペイン語・
-  ブラジルポルトガル語・日本語・簡体字中国語・繁体字中国語・韓国語・ヒンディー語・
-  インドネシア語・ベトナム語・タイ語・アラビア語）。端末の言語から自動で選び、
-  設定からいつでも変更できる。アラビア語では画面が右から左になる
-- 編集中の内容を自動で控え、次の起動時に復元するか尋ねる（IndexedDB）
-- 対応しているブラウザで「保存先を選ぶ」と「上書き保存」を追加
-- 全文（選択中ならその範囲）をクリップボードへコピーするボタン
-- 新しい版が入ったときに知らせ、その場で再読み込みできるようにした
-- 使い方の画面に版を表示
+- 15 interface languages (English, French, German, Italian, Spanish, Portuguese, Japanese,
+  Simplified Chinese, Traditional Chinese, Korean, Hindi, Indonesian, Vietnamese, Thai and
+  Arabic). The device language decides which one opens, and it can be changed at any time in
+  settings. In Arabic the interface mirrors right to left
+- Edits are kept on the device as they are made, and offered back on the next launch (IndexedDB)
+- "Choose location" and "Overwrite", where the browser supports them
+- A button that copies the whole document, or the selection, to the clipboard
+- A notice when a new version has been installed, with a reload to hand
+- The version is shown in the help dialog
 
-### 変更
+### Changed
 
-- 保存できない文字があるときは、書き出す前に止めて
-  「UTF-8 で保存 / ? に置き換えて保存 / 取りやめ」を選べるようにした
-- ファイル選択の拡張子の制限をなくし、代わりに読み込み時にバイナリらしさを判定して注意する
-- 文字コードと改行コードの表示に枠と ▾ を付け、押して変えられることを示した
-- 設定のアイコンを歯車に変更
-- 入力欄の文字サイズを 16px 以上にし、iOS で画面が勝手に拡大しないようにした
-- キーボード操作時に、選択中の場所が枠で分かるようにした
+- A character the chosen encoding cannot hold now stops the save before anything is written,
+  offering "save as UTF-8", "save with ? instead" or "cancel"
+- The file picker no longer filters by extension, so `.properties` and extensionless files can
+  be opened; files that look binary are flagged as they are read instead
+- The encoding and line-ending readouts carry a border and a ▾, so it is clear they can be pressed
+- The settings icon is now a gear
+- Inputs are at least 16px, so iOS no longer zooms in when one is tapped
+- Keyboard users can see which control has focus
 
-### 修正
+### Fixed
 
-- 保存した後の状態を揃えた。保存後は開き直しに保存内容が使われ、
-  `?` に置き換えて保存した場合は編集中の内容との食い違いが未保存マークで分かる
-- 書き込みに失敗したときは書きかけを確定させず、元のファイルを残すようにした
-- 強調表示の上限（3,000 件）を超えた一致でも「次へ」で先に進むようにした
+- The state after a save now matches the file: reopening reads the bytes that were written, and
+  a save that replaced characters with `?` keeps the unsaved mark on, showing that the file and
+  the screen differ
+- A failed write is abandoned rather than committed, leaving the original file as it was
+- "Next" carries on past the 3,000-match highlight cap
 
 ## [0.1.0]
 
-### 追加
+### Added
 
-- 最初の版。テキストファイルの読み込み・編集・別名でのダウンロード保存
-- 検索と置換（大文字小文字の区別・単語単位・正規表現）
-- 文字コードの自動判別（UTF-8 / Shift_JIS / EUC-JP / ISO-2022-JP / UTF-16 / Windows-1252）と
-  保存時の文字コード・改行コード・BOM の指定
-- 元に戻す / やり直す、行番号、行へ移動、折り返しの切り替え
-- JSON の整形・最小化・検証、行の並べ替えなどのツール
-- PWA 化によるオフライン動作と、Android の共有メニューからの起動
+- First release: open a text file, edit it, and save it as a separate download
+- Find and replace, with case-sensitive, whole-word and regular-expression matching
+- Encoding detection (UTF-8 / Shift_JIS / EUC-JP / ISO-2022-JP / UTF-16 / Windows-1252), and a
+  choice of encoding, line ending and BOM when saving
+- Undo and redo, line numbers, go to line, word wrap
+- Tools: format, minify and validate JSON, sort lines, and more
+- A PWA that works offline and opens files from Android's share menu

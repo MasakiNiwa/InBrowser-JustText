@@ -1,5 +1,5 @@
 /**
- * Portuguese (Brazil) strings.
+ * Portuguese strings.
  * Keys must match locales/en.js (checked by test/i18n.test.js).
  */
 export default {
@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Restaurar',
   'draft.discard': 'Descartar',
   'draft.restored': 'Suas alterações não salvas foram restauradas',
+  'draft.tooLarge': 'Este documento é grande demais para manter um rascunho. Salve você mesmo de vez em quando.',
+  'draft.failed': 'Não foi possível gravar o rascunho. Salve você mesmo de vez em quando.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',

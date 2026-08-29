@@ -1,25 +1,25 @@
 /**
- * 検索と置換のエンジン（DOM 非依存）。
+ * The find-and-replace engine. Knows nothing about the DOM.
  *
- * 検索条件は一度 RegExp に落としてから使う。プレーン検索も
- * エスケープして正規表現化するので、以降の処理を一本化できる。
+ * Every query becomes a RegExp first. A plain search is escaped into one too,
+ * so everything downstream has a single kind of thing to work with.
  */
 
 export class SearchError extends Error {
   /**
-   * @param {string} message 開発者向けの説明
-   * @param {string} detail 画面に出す補足（ブラウザからのメッセージ）
+   * @param {string} message for developers
+   * @param {string} detail shown to the reader — the browser's own wording
    */
   constructor(message, detail = message) {
     super(message);
     this.name = 'SearchError';
-    /** 画面側で翻訳するためのキー。 */
+    /** Translation key for the interface to look up. */
     this.code = 'search.invalidRegex';
     this.detail = detail;
   }
 }
 
-/** 正規表現のメタ文字をエスケープする。 */
+/** Escapes the regular-expression metacharacters. */
 export function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -30,9 +30,9 @@ function wrapWholeWord(source, unicode) {
 }
 
 /**
- * 検索条件から RegExp を作る。query が空なら null。
- * まず Unicode モードで組み立て、利用者の正規表現が u フラグと
- * 相容れない場合だけ従来モードにフォールバックする。
+ * Builds the RegExp for a query, or null when the query is empty.
+ * Unicode mode is tried first, and only a pattern the `u` flag rejects falls
+ * back to the older behaviour.
  */
 export function createMatcher({ query, useRegex = false, caseSensitive = false, wholeWord = false } = {}) {
   if (!query) return null;
@@ -42,7 +42,7 @@ export function createMatcher({ query, useRegex = false, caseSensitive = false, 
   try {
     return new RegExp(wholeWord ? wrapWholeWord(base, true) : base, flags + 'u');
   } catch {
-    // u フラグ非対応のパターン（\- など）はそのまま解釈する
+    // Patterns the u flag will not take (\- and friends) are read as they are.
   }
   try {
     return new RegExp(wholeWord ? wrapWholeWord(base, false) : base, flags);
@@ -51,14 +51,14 @@ export function createMatcher({ query, useRegex = false, caseSensitive = false, 
   }
 }
 
-/** 空マッチで停止しないように lastIndex を進める。 */
+/** Nudges lastIndex along so a zero-length match cannot stall the loop. */
 function stepEmpty(re, m) {
   if (m[0].length === 0) re.lastIndex = m.index + 1;
 }
 
 /**
- * すべての一致位置を返す。limit を超えた分は打ち切り、
- * truncated=true を返す（巨大ファイルでの描画コスト対策）。
+ * Returns every match. Stops at `limit` and reports truncated=true, which keeps
+ * a huge file from spending all its time drawing highlights.
  */
 export function findAll(text, re, limit = Infinity) {
   const matches = [];
@@ -73,12 +73,12 @@ export function findAll(text, re, limit = Infinity) {
   return { matches, truncated: false };
 }
 
-/** from 以降で最初に一致する位置。wrap=true なら末尾で先頭に戻る。 */
+/** The first match at or after `from`. With wrap, the end leads back to the start. */
 export function findNext(text, re, from = 0, { wrap = true } = {}) {
   if (!re) return null;
   re.lastIndex = Math.max(0, Math.min(from, text.length));
   let m = re.exec(text);
-  // 開始位置そのものでの空マッチは前進しないので 1 文字ぶん進めて取り直す
+  // A zero-length match right at `from` would never move, so step past it and retry.
   if (m && m[0].length === 0 && m.index === from) {
     re.lastIndex = from + 1;
     m = re.exec(text);
@@ -90,7 +90,7 @@ export function findNext(text, re, from = 0, { wrap = true } = {}) {
   return m ? { start: m.index, end: m.index + m[0].length } : null;
 }
 
-/** from より前で最後に一致する位置。wrap=true なら先頭で末尾に戻る。 */
+/** The last match before `from`. With wrap, the start leads back to the end. */
 export function findPrev(text, re, from = 0, { wrap = true } = {}) {
   if (!re) return null;
   const { matches } = findAll(text, re);
@@ -102,8 +102,9 @@ export function findPrev(text, re, from = 0, { wrap = true } = {}) {
 }
 
 /**
- * 置換文字列内の $&, $1, $<name> などを実際の値に展開する。
- * String.prototype.replace と同じ記法を、件数を数えながら使いたいので自前で持つ。
+ * Expands $&, $1, $<name> and the rest inside a replacement.
+ * Same notation as String.prototype.replace, written out here so that the
+ * replacements can be counted as they are made.
  */
 export function expandReplacement(m, replacement) {
   return replacement.replace(/\$(\$|&|`|'|<[^>]*>|\d{1,2})/g, (all, token) => {
@@ -116,7 +117,7 @@ export function expandReplacement(m, replacement) {
       return m.groups?.[name] ?? '';
     }
     const n = Number(token);
-    // $12 のような表記は、12 番の group が無ければ $1 + "2" と解釈する
+    // With no group 12, "$12" reads as group 1 followed by a literal "2".
     if (n >= 1 && n < m.length) return m[n] ?? '';
     const first = Number(token[0]);
     if (token.length === 2 && first >= 1 && first < m.length) return (m[first] ?? '') + token[1];
@@ -124,21 +125,21 @@ export function expandReplacement(m, replacement) {
   });
 }
 
-/** 正規表現モードの置換文字列で \n \t \r \\ を実文字として扱う。 */
+/** In regex mode, turns \n \t \r \\ in the replacement into real characters. */
 export function unescapeReplacement(str) {
   return str.replace(/\\([nrt\\])/g, (all, c) =>
     c === 'n' ? '\n' : c === 'r' ? '\r' : c === 't' ? '\t' : '\\');
 }
 
-/** 検索条件に応じて置換文字列を前処理する。 */
+/** Prepares the replacement text for the mode being searched in. */
 export function prepareReplacement(replacement, useRegex) {
-  // プレーン検索では $ を特別扱いしない
+  // A plain search gives $ no special meaning.
   return useRegex ? unescapeReplacement(replacement) : replacement.replace(/\$/g, '$$$$');
 }
 
 /**
- * すべて置換する。件数を数えつつ 1 パスで組み立てる。
- * 返り値の delta は「置換後の長さ − 置換前の長さ」。
+ * Replaces every match, building the result in one pass and counting as it goes.
+ * `delta` is how much longer the text became.
  */
 export function replaceAll(text, re, replacement) {
   if (!re) return { text, count: 0, delta: 0 };
@@ -161,8 +162,9 @@ export function replaceAll(text, re, replacement) {
 }
 
 /**
- * start 位置の一致だけを置換する。位置がずれていれば null。
- * 返り値の end は置換後テキストでの終端位置（次の検索開始点に使う）。
+ * Replaces just the match at `start`, or returns null when nothing matches
+ * exactly there. `end` is where that match now ends in the new text, which is
+ * where the next search should begin.
  */
 export function replaceOne(text, re, replacement, start) {
   if (!re) return null;

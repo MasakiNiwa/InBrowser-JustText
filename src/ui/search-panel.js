@@ -1,11 +1,11 @@
 /**
- * 検索・置換パネル。
+ * The find-and-replace panel.
  *
- * 一致位置はエディタの強調表示に渡す。移動しても textarea には
- * フォーカスを戻さない（Android でソフトキーボードが暴れるため）。
- * 選択範囲も併せて動かすが、どこを置換するかの判断には使わない。
- * フォーカスが検索欄にある間、ブラウザが textarea の選択範囲を
- * 巻き戻すことがあるため、現在位置はこのパネル自身が持つ。
+ * Matches are handed to the editor for highlighting. Moving between them never
+ * pulls focus back into the textarea, because that makes the Android soft
+ * keyboard jump around. The selection follows along, but it is not what decides
+ * where a replacement goes: while focus sits in the search box, the browser can
+ * roll the textarea selection back, so the panel keeps the current match itself.
  */
 
 import {
@@ -21,7 +21,7 @@ import {
 import { t } from '../i18n/index.js';
 import { debounce, formatNumber } from '../util/dom.js';
 
-/** 強調表示に渡す一致件数の上限。 */
+/** How many matches are handed to the highlight layer at once. */
 const MAX_HIGHLIGHTS = 3000;
 
 export function createSearchPanel({ elements, editor, notify }) {
@@ -42,12 +42,19 @@ export function createSearchPanel({ elements, editor, notify }) {
   } = elements;
 
   let matches = [];
-  let current = -1;
+  /** Index into `matches`, or -1 when the current match is past the cap. */
+  let currentIndex = -1;
+  /**
+   * The match that is selected right now.
+   * Kept separately from the index so that replacing still works past
+   * MAX_HIGHLIGHTS, where the match is not in `matches` at all.
+   */
+  let currentMatch = null;
   let truncated = false;
   /**
-   * 次に探し始める位置。
-   * textarea の選択位置は、フォーカスが検索欄にある間ブラウザ側で
-   * 巻き戻されることがあるため、探索の基準はパネル側で持つ。
+   * Where the next search starts from.
+   * While focus is in the search box the browser can roll the textarea
+   * selection back, so the panel keeps its own anchor.
    */
   let anchor = 0;
 
@@ -58,7 +65,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     wholeWord: optWord.checked,
   });
 
-  /** 探索の基準位置。編集面を触っている間はそちらのカーソルを優先する。 */
+  /** Where to search from. While the editor has focus its caret wins. */
   function anchorFrom(which = 'end') {
     if (editor.hasFocus) {
       const sel = editor.getSelection();
@@ -82,23 +89,25 @@ export function createSearchPanel({ elements, editor, notify }) {
     }
   }
 
-  /** 一致位置を数え直して表示を更新する。 */
+  /** Recount the matches and refresh what is shown. */
   function refresh({ keepCurrent = true } = {}) {
     const re = matcher();
     if (!re) {
       matches = [];
-      current = -1;
+      currentIndex = -1;
+      currentMatch = null;
       truncated = false;
       editor.setHighlights([], -1);
       updateCount();
       return;
     }
-    const prevStart = keepCurrent && current >= 0 ? matches[current]?.start : null;
+    const previous = keepCurrent ? currentMatch : null;
     const result = findAll(editor.getText(), re, MAX_HIGHLIGHTS);
     matches = result.matches;
     truncated = result.truncated;
-    current = prevStart == null ? -1 : matches.findIndex((m) => m.start === prevStart);
-    editor.setHighlights(matches, current);
+    currentIndex = previous ? matches.findIndex((m) => m.start === previous.start) : -1;
+    currentMatch = currentIndex >= 0 ? matches[currentIndex] : previous;
+    editor.setHighlights(matches, currentIndex);
     updateCount();
   }
 
@@ -116,30 +125,31 @@ export function createSearchPanel({ elements, editor, notify }) {
     }
     count.classList.remove('empty');
     const total = truncated ? `${formatNumber(matches.length)}+` : formatNumber(matches.length);
-    count.textContent = current >= 0
-      ? t('search.position', { index: current + 1, total })
+    count.textContent = currentIndex >= 0
+      ? t('search.position', { index: currentIndex + 1, total })
       : t('search.count', { count: total });
   }
 
-  /** 一致位置へ移動する。 */
+  /** Move to one of the listed matches. */
   function moveTo(index) {
     if (matches.length === 0) return;
-    current = (index + matches.length) % matches.length;
-    const m = matches[current];
-    anchor = m.end;
-    editor.setSelection(m.start, m.end);
-    editor.setHighlights(matches, current);
-    editor.revealOffset(m.start);
+    currentIndex = (index + matches.length) % matches.length;
+    currentMatch = matches[currentIndex];
+    anchor = currentMatch.end;
+    editor.setSelection(currentMatch.start, currentMatch.end);
+    editor.setHighlights(matches, currentIndex);
+    editor.revealOffset(currentMatch.start);
     updateCount();
   }
 
   /**
-   * 強調表示の上限を超えていて一覧に無い一致へ移動する。
-   * current を外しておかないと、次に押したとき古い位置から探し直して
-   * 同じところを行き来してしまう。
+   * Move to a match that is past MAX_HIGHLIGHTS and therefore not listed.
+   * The index is dropped, but the match itself is kept so that "replace"
+   * still knows what to act on.
    */
   function moveToUnlisted(hit, direction) {
-    current = -1;
+    currentIndex = -1;
+    currentMatch = hit;
     anchor = direction === 'start' ? hit.start : hit.end;
     editor.setHighlights(matches, -1);
     editor.setSelection(hit.start, hit.end);
@@ -155,7 +165,7 @@ export function createSearchPanel({ elements, editor, notify }) {
       notify(t('search.notFound'));
       return;
     }
-    const from = current >= 0 ? matches[current].end : anchorFrom('end');
+    const from = currentMatch ? currentMatch.end : anchorFrom('end');
     const hit = findNext(editor.getText(), re, from);
     if (!hit) return;
     const index = matches.findIndex((m) => m.start === hit.start);
@@ -171,7 +181,7 @@ export function createSearchPanel({ elements, editor, notify }) {
       notify(t('search.notFound'));
       return;
     }
-    const from = current >= 0 ? matches[current].start : anchorFrom('start');
+    const from = currentMatch ? currentMatch.start : anchorFrom('start');
     const hit = findPrev(editor.getText(), re, from);
     if (!hit) return;
     const index = matches.findIndex((m) => m.start === hit.start);
@@ -180,22 +190,22 @@ export function createSearchPanel({ elements, editor, notify }) {
   }
 
   /**
-   * 現在の一致を置換して次へ進む。
-   * どこを置換するかはパネルが持つ current から決める（選択状態には依存しない）。
+   * Replace the current match and move on.
+   * What gets replaced comes from `currentMatch`, which is kept even for
+   * matches past the highlight cap, and never from the textarea selection.
    */
   function replaceCurrent() {
     const re = matcher();
     if (!re) return;
 
-    // まだどれも選んでいなければ、まず 1 件目へ移動するだけにする
-    const target = current >= 0 ? matches[current] : null;
-    if (!target) {
+    // Nothing picked yet: just move to the first match.
+    if (!currentMatch) {
       next();
       return;
     }
 
     const rep = prepareReplacement(replacement.value, optRegex.checked);
-    const result = replaceOne(editor.getText(), re, rep, target.start);
+    const result = replaceOne(editor.getText(), re, rep, currentMatch.start);
     if (!result) {
       next();
       return;
@@ -207,7 +217,8 @@ export function createSearchPanel({ elements, editor, notify }) {
       label: 'search.replace',
     });
     anchor = result.end;
-    current = -1;
+    currentIndex = -1;
+    currentMatch = null;
     refresh({ keepCurrent: false });
     next();
   }
@@ -228,12 +239,13 @@ export function createSearchPanel({ elements, editor, notify }) {
       label: 'search.replaceAll',
     });
     anchor = caret;
-    current = -1;
+    currentIndex = -1;
+    currentMatch = null;
     refresh({ keepCurrent: false });
     notify(t('search.replaced', { count: formatNumber(result.count) }));
   }
 
-  /* ---------- イベント ---------- */
+  /* ---------- Events ---------- */
 
   query.addEventListener('input', () => refresh({ keepCurrent: false }));
   for (const opt of [optCase, optWord, optRegex]) {
@@ -261,12 +273,13 @@ export function createSearchPanel({ elements, editor, notify }) {
     if (!panel.hidden && query.value) refreshSoon();
   });
 
-  /* ---------- 開閉 ---------- */
+  /* ---------- Opening and closing ---------- */
 
   function open({ withSelection = true } = {}) {
     const sel = editor.getSelection();
     anchor = sel.start;
-    current = -1;
+    currentIndex = -1;
+    currentMatch = null;
     if (withSelection && sel.end > sel.start && sel.end - sel.start < 200) {
       const picked = editor.getText().slice(sel.start, sel.end);
       if (!picked.includes('\n')) query.value = picked;

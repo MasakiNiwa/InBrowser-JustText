@@ -1,19 +1,20 @@
 /**
- * ファイルの読み込み。
- * バイト列は保持しておき、あとから文字コードを指定して読み直せるようにする。
+ * Reading files in.
+ * The raw bytes are kept, so the file can be re-read later under a different
+ * encoding if the guess was wrong.
  */
 
 import { detectEncoding, decodeText } from '../core/encoding.js';
 import { detectNewline, normalizeToLf } from '../core/newline.js';
 
-/** 大きすぎるファイルは警告する目安（バイト）。 */
+/** Past this many bytes, a file is big enough to warn about. */
 export const LARGE_FILE_BYTES = 8 * 1024 * 1024;
 
 /**
- * バイト列からドキュメントを組み立てる。
+ * Builds a document out of bytes.
  * @param {Uint8Array} bytes
- * @param {string} name ファイル名
- * @param {string} [forcedEncoding] 指定があれば判別せずその文字コードで読む
+ * @param {string} name the file name
+ * @param {string} [forcedEncoding] read as this instead of guessing
  */
 export function buildDocument(bytes, name, forcedEncoding) {
   const detected = forcedEncoding
@@ -29,24 +30,24 @@ export function buildDocument(bytes, name, forcedEncoding) {
     newline,
     detectionReason: detected.reason,
     text: normalizeToLf(raw),
-    /** File System Access API で掴んでいるファイル（上書き保存に使う）。 */
+    /** The File System Access handle, when there is one, for writing over it. */
     handle: null,
-    /** 名前がまだ決まっていない（言語を変えたら付け直してよい）か。 */
+    /** Whether the name is still a placeholder, free to change with the language. */
     untitled: false,
   };
 }
 
 /**
- * File / Blob を読み込んでドキュメントにする。
+ * Reads a File or Blob into a document.
  * @param {File|Blob} file
- * @param {string} fallbackName 名前を持たない Blob のときに使う名前
+ * @param {string} fallbackName name to use for a Blob that has none
  */
 export async function readFile(file, { forcedEncoding, fallbackName = 'untitled.txt' } = {}) {
   const buffer = await file.arrayBuffer();
   return buildDocument(new Uint8Array(buffer), file.name || fallbackName, forcedEncoding);
 }
 
-/** 空のドキュメント。 */
+/** An empty document. */
 export function emptyDocument(name) {
   return {
     name,

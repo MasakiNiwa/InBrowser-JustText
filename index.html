@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>InBrowser JustText</title>
-<meta name="description" content="ブラウザだけでテキストファイルを開いて編集し、別名で保存（ダウンロード）できるツール。検索と置換、文字コードの自動判別に対応。 / Edit text files in your browser and save them — with find &amp; replace and automatic encoding detection.">
+<meta name="description" content="Edit text files in your browser and save them — find &amp; replace, automatic encoding detection, works offline, 15 languages. / ブラウザだけでテキストファイルを編集して保存できるツール。">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#11151a">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -39,72 +39,73 @@
       <span class="brand-mark" aria-hidden="true">JT</span>
       <span class="brand-text"><b>InBrowser</b> JustText</span>
     </div>
-    <div class="file-chip" id="fileChip" data-i18n-title="header.file" title="編集中のファイル">
-      <span class="file-name" id="fileName">無題.txt</span>
-      <span class="dirty" id="dirtyMark" hidden data-i18n-aria-label="header.dirty" aria-label="未保存の変更あり">●</span>
+    <div class="file-chip" id="fileChip" data-i18n-title="header.file" title="Current file">
+      <span class="file-name" id="fileName">untitled.txt</span>
+      <span class="dirty" id="dirtyMark" hidden data-i18n-aria-label="header.dirty" aria-label="Unsaved changes">●</span>
     </div>
-    <button type="button" class="icon-btn" id="btnSettings" data-i18n-aria-label="header.settings" aria-label="設定">
+    <button type="button" class="icon-btn" id="btnSettings" data-i18n-aria-label="header.settings" aria-label="Settings">
       <svg class="icon"><use href="#i-settings"/></svg>
     </button>
-    <button type="button" class="icon-btn" id="btnHelp" data-i18n-aria-label="header.help" aria-label="使い方">
+    <button type="button" class="icon-btn" id="btnHelp" data-i18n-aria-label="header.help" aria-label="Help">
       <svg class="icon"><use href="#i-help"/></svg>
     </button>
   </header>
 
-  <nav class="toolbar" data-i18n-aria-label="toolbar.region" aria-label="操作">
-    <button type="button" class="tbtn" id="btnOpen"><svg class="icon"><use href="#i-open"/></svg><span data-i18n="toolbar.open">開く</span></button>
-    <button type="button" class="tbtn accent" id="btnSave"><svg class="icon"><use href="#i-save"/></svg><span data-i18n="toolbar.save">保存</span></button>
+  <nav class="toolbar" data-i18n-aria-label="toolbar.region" aria-label="Actions">
+    <button type="button" class="tbtn" id="btnOpen"><svg class="icon"><use href="#i-open"/></svg><span data-i18n="toolbar.open">Open</span></button>
+    <button type="button" class="tbtn accent" id="btnSave"><svg class="icon"><use href="#i-save"/></svg><span data-i18n="toolbar.save">Save</span></button>
     <span class="tsep" role="separator"></span>
-    <button type="button" class="tbtn" id="btnUndo" disabled><svg class="icon"><use href="#i-undo"/></svg><span data-i18n="toolbar.undo">戻す</span></button>
-    <button type="button" class="tbtn" id="btnRedo" disabled><svg class="icon"><use href="#i-redo"/></svg><span data-i18n="toolbar.redo">進む</span></button>
+    <button type="button" class="tbtn" id="btnUndo" disabled><svg class="icon"><use href="#i-undo"/></svg><span data-i18n="toolbar.undo">Undo</span></button>
+    <button type="button" class="tbtn" id="btnRedo" disabled><svg class="icon"><use href="#i-redo"/></svg><span data-i18n="toolbar.redo">Redo</span></button>
     <span class="tsep" role="separator"></span>
-    <button type="button" class="tbtn" id="btnSearch"><svg class="icon"><use href="#i-search"/></svg><span data-i18n="toolbar.search">検索</span></button>
-    <button type="button" class="tbtn" id="btnTools"><svg class="icon"><use href="#i-tools"/></svg><span data-i18n="toolbar.tools">ツール</span></button>
-    <button type="button" class="tbtn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span data-i18n="toolbar.copy">コピー</span></button>
-    <button type="button" class="tbtn" id="btnNew"><svg class="icon"><use href="#i-new"/></svg><span data-i18n="toolbar.new">新規</span></button>
+    <button type="button" class="tbtn" id="btnSearch"><svg class="icon"><use href="#i-search"/></svg><span data-i18n="toolbar.search">Find</span></button>
+    <button type="button" class="tbtn" id="btnTools"><svg class="icon"><use href="#i-tools"/></svg><span data-i18n="toolbar.tools">Tools</span></button>
+    <button type="button" class="tbtn" id="btnCopy"><svg class="icon"><use href="#i-copy"/></svg><span data-i18n="toolbar.copy">Copy</span></button>
+    <button type="button" class="tbtn" id="btnNew"><svg class="icon"><use href="#i-new"/></svg><span data-i18n="toolbar.new">New</span></button>
   </nav>
 
-  <section class="searchbar" id="searchPanel" hidden data-i18n-aria-label="search.region" aria-label="検索と置換">
+  <section class="searchbar" id="searchPanel" hidden data-i18n-aria-label="search.region" aria-label="Find and replace">
     <div class="search-row">
-      <input type="search" id="searchQuery" class="field" data-i18n-placeholder="search.query" placeholder="検索する文字列" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <input type="search" id="searchQuery" class="field" data-i18n-placeholder="search.query" placeholder="Find" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <span class="search-count" id="searchCount" dir="ltr" aria-live="polite"></span>
-      <button type="button" class="icon-btn" id="btnFindPrev" data-i18n-aria-label="search.prev" aria-label="前を検索"><svg class="icon"><use href="#i-up"/></svg></button>
-      <button type="button" class="icon-btn" id="btnFindNext" data-i18n-aria-label="search.next" aria-label="次を検索"><svg class="icon"><use href="#i-down"/></svg></button>
-      <button type="button" class="icon-btn" id="btnSearchClose" data-i18n-aria-label="search.close" aria-label="検索を閉じる"><svg class="icon"><use href="#i-close"/></svg></button>
+      <button type="button" class="icon-btn" id="btnFindPrev" data-i18n-aria-label="search.prev" aria-label="Find previous"><svg class="icon"><use href="#i-up"/></svg></button>
+      <button type="button" class="icon-btn" id="btnFindNext" data-i18n-aria-label="search.next" aria-label="Find next"><svg class="icon"><use href="#i-down"/></svg></button>
+      <button type="button" class="icon-btn" id="btnSearchClose" data-i18n-aria-label="search.close" aria-label="Close find"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
     <div class="search-row">
-      <input type="text" id="searchReplace" class="field" data-i18n-placeholder="search.replacement" placeholder="置換後の文字列" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button type="button" class="sbtn" id="btnReplace" data-i18n="search.replace">置換</button>
-      <button type="button" class="sbtn" id="btnReplaceAll" data-i18n="search.replaceAll">すべて</button>
+      <input type="text" id="searchReplace" class="field" data-i18n-placeholder="search.replacement" placeholder="Replace with" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button type="button" class="sbtn" id="btnReplace" data-i18n="search.replace">Replace</button>
+      <button type="button" class="sbtn" id="btnReplaceAll" data-i18n="search.replaceAll">All</button>
     </div>
     <div class="search-opts">
-      <label class="chk"><input type="checkbox" id="optCase"><span data-i18n="search.matchCase">Aa 区別</span></label>
-      <label class="chk"><input type="checkbox" id="optWord"><span data-i18n="search.wholeWord">単語単位</span></label>
-      <label class="chk"><input type="checkbox" id="optRegex"><span data-i18n="search.regex">正規表現</span></label>
+      <label class="chk"><input type="checkbox" id="optCase"><span data-i18n="search.matchCase">Aa Case</span></label>
+      <label class="chk"><input type="checkbox" id="optWord"><span data-i18n="search.wholeWord">Whole word</span></label>
+      <label class="chk"><input type="checkbox" id="optRegex"><span data-i18n="search.regex">Regex</span></label>
       <span class="search-error" id="searchError" aria-live="polite"></span>
     </div>
   </section>
 
-  <!-- 編集面は表示言語に関わらず左から右。行番号と強調表示の位置合わせを崩さないため -->
+  <!-- The editing area stays left to right whatever the interface language,
+       so line numbers and highlights keep lining up with the text -->
   <main class="editor" id="editor" dir="ltr">
     <div class="gutter" id="gutter" aria-hidden="true" hidden><div class="gutter-inner" id="gutterInner"></div></div>
     <div class="editor-body" id="editorBody">
       <div class="layer" id="highlightLayer" aria-hidden="true" hidden></div>
       <div class="layer measure" id="measureLayer" aria-hidden="true" hidden></div>
       <textarea id="input" class="input"
-        data-i18n-placeholder="editor.placeholder" placeholder="ここにテキストを入力するか、「開く」からファイルを読み込んでください。"
-        data-i18n-aria-label="editor.label" aria-label="テキスト編集"
+        data-i18n-placeholder="editor.placeholder" placeholder="Type here, or load a file with “Open”."
+        data-i18n-aria-label="editor.label" aria-label="Text editor"
         spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="soft"></textarea>
     </div>
-    <div class="drop-overlay" id="dropOverlay" hidden><span data-i18n="editor.drop">ドロップしてファイルを開く</span></div>
+    <div class="drop-overlay" id="dropOverlay" hidden><span data-i18n="editor.drop">Drop a file to open it</span></div>
   </main>
 
   <footer class="statusbar">
-    <button type="button" class="status-btn" id="statusPos" dir="ltr" data-i18n-title="status.goToLine" title="行へ移動">1 : 1</button>
-    <span class="status-item" id="statusCount">0 行 / 0 文字</span>
+    <button type="button" class="status-btn" id="statusPos" dir="ltr" data-i18n-title="status.goToLine" title="Go to line">1 : 1</button>
+    <span class="status-item" id="statusCount">0 lines / 0 chars</span>
     <span class="status-spacer"></span>
-    <button type="button" class="status-btn status-menu" id="statusEncoding" data-i18n-title="status.encodingHint" title="文字コード（押すと指定して開き直せます）">UTF-8</button>
-    <button type="button" class="status-btn status-menu" id="statusNewline" data-i18n-title="status.newlineHint" title="保存時の改行コード（押すと切り替わります）">LF</button>
+    <button type="button" class="status-btn status-menu" id="statusEncoding" data-i18n-title="status.encodingHint" title="Encoding (tap to reopen with another one)">UTF-8</button>
+    <button type="button" class="status-btn status-menu" id="statusNewline" data-i18n-title="status.newlineHint" title="Line ending used when saving (tap to change)">LF</button>
   </footer>
 
 </div>
@@ -112,171 +113,171 @@
 <div class="toast-area" id="toastArea" aria-live="polite"></div>
 <input type="file" id="filePicker" class="visually-hidden">
 
-<!-- 保存 -->
+<!-- Saving -->
 <dialog class="sheet" id="saveDialog" aria-labelledby="saveTitle">
   <form method="dialog" class="sheet-body" id="saveForm">
-    <h2 class="sheet-title" id="saveTitle" data-i18n="save.title">名前を付けて保存</h2>
+    <h2 class="sheet-title" id="saveTitle" data-i18n="save.title">Save as</h2>
     <div class="field-row">
-      <span class="field-label" data-i18n="save.name">ファイル名</span>
+      <span class="field-label" data-i18n="save.name">File name</span>
       <span class="field-with-btn">
         <input type="text" id="saveName" class="field" required autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button type="button" class="btn small" id="saveRename" data-i18n="save.rename" data-i18n-title="save.renameHint" title="末尾に連番を付ける">別名</button>
+        <button type="button" class="btn small" id="saveRename" data-i18n="save.rename" data-i18n-title="save.renameHint" title="Add a number to the end">Rename</button>
       </span>
     </div>
     <label class="field-row">
-      <span class="field-label" data-i18n="save.encoding">文字コード</span>
+      <span class="field-label" data-i18n="save.encoding">Encoding</span>
       <select id="saveEncoding" class="field"></select>
     </label>
     <label class="field-row">
-      <span class="field-label" data-i18n="save.newline">改行コード</span>
+      <span class="field-label" data-i18n="save.newline">Line ending</span>
       <select id="saveNewline" class="field"></select>
     </label>
-    <label class="chk chk-row"><input type="checkbox" id="saveBom"><span data-i18n="save.bom">BOM を付ける</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="saveBom"><span data-i18n="save.bom">Add a BOM</span></label>
     <p class="sheet-note" id="saveNote"></p>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="saveCancel" data-i18n="save.cancel">キャンセル</button>
-      <button type="submit" class="btn warn" id="saveOverwrite" value="overwrite" hidden formnovalidate data-i18n="save.overwrite">上書き保存</button>
-      <button type="submit" class="btn" id="savePick" value="pick" hidden data-i18n="save.pick" data-i18n-title="save.pickHint">保存先を選ぶ</button>
-      <button type="submit" class="btn accent" id="saveConfirm" value="download" data-i18n="save.download">ダウンロード</button>
+      <button type="button" class="btn" id="saveCancel" data-i18n="save.cancel">Cancel</button>
+      <button type="submit" class="btn warn" id="saveOverwrite" value="overwrite" hidden formnovalidate data-i18n="save.overwrite">Overwrite</button>
+      <button type="submit" class="btn" id="savePick" value="pick" hidden data-i18n="save.pick" data-i18n-title="save.pickHint">Choose location</button>
+      <button type="submit" class="btn accent" id="saveConfirm" value="download" data-i18n="save.download">Download</button>
     </div>
   </form>
 </dialog>
 
-<!-- 保存できない文字がある場合の確認 -->
+<!-- Asked before writing when some characters cannot be represented -->
 <dialog class="sheet" id="lossDialog" aria-labelledby="lossTitle">
   <form method="dialog" class="sheet-body">
-    <h2 class="sheet-title" id="lossTitle" data-i18n="loss.title">保存できない文字があります</h2>
+    <h2 class="sheet-title" id="lossTitle" data-i18n="loss.title">Some characters cannot be saved</h2>
     <p class="sheet-note" id="lossBody"></p>
     <p class="loss-chars" id="lossChars"></p>
-    <p class="sheet-note" data-i18n="loss.explain">このまま保存すると ? に置き換わり、元の文字は失われます。</p>
+    <p class="sheet-note" data-i18n="loss.explain">Saving as-is replaces them with “?”, losing the original characters.</p>
     <div class="sheet-actions">
-      <button type="submit" class="btn" value="cancel" data-i18n="loss.cancel">キャンセル</button>
-      <button type="submit" class="btn" value="replace" data-i18n="loss.replace">? に置き換えて保存</button>
-      <button type="submit" class="btn accent" value="utf8" data-i18n="loss.utf8">UTF-8 で保存</button>
+      <button type="submit" class="btn" value="cancel" data-i18n="loss.cancel">Cancel</button>
+      <button type="submit" class="btn" value="replace" data-i18n="loss.replace">Save with “?”</button>
+      <button type="submit" class="btn accent" value="utf8" data-i18n="loss.utf8">Save as UTF-8</button>
     </div>
   </form>
 </dialog>
 
-<!-- 前回の編集内容の復元 -->
+<!-- Bringing back unsaved work from last time -->
 <dialog class="sheet" id="draftDialog" aria-labelledby="draftTitle">
   <form method="dialog" class="sheet-body">
-    <h2 class="sheet-title" id="draftTitle" data-i18n="draft.title">前回の続きがあります</h2>
+    <h2 class="sheet-title" id="draftTitle" data-i18n="draft.title">Unsaved work from last time</h2>
     <p class="sheet-note" id="draftBody"></p>
     <div class="sheet-actions">
-      <button type="submit" class="btn" value="discard" data-i18n="draft.discard">破棄する</button>
-      <button type="submit" class="btn accent" value="restore" data-i18n="draft.restore">復元する</button>
+      <button type="submit" class="btn" value="discard" data-i18n="draft.discard">Discard</button>
+      <button type="submit" class="btn accent" value="restore" data-i18n="draft.restore">Restore</button>
     </div>
   </form>
 </dialog>
 
-<!-- ツール -->
+<!-- Tools -->
 <dialog class="sheet" id="toolsDialog" aria-labelledby="toolsTitle">
   <div class="sheet-body">
-    <h2 class="sheet-title" id="toolsTitle" data-i18n="tools.title">ツール</h2>
+    <h2 class="sheet-title" id="toolsTitle" data-i18n="tools.title">Tools</h2>
     <div class="tool-list" id="toolList"></div>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="toolsClose" data-i18n="tools.close">閉じる</button>
+      <button type="button" class="btn" id="toolsClose" data-i18n="tools.close">Close</button>
     </div>
   </div>
 </dialog>
 
-<!-- 設定 -->
+<!-- Settings -->
 <dialog class="sheet" id="settingsDialog" aria-labelledby="settingsTitle">
   <div class="sheet-body">
-    <h2 class="sheet-title" id="settingsTitle" data-i18n="settings.title">設定</h2>
+    <h2 class="sheet-title" id="settingsTitle" data-i18n="settings.title">Settings</h2>
     <label class="field-row">
-      <span class="field-label" data-i18n="settings.language">言語</span>
+      <span class="field-label" data-i18n="settings.language">Language</span>
       <select id="setLanguage" class="field"></select>
     </label>
     <label class="field-row">
-      <span class="field-label" data-i18n="settings.theme">テーマ</span>
+      <span class="field-label" data-i18n="settings.theme">Theme</span>
       <select id="setTheme" class="field">
-        <option value="auto" data-i18n="settings.themeAuto">端末に合わせる</option>
-        <option value="light" data-i18n="settings.themeLight">ライト</option>
-        <option value="dark" data-i18n="settings.themeDark">ダーク</option>
+        <option value="auto" data-i18n="settings.themeAuto">Match the device</option>
+        <option value="light" data-i18n="settings.themeLight">Light</option>
+        <option value="dark" data-i18n="settings.themeDark">Dark</option>
       </select>
     </label>
     <div class="field-row">
-      <span class="field-label" data-i18n="settings.fontSize">文字サイズ</span>
+      <span class="field-label" data-i18n="settings.fontSize">Text size</span>
       <div class="stepper">
-        <button type="button" class="btn" id="fontSmaller" data-i18n-aria-label="settings.smaller" aria-label="小さく">−</button>
+        <button type="button" class="btn" id="fontSmaller" data-i18n-aria-label="settings.smaller" aria-label="Smaller">−</button>
         <output id="fontValue">16</output>
-        <button type="button" class="btn" id="fontLarger" data-i18n-aria-label="settings.larger" aria-label="大きく">＋</button>
+        <button type="button" class="btn" id="fontLarger" data-i18n-aria-label="settings.larger" aria-label="Larger">+</button>
       </div>
     </div>
     <label class="field-row">
-      <span class="field-label" data-i18n="settings.tabSize">タブ幅</span>
+      <span class="field-label" data-i18n="settings.tabSize">Tab width</span>
       <select id="setTabSize" class="field">
         <option value="2">2</option>
         <option value="4">4</option>
         <option value="8">8</option>
       </select>
     </label>
-    <label class="chk chk-row"><input type="checkbox" id="setWrap"><span data-i18n="settings.wrap">長い行を折り返す</span></label>
-    <label class="chk chk-row"><input type="checkbox" id="setGutter"><span data-i18n="settings.gutter">行番号を表示（折り返しオフのとき）</span></label>
-    <label class="chk chk-row"><input type="checkbox" id="setInsertSpaces"><span data-i18n="settings.insertSpaces">Tab キーでスペースを入力</span></label>
-    <label class="chk chk-row"><input type="checkbox" id="setAutoIndent"><span data-i18n="settings.autoIndent">改行時にインデントを引き継ぐ</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setWrap"><span data-i18n="settings.wrap">Wrap long lines</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setGutter"><span data-i18n="settings.gutter">Show line numbers (when wrapping is off)</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setInsertSpaces"><span data-i18n="settings.insertSpaces">Insert spaces with the Tab key</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setAutoIndent"><span data-i18n="settings.autoIndent">Keep the indent on a new line</span></label>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="settingsClose" data-i18n="settings.close">閉じる</button>
+      <button type="button" class="btn" id="settingsClose" data-i18n="settings.close">Close</button>
     </div>
   </div>
 </dialog>
 
-<!-- 文字コードを指定して開き直す -->
+<!-- Reopening with another encoding -->
 <dialog class="sheet" id="reopenDialog" aria-labelledby="reopenTitle">
   <form method="dialog" class="sheet-body" id="reopenForm">
-    <h2 class="sheet-title" id="reopenTitle" data-i18n="reopen.title">文字コードを指定して開き直す</h2>
-    <p class="sheet-note" data-i18n="reopen.note">読み込んだファイルを、選んだ文字コードで解釈し直します。編集内容は破棄されます。</p>
+    <h2 class="sheet-title" id="reopenTitle" data-i18n="reopen.title">Reopen with another encoding</h2>
+    <p class="sheet-note" data-i18n="reopen.note">Reads the loaded file again using the encoding you choose. Your edits are discarded.</p>
     <label class="field-row">
-      <span class="field-label" data-i18n="reopen.encoding">文字コード</span>
+      <span class="field-label" data-i18n="reopen.encoding">Encoding</span>
       <select id="reopenEncoding" class="field"></select>
     </label>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="reopenCancel" data-i18n="reopen.cancel">キャンセル</button>
-      <button type="submit" class="btn accent" data-i18n="reopen.submit">開き直す</button>
+      <button type="button" class="btn" id="reopenCancel" data-i18n="reopen.cancel">Cancel</button>
+      <button type="submit" class="btn accent" data-i18n="reopen.submit">Reopen</button>
     </div>
   </form>
 </dialog>
 
-<!-- 行へ移動 -->
+<!-- Go to line -->
 <dialog class="sheet" id="gotoDialog" aria-labelledby="gotoTitle">
   <form method="dialog" class="sheet-body" id="gotoForm">
-    <h2 class="sheet-title" id="gotoTitle" data-i18n="goto.title">行へ移動</h2>
+    <h2 class="sheet-title" id="gotoTitle" data-i18n="goto.title">Go to line</h2>
     <label class="field-row">
-      <span class="field-label" data-i18n="goto.line">行番号</span>
+      <span class="field-label" data-i18n="goto.line">Line number</span>
       <input type="number" id="gotoLine" class="field" min="1" step="1" inputmode="numeric" required>
     </label>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="gotoCancel" data-i18n="goto.cancel">キャンセル</button>
-      <button type="submit" class="btn accent" data-i18n="goto.submit">移動</button>
+      <button type="button" class="btn" id="gotoCancel" data-i18n="goto.cancel">Cancel</button>
+      <button type="submit" class="btn accent" data-i18n="goto.submit">Go</button>
     </div>
   </form>
 </dialog>
 
-<!-- 使い方 -->
+<!-- Help -->
 <dialog class="sheet" id="helpDialog" aria-labelledby="helpTitle">
   <div class="sheet-body">
     <h2 class="sheet-title" id="helpTitle" data-i18n="help.title">InBrowser JustText</h2>
-    <p class="sheet-note" data-i18n="help.lead">ブラウザだけでテキストをいじって保存するツールです。ファイルは端末の外に出ません。</p>
+    <p class="sheet-note" data-i18n="help.lead">Edit text in your browser and save it, nothing more. Your files never leave the device.</p>
     <ul class="help-list">
-      <li><b data-i18n="toolbar.open">開く</b> — <span data-i18n="help.open">端末内のテキストファイルを読み込みます。文字コードは自動判別します。</span></li>
-      <li><b data-i18n="toolbar.save">保存</b> — <span data-i18n="help.save">編集後の内容を別ファイルとしてダウンロードします。元のファイルは変更しません。</span></li>
-      <li><span data-i18n="help.overwrite">対応している環境では、保存先を選んで既存ファイルへ上書きすることもできます。</span></li>
-      <li><b data-i18n="toolbar.search">検索</b> — <span data-i18n="help.search">検索と置換。正規表現・単語単位・大文字小文字の区別を切り替えられます。</span></li>
-      <li><b data-i18n="toolbar.tools">ツール</b> — <span data-i18n="help.tools">JSON の整形や行の並べ替えなど。</span></li>
-      <li><span data-i18n="help.status">画面下の文字コードと改行コードは、押すと変更できます。</span></li>
-      <li><span data-i18n="help.pwa">ホーム画面に追加するとアプリとして起動でき、オフラインでも使えます。</span></li>
-      <li><span data-i18n="help.share">Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開けます。</span></li>
+      <li><b data-i18n="toolbar.open">Open</b> — <span data-i18n="help.open">Loads a text file from your device. The encoding is detected automatically.</span></li>
+      <li><b data-i18n="toolbar.save">Save</b> — <span data-i18n="help.save">Downloads the edited text as a separate file. The original file is left untouched.</span></li>
+      <li><span data-i18n="help.overwrite">Where the browser supports it, you can also choose a location and overwrite an existing file.</span></li>
+      <li><b data-i18n="toolbar.search">Find</b> — <span data-i18n="help.search">Find and replace, with regular expressions, whole-word and case-sensitive matching.</span></li>
+      <li><b data-i18n="toolbar.tools">Tools</b> — <span data-i18n="help.tools">Format JSON, sort lines, and more.</span></li>
+      <li><span data-i18n="help.status">The encoding and line ending at the bottom of the screen can be changed by tapping them.</span></li>
+      <li><span data-i18n="help.pwa">Add it to your home screen to launch it as an app; it works offline too.</span></li>
+      <li><span data-i18n="help.share">On Android, share a file to this app to open it directly.</span></li>
     </ul>
-    <p class="sheet-note" data-i18n="help.shortcuts">キーボード操作: Ctrl+O 開く / Ctrl+S 保存 / Ctrl+F 検索 / Ctrl+G 行へ移動 / Ctrl+Z 戻す / Ctrl+Shift+Z 進む</p>
+    <p class="sheet-note" data-i18n="help.shortcuts">Keyboard: Ctrl+O open / Ctrl+S save / Ctrl+F find / Ctrl+G go to line / Ctrl+Z undo / Ctrl+Shift+Z redo</p>
     <p class="sheet-note" id="helpVersion"></p>
     <div class="sheet-actions">
-      <button type="button" class="btn" id="helpClose" data-i18n="help.close">閉じる</button>
+      <button type="button" class="btn" id="helpClose" data-i18n="help.close">Close</button>
     </div>
   </div>
 </dialog>
 
-<noscript><p style="padding:1rem" data-i18n="common.noscript">このツールは JavaScript を有効にしてお使いください。</p></noscript>
+<noscript><p style="padding:1rem" data-i18n="common.noscript">Please enable JavaScript to use this tool.</p></noscript>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

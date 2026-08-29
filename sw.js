@@ -1,12 +1,12 @@
 /*
  * InBrowser JustText — Service Worker
  *
- *  1. アプリ一式をキャッシュしてオフラインでも起動できるようにする
- *  2. Android の「共有」から POST されたファイルを受け取り、
- *     Cache に置いてから ?share=1 付きでアプリへ転送する
+ *  1. Caches the whole app, so it still starts with no connection.
+ *  2. Catches the POST from Android's "share" menu, puts the file in the cache
+ *     and sends the browser on to the app with ?share=1.
  */
 
-const VERSION = 'v4';
+const VERSION = 'v6';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 
@@ -36,7 +36,7 @@ const APP_SHELL = [
   './src/i18n/locales/it.js',
   './src/i18n/locales/ja.js',
   './src/i18n/locales/ko.js',
-  './src/i18n/locales/pt-br.js',
+  './src/i18n/locales/pt.js',
   './src/i18n/locales/th.js',
   './src/i18n/locales/vi.js',
   './src/i18n/locales/zh-hans.js',
@@ -62,7 +62,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(APP_CACHE);
-      // 1 つでも失敗すると全体が入らなくなるので、個別に入れる
+      // Added one at a time: with addAll, a single failure loses the lot.
       await Promise.all(
         APP_SHELL.map((path) => cache.add(new Request(path, { cache: 'reload' })).catch(() => {})),
       );
@@ -85,7 +85,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/** 共有されたファイルを Cache に預けてからアプリへ転送する。 */
+/** Puts the shared file in the cache, then hands over to the app. */
 async function handleShare(request) {
   const target = new URL('./?share=1', self.registration.scope).href;
   try {
@@ -100,7 +100,7 @@ async function handleShare(request) {
     } else {
       const parts = ['title', 'text', 'url'].map((k) => form.get(k)).filter(Boolean);
       blob = new Blob([parts.join('\n')], { type: 'text/plain' });
-      // 本文だけが共有されたとき。画面の言語が分からないので中立な名前にする
+      // Only text was shared. The app's language is unknown here, so the name stays neutral.
       name = 'shared.txt';
     }
 
@@ -111,18 +111,18 @@ async function handleShare(request) {
       new Response(blob, {
         headers: {
           'content-type': 'application/octet-stream',
-          // ヘッダは ASCII しか運べないので日本語ファイル名は URL エンコードする
+          // Headers carry ASCII only, so a name in any other script travels encoded.
           'x-justtext-filename': encodeURIComponent(name),
         },
       }),
     );
   } catch {
-    /* 受け取れなくてもアプリは開く */
+    /* Even if nothing could be taken, still open the app. */
   }
   return Response.redirect(target, 303);
 }
 
-/** 画面の読み込みは新しい方を優先し、繋がらなければキャッシュを返す。 */
+/** Page loads prefer the network and fall back to the cache. */
 async function navigationHandler(request) {
   try {
     return await fetch(request);
@@ -132,12 +132,12 @@ async function navigationHandler(request) {
       (await cache.match(request)) ??
       (await cache.match('./index.html')) ??
       (await cache.match('./')) ??
-      new Response('オフラインです', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } })
+      new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } })
     );
   }
 }
 
-/** 部品はキャッシュを即返しつつ、裏で更新する。 */
+/** Assets come straight from the cache and are refreshed behind the scenes. */
 async function assetHandler(request) {
   const cache = await caches.open(APP_CACHE);
   const cached = await cache.match(request);

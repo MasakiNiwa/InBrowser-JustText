@@ -1,12 +1,13 @@
 /**
- * 元に戻す / やり直す の履歴。
+ * Undo and redo.
  *
- * Android のソフトキーボードには Ctrl+Z が無いので、ブラウザ標準の
- * undo に頼らず自前で持つ。スタックの先頭は常に「現在の内容」。
+ * Android soft keyboards have no Ctrl+Z, so the stack is kept here rather than
+ * left to the browser's own undo. The entry at the current index is always the
+ * text as it stands.
  */
 
 const DEFAULT_LIMIT = 300;
-const DEFAULT_BUDGET = 32 * 1024 * 1024; // 文字数換算のおおよその上限
+const DEFAULT_BUDGET = 32 * 1024 * 1024; // a rough ceiling, counted in characters
 const COALESCE_MS = 600;
 
 export class History {
@@ -16,7 +17,7 @@ export class History {
     this.reset({ text: '', selectionStart: 0, selectionEnd: 0 });
   }
 
-  /** 履歴を破棄して初期状態にする（ファイルを開いた時など）。 */
+  /** Throws the history away and starts over — on opening a file, say. */
   reset(state) {
     this.stack = [{ ...state }];
     this.index = 0;
@@ -38,13 +39,14 @@ export class History {
   }
 
   /**
-   * 変更を記録する。
-   * key が直前と同じで時間も近ければ 1 手にまとめる（連続入力用）。
+   * Records a change.
+   * When `key` matches the last one and little time has passed, the two collapse
+   * into a single step, so a run of typing undoes as one.
    */
   record(state, { key = null, now = Date.now() } = {}) {
     const top = this.stack[this.index];
     if (top && top.text === state.text) {
-      // 内容が同じならカーソル位置だけ更新する
+      // Same text: only the caret moved.
       top.selectionStart = state.selectionStart;
       top.selectionEnd = state.selectionEnd;
       return false;
@@ -57,7 +59,7 @@ export class History {
       this.size += state.text.length - top.text.length;
       this.stack[this.index] = { ...state };
     } else {
-      this.stack.length = this.index + 1; // やり直し分を捨てる
+      this.stack.length = this.index + 1; // drop anything that could be redone
       this.stack.push({ ...state });
       this.index = this.stack.length - 1;
       this.size += state.text.length;
@@ -68,10 +70,10 @@ export class History {
     return true;
   }
 
-  /** 件数・総量の上限を超えた古い履歴を捨てる。 */
+  /** Drops the oldest steps once the count or the total size runs over. */
   trim() {
     while (this.stack.length > 1 && (this.stack.length > this.limit || this.size > this.budget)) {
-      if (this.index === 0) break; // 現在位置は必ず残す
+      if (this.index === 0) break; // never drop where we are now
       this.size -= this.stack[0].text.length;
       this.stack.shift();
       this.index--;
@@ -92,7 +94,7 @@ export class History {
     return { ...this.stack[this.index] };
   }
 
-  /** 次の record をまとめずに独立した 1 手として扱わせる。 */
+  /** Makes the next record start a fresh step instead of joining this one. */
   breakCoalesce() {
     this.coalesceKey = null;
   }

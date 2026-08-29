@@ -107,6 +107,8 @@ export default {
   'draft.restore': 'Pulihkan',
   'draft.discard': 'Buang',
   'draft.restored': 'Suntingan yang belum disimpan telah dipulihkan',
+  'draft.tooLarge': 'Dokumen ini terlalu besar untuk disimpan sebagai draf. Simpan sendiri sesekali.',
+  'draft.failed': 'Draf tidak bisa ditulis. Simpan sendiri sesekali.',
 
   /* Clipboard */
   'copy.all': 'Seluruh teks disalin ({chars} karakter)',

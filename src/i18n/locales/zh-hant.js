@@ -107,6 +107,8 @@ export default {
   'draft.restore': '復原',
   'draft.discard': '捨棄',
   'draft.restored': '已復原上次未儲存的內容',
+  'draft.tooLarge': '文件過大，無法自動儲存草稿。請自行不時儲存。',
+  'draft.failed': '草稿儲存失敗。請自行不時儲存。',
 
   /* Clipboard */
   'copy.all': '已複製全文（{chars} 個字元）',
