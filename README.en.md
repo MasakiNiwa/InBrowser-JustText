@@ -154,8 +154,8 @@ npm run test:browser:firefox # the same run in Firefox
 npm run test:browser:webkit  # the same run in WebKit
 ```
 
-For what automation cannot reach — iOS Safari, sharing on a real device, screen readers —
-work through the list in [docs/manual-checks.md](docs/manual-checks.md).
+iOS Safari, sharing on a real device and screen readers are outside what automation reaches,
+so try changes on a real device as well.
 
 The browser run needs Playwright:
 
@@ -283,8 +283,6 @@ still leaves a working screen.
 ## Also here
 
 - [CHANGELOG.md](CHANGELOG.md) — what changed and when
-- [docs/manual-checks.md](docs/manual-checks.md) — the manual test checklist
-- [docs/publishing.md](docs/publishing.md) — repository About, Pages and release settings
 
 ## License
 

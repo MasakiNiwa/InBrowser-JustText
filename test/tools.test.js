@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { findErrorOffset, formatJson, minifyJson, parseJson, parseErrorOffset } from '../src/tools/json-tools.js';
+import { findErrorOffset, formatJson, minifyJson, parseJson } from '../src/tools/json-tools.js';
 import {
   indentLines,
   outdentLines,
@@ -45,7 +45,7 @@ test('エラー位置が壊れた箇所を正しく指す', () => {
     ['{"a":1,}', 7],
     ['{"a" 1}', 5],
     ['{"a":[1,2,]}', 10],
-    ['[1, 2, tru]', 10],
+    ['[1, 2, tru]', 7], // 壊れた語の先頭を指す
     ['{"a": "x" "b": 1}', 10],
     ['{"a":1} ゴミ', 8],
     ['{\n  "name": "テスト",\n  "値": ,\n}', 26],
@@ -67,9 +67,53 @@ test('途中で切れた JSON は末尾を指す', () => {
   assert.ok(result.offset === null || result.offset >= 10);
 });
 
-test('エラーメッセージから位置を取り出す', () => {
-  assert.equal(parseErrorOffset('Unexpected token } in JSON at position 42'), 42);
-  assert.equal(parseErrorOffset('位置の情報なし'), null);
+test('壊れ方の種類ごとに位置を指せる', () => {
+  const cases = [
+    ['{"a": "閉じていない', 13], // 文字列が閉じていない（末尾を指す）
+    ['{"a": 01}', 7], // 数値の書き方が不正
+    ['{"a": .5}', 6], // 小数点から始まる数値
+    ['[1,]', 3], // 余分なカンマ
+    ['{"a": tru}', 6], // 語が途中で切れている
+    ['{"a": "\u0001"}', 7], // 文字列に生の制御文字
+    ['{"a": "\\q"}', 8], // 知らないエスケープ（\ の次の文字を指す）
+  ];
+  for (const [source, expected] of cases) {
+    assert.equal(findErrorOffset(source), expected, `${JSON.stringify(source)} のエラー位置`);
+    assert.equal(parseJson(source).ok, false, `${JSON.stringify(source)} は失敗するはず`);
+  }
+});
+
+test('正しい JSON では位置を返さない', () => {
+  const valid = [
+    '{"a": [1, 2, {"b": null}], "c": true}',
+    '[]',
+    '{}',
+    '"文字列だけ"',
+    '-1.5e10',
+    '  {"空白に囲まれている": 1}  ',
+    '{"エスケープ": "改行\\nとタブ\\tと\\u3042"}',
+  ];
+  for (const source of valid) {
+    assert.equal(findErrorOffset(source), null, `${source} は正しいはず`);
+    assert.equal(parseJson(source).ok, true, `${source} は解析できるはず`);
+  }
+});
+
+test('走査の判定が JSON.parse と食い違わない', () => {
+  // どちらも「壊れている / 正しい」の判断が一致していること
+  const samples = [
+    '{}', '[]', '{"a":1}', '{"a":}', '[1,2,]', 'null', 'nul', '"x"', '"x', '1e', '1e5',
+    '{"a":"b"}{', '[[[]]]', '{"a": [1, {"b": [true, false, null]}]}', '', '   ', 'tru',
+  ];
+  for (const source of samples) {
+    let parsed = true;
+    try {
+      JSON.parse(source);
+    } catch {
+      parsed = false;
+    }
+    assert.equal(findErrorOffset(source) === null, parsed, `${JSON.stringify(source)} の判定`);
+  }
 });
 
 test('整形しても値は変わらない', () => {
