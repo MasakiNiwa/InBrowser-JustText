@@ -106,13 +106,15 @@ export default {
 
   /* Restauration d’un brouillon */
   'draft.title': 'Travail non enregistré',
-  'draft.body': 'Des modifications de {name} datant de {time} sont encore là. Les restaurer ?',
+  'draft.lead': 'Du travail de la dernière fois est encore là — {count} au total. Choisissez ce qu’il faut rétablir ; le reste attendra.',
+  'draft.when': '{time} · {chars} caractères',
   'draft.restore': 'Restaurer',
-  'draft.discard': 'Abandonner',
+  'draft.later': 'Plus tard',
+  'draft.discardAll': 'Tout supprimer',
+  'draft.discardOne': 'Supprimer les modifications de {name}',
   'draft.restored': 'Vos modifications non enregistrées ont été restaurées',
   'draft.tooLarge': 'Ce document est trop volumineux pour en garder un brouillon. Pensez à enregistrer vous-même.',
   'draft.failed': 'Le brouillon n’a pas pu être écrit. Pensez à enregistrer vous-même.',
-  'draft.more': '{count} autre(s) en attente.',
 
   /* Clipboard */
   'copy.all': 'Document copié ({chars} caractères)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'Ce JSON est valide',
   'json.error': 'Erreur JSON : {detail}',
   'json.parseFailed': 'Analyse JSON impossible : {detail}',
+  'json.numberUnsafe': 'Rien n’a été modifié : {detail} ne peut pas être réécrit sans changer sa valeur.',
+  'json.duplicateKeyUnsafe': 'Rien n’a été modifié : la clé « {detail} » apparaît deux fois dans un même objet, et la réécriture en perdrait une.',
 
   /* Settings */
   'settings.title': 'Paramètres',

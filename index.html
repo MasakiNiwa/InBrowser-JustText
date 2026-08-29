@@ -164,14 +164,16 @@
 
 <!-- Bringing back unsaved work from last time -->
 <dialog class="sheet" id="draftDialog" aria-labelledby="draftTitle">
-  <form method="dialog" class="sheet-body">
+  <div class="sheet-body">
     <h2 class="sheet-title" id="draftTitle" data-i18n="draft.title">Unsaved work from last time</h2>
     <p class="sheet-note" id="draftBody"></p>
+    <!-- One row per leftover draft; built in src/main.js -->
+    <ul class="draft-list" id="draftList"></ul>
     <div class="sheet-actions">
-      <button type="submit" class="btn" value="discard" data-i18n="draft.discard">Discard</button>
-      <button type="submit" class="btn accent" value="restore" data-i18n="draft.restore">Restore</button>
+      <button type="button" class="btn" id="draftLater" data-i18n="draft.later">Not now</button>
+      <button type="button" class="btn warn" id="draftDiscardAll" data-i18n="draft.discardAll">Discard all</button>
     </div>
-  </form>
+  </div>
 </dialog>
 
 <!-- Tools -->

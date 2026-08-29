@@ -106,13 +106,15 @@ export default {
 
   /* 임시 저장 되살리기 */
   'draft.title': '저장하지 않은 작업이 남아 있습니다',
-  'draft.body': '{name}의 편집 내용({time})이 남아 있습니다. 되살릴까요?',
+  'draft.lead': '지난번 작업이 {count}개 남아 있습니다. 되살릴 것을 고르세요. 나머지는 그대로 둡니다.',
+  'draft.when': '{time} · {chars}자',
   'draft.restore': '되살리기',
-  'draft.discard': '버리기',
+  'draft.later': '나중에',
+  'draft.discardAll': '모두 버리기',
+  'draft.discardOne': '{name}의 변경 내용 버리기',
   'draft.restored': '저장하지 않았던 편집 내용을 되살렸습니다',
   'draft.tooLarge': '문서가 너무 커서 임시 저장을 할 수 없습니다. 가끔 직접 저장해 주세요.',
   'draft.failed': '임시 저장에 실패했습니다. 가끔 직접 저장해 주세요.',
-  'draft.more': '{count}개가 더 남아 있습니다.',
 
   /* Clipboard */
   'copy.all': '전체를 복사했습니다 ({chars}자)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': '올바른 JSON입니다',
   'json.error': 'JSON 오류: {detail}',
   'json.parseFailed': 'JSON으로 해석하지 못했습니다: {detail}',
+  'json.numberUnsafe': '바꾸지 않았습니다: {detail}은(는) 값을 바꾸지 않고 다시 쓸 수 없습니다.',
+  'json.duplicateKeyUnsafe': '바꾸지 않았습니다: 키 "{detail}"이(가) 같은 객체에 두 번 있어, 다시 쓰면 하나가 사라집니다.',
 
   /* Settings */
   'settings.title': '설정',

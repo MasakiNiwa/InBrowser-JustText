@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { findErrorOffset, formatJson, minifyJson, parseJson, sortJsonKeys } from '../src/tools/json-tools.js';
+import {
+  findErrorOffset,
+  findLossyRewrite,
+  formatJson,
+  minifyJson,
+  numberSurvives,
+  parseJson,
+  scanJson,
+  sortJsonKeys,
+} from '../src/tools/json-tools.js';
 import {
   deleteLines,
   duplicateLines,
@@ -176,6 +185,88 @@ test('indents and outdents', () => {
   assert.equal(indentLines('a\nb', '  '), '  a\n  b');
   assert.equal(outdentLines('  a\n\tb\nc', '  '), 'a\nb\nc');
   assert.equal(outdentLines(' a', '  '), 'a'); // a part-width indent still counts as one step
+});
+
+/* ---------- Rewrites that would change the data ---------- */
+
+/*
+ * Reformatting goes through JSON.parse, which rounds numbers it cannot hold and
+ * keeps only the last of a repeated key — both without a word. For a text
+ * editor that is data loss, so the commands have to see it coming.
+ */
+
+test('a number literal that survives a double is recognised', () => {
+  for (const literal of ['0', '-0', '1', '1.0', '1e0', '100', '1e2', '1.50', '0.1',
+    '-12345', '3.14159', '9007199254740992', '1e308', '-1.7976931348623157e308']) {
+    assert.equal(numberSurvives(literal), true, literal);
+  }
+});
+
+test('and one that does not is caught', () => {
+  for (const literal of [
+    '9007199254740993', // one past what a double can count to
+    '123456789012345678901234567890',
+    '0.1234567890123456789', // more digits than a double carries
+    '1e999', // overflows to Infinity, which is written out as null
+    '-1e999',
+    '1e-999', // underflows to zero
+  ]) {
+    assert.equal(numberSurvives(literal), false, literal);
+  }
+});
+
+test('an unsafe number stops a rewrite, and says which one', () => {
+  const lossy = findLossyRewrite('{"id":9007199254740993}');
+  assert.equal(lossy.reason, 'number');
+  assert.equal(lossy.detail, '9007199254740993');
+  assert.equal('{"id":9007199254740993}'.slice(lossy.offset, lossy.offset + 16), '9007199254740993');
+});
+
+test('a repeated key stops a rewrite, at whichever level it is on', () => {
+  assert.deepEqual(
+    { reason: findLossyRewrite('{"a":1,"a":2}').reason, detail: findLossyRewrite('{"a":1,"a":2}').detail },
+    { reason: 'duplicateKey', detail: 'a' },
+  );
+  assert.equal(findLossyRewrite('{"outer":{"b":1,"b":2}}').detail, 'b');
+  // The same name in different objects is not a repeat.
+  assert.equal(findLossyRewrite('{"a":{"x":1},"b":{"x":2}}'), null);
+  // Nor is a repeated value.
+  assert.equal(findLossyRewrite('[1,1,1]'), null);
+});
+
+test('ordinary JSON is left free to be rewritten', () => {
+  for (const source of ['{}', '[]', '{"a":1,"b":[1,2,{"c":null}]}', '"text"', '3.14', 'null']) {
+    assert.equal(findLossyRewrite(source), null, source);
+  }
+});
+
+test('broken JSON is reported as broken, not as unsafe', () => {
+  // The syntax error is the thing worth saying; it has its own message.
+  assert.equal(findLossyRewrite('{"a":}'), null);
+  assert.equal(findErrorOffset('{"a":}'), 5);
+});
+
+test('the scan finds every number, and the first repeated key', () => {
+  const scan = scanJson('{"a":1,"b":[2,3.5],"a":4}');
+  assert.equal(scan.error, null);
+  assert.equal(scan.numbers.length, 4);
+  assert.equal(scan.duplicateKey.name, 'a');
+});
+
+test('sorting keys keeps __proto__, which a plain object would swallow', () => {
+  // JSON.parse makes __proto__ an ordinary property; assigning it to a {} would
+  // set the prototype instead, and the key would vanish from the output.
+  const source = '{"z":1,"__proto__":{"keep":true},"a":2}';
+  const sorted = sortJsonKeys(source, 0).text;
+  assert.ok(sorted.includes('__proto__'), sorted);
+  assert.deepEqual(Object.keys(JSON.parse(sorted)).sort(), ['__proto__', 'a', 'z']);
+  assert.deepEqual(JSON.parse(sorted).__proto__, { keep: true });
+});
+
+test('formatting and minifying keep __proto__ as well', () => {
+  const source = '{"__proto__":{"keep":true}}';
+  assert.ok(formatJson(source, 2).text.includes('__proto__'));
+  assert.equal(minifyJson(source).text, source);
 });
 
 /* ---------- Whole-line edits ---------- */

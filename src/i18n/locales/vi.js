@@ -106,13 +106,15 @@ export default {
 
   /* Khôi phục bản nháp */
   'draft.title': 'Công việc chưa lưu lần trước',
-  'draft.body': 'Các thay đổi của {name} lúc {time} vẫn còn. Khôi phục chứ?',
+  'draft.lead': 'Vẫn còn phần chưa lưu từ lần trước — tất cả {count}. Chọn phần muốn khôi phục; phần còn lại vẫn được giữ.',
+  'draft.when': '{time} · {chars} ký tự',
   'draft.restore': 'Khôi phục',
-  'draft.discard': 'Bỏ đi',
+  'draft.later': 'Để sau',
+  'draft.discardAll': 'Bỏ tất cả',
+  'draft.discardOne': 'Bỏ các thay đổi của {name}',
   'draft.restored': 'Đã khôi phục các thay đổi chưa lưu',
   'draft.tooLarge': 'Tài liệu này quá lớn để giữ bản nháp. Hãy tự lưu thỉnh thoảng.',
   'draft.failed': 'Không ghi được bản nháp. Hãy tự lưu thỉnh thoảng.',
-  'draft.more': 'Còn {count} bản nữa.',
 
   /* Clipboard */
   'copy.all': 'Đã sao chép toàn bộ ({chars} ký tự)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'JSON hợp lệ',
   'json.error': 'Lỗi JSON: {detail}',
   'json.parseFailed': 'Không phân tích được thành JSON: {detail}',
+  'json.numberUnsafe': 'Không thay đổi gì: {detail} không thể viết lại mà không đổi giá trị.',
+  'json.duplicateKeyUnsafe': 'Không thay đổi gì: khoá "{detail}" xuất hiện hai lần trong cùng một đối tượng, viết lại sẽ mất một.',
 
   /* Settings */
   'settings.title': 'Cài đặt',

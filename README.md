@@ -162,10 +162,25 @@ document is too large, or storage is unavailable.
   Beyond about 2 MB the original bytes are dropped from the copy, so a restored document
   cannot be reopened under a different encoding
 - Each tab, and each file arriving from the share menu, keeps a copy of its own. Nothing
-  writes over work you have not been asked about; leftover copies are offered one per
-  launch, and any never claimed are dropped after 30 days
+  writes over work you have not been asked about, and a copy another open tab is still
+  using is never offered — discarding it would take away that tab's only backup
+- Everything waiting is shown in one list, with the file name, when it was last touched
+  and a glimpse of what is in it. Restore one, drop one, drop them all, or leave them for
+  later; anything never claimed is dropped after 30 days
 - Where storage is unavailable (private browsing, no quota) it quietly gives up.
   It is a safety net, not a substitute for saving
+
+<p><img src="docs/screenshot-drafts.png" alt="The list of leftover drafts" width="300"></p>
+
+## JSON and your data
+
+The JSON commands go through the browser's own parser, which quietly changes two things:
+a number too large for it to hold is rounded, and where a key appears twice in one object
+only the last survives. Silently rewriting somebody's config file that way would be worse
+than doing nothing, so the commands stop instead, say what is in the way, and put the
+caret on it. **Validate** reports the same thing, so you can find out before it matters.
+
+`__proto__` is an ordinary key in JSON, and it is kept as one.
 
 ## Development
 

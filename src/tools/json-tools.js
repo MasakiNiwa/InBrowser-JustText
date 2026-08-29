@@ -6,20 +6,40 @@ import { t } from '../i18n/index.js';
 import { register } from './registry.js';
 
 /**
- * Scans JSON and returns where the syntax first goes wrong, or null when it
- * does not.
+ * Walks JSON once and reports everything the commands need to know:
+ * where the syntax first goes wrong, every number literal, and the first key
+ * that appears twice in the same object.
  *
- * The scanning is done here rather than read out of JSON.parse's error, because
+ * The walking is done here rather than read out of JSON.parse's error, because
  * every engine words that differently — Chrome says "at position 18", Firefox
- * "at line 3 column 7", Safari sometimes gives no position at all. Scanning
- * ourselves points at the same character everywhere.
+ * "at line 3 column 7", Safari sometimes gives no position at all. Walking it
+ * ourselves points at the same character everywhere, and the last two are
+ * things JSON.parse quietly swallows rather than reports.
+ *
+ * @returns {{error:number|null, numbers:{start:number,end:number}[],
+ *            duplicateKey:{offset:number, name:string}|null}}
  */
-export function findErrorOffset(text) {
+export function scanJson(text) {
   let i = 0;
   const n = text.length;
+  const numbers = [];
+  let duplicateKey = null;
 
   /** Where it went wrong. A null result means it did not. */
   const fail = (at = i) => Math.min(at, n);
+
+  /** Where the string just scanned sat, so an object key can be read back. */
+  let lastStringSpan = null;
+
+  /** Reads a scanned string span. It has been validated, so parsing is safe. */
+  function readString(span) {
+    if (!span) return null;
+    try {
+      return JSON.parse(text.slice(span.start, span.end));
+    } catch {
+      return null;
+    }
+  }
 
   function skipSpace() {
     while (i < n) {
@@ -29,12 +49,15 @@ export function findErrorOffset(text) {
     }
   }
 
+  /** Scans a string, and hands back where it sat so the caller can read it. */
   function scanString() {
+    const from = i;
     i++; // the opening quote
     while (i < n) {
       const c = text[i];
       if (c === '"') {
         i++;
+        lastStringSpan = { start: from, end: i };
         return null;
       }
       if (c === '\\') {
@@ -65,6 +88,7 @@ export function findErrorOffset(text) {
   }
 
   function scanNumber() {
+    const from = i;
     if (text[i] === '-') i++;
     if (text[i] === '0') i++;
     else if (!scanDigits()) return fail();
@@ -77,6 +101,7 @@ export function findErrorOffset(text) {
       if (text[i] === '+' || text[i] === '-') i++;
       if (!scanDigits()) return fail();
     }
+    numbers.push({ start: from, end: i });
     return null;
   }
 
@@ -95,11 +120,19 @@ export function findErrorOffset(text) {
       i++;
       return null;
     }
+    // Repeats matter: JSON.parse keeps the last and drops the rest without a word.
+    const seen = new Set();
     for (;;) {
       skipSpace();
       if (text[i] !== '"') return fail();
+      const keyAt = i;
       const key = scanString();
       if (key !== null) return key;
+      const name = readString(lastStringSpan);
+      if (name !== null) {
+        if (seen.has(name) && duplicateKey === null) duplicateKey = { offset: keyAt, name };
+        seen.add(name);
+      }
       skipSpace();
       if (text[i] !== ':') return fail();
       i++;
@@ -156,9 +189,74 @@ export function findErrorOffset(text) {
   }
 
   const result = scanValue();
-  if (result !== null) return result;
+  if (result !== null) return { error: result, numbers, duplicateKey };
   skipSpace();
-  return i < n ? fail() : null; // anything trailing the value is an error
+  // Anything trailing the value is an error.
+  return { error: i < n ? fail() : null, numbers, duplicateKey };
+}
+
+/** Where the syntax first goes wrong, or null when it does not. */
+export function findErrorOffset(text) {
+  return scanJson(text).error;
+}
+
+/**
+ * A number literal's exact value, as a string that two literals share only when
+ * they mean the same number. `1`, `1.0` and `1e0` all come out the same; a
+ * literal too precise for a double does not match what a double writes back.
+ *
+ * The form is "digits e point", meaning 0.digits × 10^point.
+ */
+function exactValueOf(literal) {
+  const parts = /^(-?)(\d+)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(literal);
+  if (!parts) return literal;
+  const [, sign, whole, fraction = '', exponent = '0'] = parts;
+
+  let digits = whole + fraction;
+  let point = whole.length + Number(exponent);
+
+  let lead = 0;
+  while (lead < digits.length && digits[lead] === '0') lead++;
+  digits = digits.slice(lead);
+  point -= lead;
+
+  let end = digits.length;
+  while (end > 0 && digits[end - 1] === '0') end--;
+  digits = digits.slice(0, end);
+
+  if (digits === '') return '0';
+  return `${sign}${digits}e${point}`;
+}
+
+/**
+ * Whether a number literal comes back unchanged after a trip through a double.
+ * `9007199254740993` does not — JavaScript has no way to hold it — and neither
+ * does `1e999`, which becomes Infinity and is written out as null.
+ */
+export function numberSurvives(literal) {
+  const value = Number(literal);
+  if (!Number.isFinite(value)) return false;
+  return exactValueOf(literal) === exactValueOf(String(value));
+}
+
+/**
+ * Whether rewriting this JSON would change what it says, rather than only how
+ * it is laid out. Reformatting goes through JSON.parse, which rounds numbers it
+ * cannot hold and keeps only the last of any repeated key — both silently. A
+ * text editor must not do that to somebody's config file, so the commands stop
+ * instead and point at what is in the way.
+ *
+ * @returns {{reason:'number'|'duplicateKey', offset:number, detail:string}|null}
+ */
+export function findLossyRewrite(text) {
+  const { error, numbers, duplicateKey } = scanJson(text);
+  if (error !== null) return null; // broken JSON is reported on its own terms
+  for (const span of numbers) {
+    const literal = text.slice(span.start, span.end);
+    if (!numberSurvives(literal)) return { reason: 'number', offset: span.start, detail: literal };
+  }
+  if (duplicateKey) return { reason: 'duplicateKey', offset: duplicateKey.offset, detail: duplicateKey.name };
+  return null;
 }
 
 /**
@@ -184,7 +282,9 @@ export function formatJson(text, indent = 2) {
 function withSortedKeys(value) {
   if (Array.isArray(value)) return value.map(withSortedKeys);
   if (value && typeof value === 'object') {
-    const out = {};
+    // Object.create(null), not {}: assigning to `__proto__` on a plain object
+    // sets the prototype instead of a property, and the key would vanish.
+    const out = Object.create(null);
     for (const key of Object.keys(value).sort()) out[key] = withSortedKeys(value[key]);
     return out;
   }
@@ -209,9 +309,20 @@ export function minifyJson(text) {
   return { ok: true, text: JSON.stringify(parsed.value) };
 }
 
-/** Shared handling for the JSON commands. On failure the caret goes to the error. */
+/**
+ * Shared handling for the JSON commands.
+ * Anything that would change the data rather than its layout stops the command,
+ * and the caret goes to whatever is in the way — as it does for a syntax error.
+ */
 function applyJson(ctx, fn, label) {
-  const result = fn(ctx.getText());
+  const text = ctx.getText();
+  const lossy = findLossyRewrite(text);
+  if (lossy) {
+    ctx.setSelection(lossy.offset, lossy.offset, { reveal: true });
+    ctx.notify(t(`json.${lossy.reason}Unsafe`, { detail: lossy.detail }), 'error');
+    return false;
+  }
+  const result = fn(text);
   if (!result.ok) {
     if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
     ctx.notify(t('json.parseFailed', { detail: result.message }), 'error');
@@ -264,13 +375,22 @@ register({
   label: 'cmd.json.validate',
   hint: 'cmd.json.validateHint',
   run: (ctx) => {
-    const result = parseJson(ctx.getText());
-    if (result.ok) {
-      ctx.notify(t('json.valid'));
+    const text = ctx.getText();
+    const result = parseJson(text);
+    if (!result.ok) {
+      if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
+      ctx.notify(t('json.error', { detail: result.message }), 'error');
       return;
     }
-    if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
-    ctx.notify(t('json.error', { detail: result.message }), 'error');
+    // Valid, but there may still be something here that no reformatting could
+    // survive. Better to hear about it now than to find it changed later.
+    const lossy = findLossyRewrite(text);
+    if (lossy) {
+      ctx.setSelection(lossy.offset, lossy.offset, { reveal: true });
+      ctx.notify(t(`json.${lossy.reason}Unsafe`, { detail: lossy.detail }), 'error');
+      return;
+    }
+    ctx.notify(t('json.valid'));
   },
 });
 

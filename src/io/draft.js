@@ -90,13 +90,28 @@ export async function clearDraft(key) {
 /**
  * Every draft that is still around, newest first.
  * Each carries the `key` it is stored under, so the caller can act on it.
+ *
+ * The key is read from the store rather than from the record, because drafts
+ * written before 0.4 hold no key of their own — they all sat under "current".
+ * Somebody updating with unsaved work must still be offered it.
  */
 export async function listDrafts() {
-  const { ok, value } = await withStore('readonly', (store) => store.getAll());
-  if (!ok || !Array.isArray(value)) return [];
-  return value
-    .filter((draft) => draft && typeof draft.text === 'string' && typeof draft.key === 'string')
-    .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+  const rows = [];
+  const { ok } = await withStore('readonly', (store) => {
+    const request = store.openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      const draft = cursor.value;
+      if (draft && typeof draft.text === 'string') {
+        rows.push({ ...draft, key: typeof draft.key === 'string' ? draft.key : String(cursor.key) });
+      }
+      cursor.continue();
+    };
+    return request;
+  });
+  if (!ok) return [];
+  return rows.sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
 }
 
 /**

@@ -518,6 +518,57 @@ body {
 }
 .sheet-title { margin: 0; font-size: 16px; font-weight: 600; }
 .sheet-note { margin: 0; font-size: 12px; color: var(--fg-dim); line-height: 1.6; }
+/*
+ * The list of leftover drafts. Each row restores one; the ✕ beside it drops
+ * that one alone, so nothing is thrown away wholesale by accident.
+ */
+.draft-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.draft-row { display: flex; align-items: stretch; gap: 6px; }
+.draft-pick {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--fg);
+  cursor: pointer;
+}
+.draft-pick:hover { border-color: var(--accent); }
+.draft-name { display: block; font-weight: 600; font-size: 13px; }
+.draft-when { display: block; font-size: 11px; color: var(--fg-dim); margin-top: 1px; }
+.draft-preview {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--editor-font);
+  font-size: 11px;
+  color: var(--fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.draft-drop {
+  flex: none;
+  width: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--fg-dim);
+  font-size: 15px;
+  cursor: pointer;
+}
+.draft-drop:hover { border-color: var(--danger); color: var(--danger); }
+
 /* The characters that cannot be saved. */
 .loss-chars {
   margin: 0;

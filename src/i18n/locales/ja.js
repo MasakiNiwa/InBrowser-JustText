@@ -106,13 +106,15 @@ export default {
 
   /* Restoring a draft */
   'draft.title': '前回の続きがあります',
-  'draft.body': '{name}（{time}）の編集内容が残っています。復元しますか？',
+  'draft.lead': '前回の続きが {count} 件残っています。戻すものを選んでください。選ばなかったものはそのまま残ります。',
+  'draft.when': '{time} · {chars} 文字',
   'draft.restore': '復元する',
-  'draft.discard': '破棄する',
+  'draft.later': 'あとで',
+  'draft.discardAll': 'すべて破棄',
+  'draft.discardOne': '{name} の編集内容を破棄',
   'draft.restored': '前回の編集内容を復元しました',
   'draft.tooLarge': '大きすぎるため、編集内容の自動保存ができません。こまめに保存してください。',
   'draft.failed': '編集内容の自動保存ができませんでした。こまめに保存してください。',
-  'draft.more': 'ほかに {count} 件残っています。',
 
   /* Clipboard */
   'copy.all': '全文をコピーしました（{chars} 文字）',
@@ -162,6 +164,8 @@ export default {
   'json.valid': 'JSON として正しい形式です',
   'json.error': 'JSON エラー: {detail}',
   'json.parseFailed': 'JSON として解析できません: {detail}',
+  'json.numberUnsafe': '変更しませんでした: {detail} は値を変えずに書き直せません。',
+  'json.duplicateKeyUnsafe': '変更しませんでした: キー「{detail}」が同じオブジェクトに 2 回あり、書き直すと片方が失われます。',
 
   /* Settings */
   'settings.title': '設定',

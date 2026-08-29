@@ -106,13 +106,15 @@ export default {
 
   /* Restaurar um rascunho */
   'draft.title': 'Trabalho não salvo',
-  'draft.body': 'Ainda há alterações em {name} de {time}. Restaurar?',
+  'draft.lead': 'Ainda há trabalho da última vez — {count} no total. Escolha o que recuperar; o resto fica para depois.',
+  'draft.when': '{time} · {chars} caracteres',
   'draft.restore': 'Restaurar',
-  'draft.discard': 'Descartar',
+  'draft.later': 'Agora não',
+  'draft.discardAll': 'Eliminar tudo',
+  'draft.discardOne': 'Eliminar as alterações a {name}',
   'draft.restored': 'Suas alterações não salvas foram restauradas',
   'draft.tooLarge': 'Este documento é grande demais para manter um rascunho. Salve você mesmo de vez em quando.',
   'draft.failed': 'Não foi possível gravar o rascunho. Salve você mesmo de vez em quando.',
-  'draft.more': 'Faltam mais {count}.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'Este JSON é válido',
   'json.error': 'Erro de JSON: {detail}',
   'json.parseFailed': 'Não foi possível interpretar como JSON: {detail}',
+  'json.numberUnsafe': 'Nada foi alterado: {detail} não pode ser reescrito sem mudar o seu valor.',
+  'json.duplicateKeyUnsafe': 'Nada foi alterado: a chave «{detail}» aparece duas vezes no mesmo objeto, e reescrever perderia uma.',
 
   /* Settings */
   'settings.title': 'Configurações',

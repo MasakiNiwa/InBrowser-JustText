@@ -106,13 +106,15 @@ export default {
 
   /* ड्राफ़्ट वापस लाना */
   'draft.title': 'पिछली बार का बिना सहेजा काम',
-  'draft.body': '{name} में {time} के बदलाव अब भी मौजूद हैं। इन्हें वापस लाएँ?',
+  'draft.lead': 'पिछली बार का काम अब भी यहाँ है — कुल {count}। जो वापस लाना है चुनें; बाकी बाद के लिए रहेंगे।',
+  'draft.when': '{time} · {chars} अक्षर',
   'draft.restore': 'वापस लाएँ',
-  'draft.discard': 'छोड़ दें',
+  'draft.later': 'अभी नहीं',
+  'draft.discardAll': 'सब हटाएँ',
+  'draft.discardOne': '{name} के बदलाव हटाएँ',
   'draft.restored': 'बिना सहेजे बदलाव वापस ले आए',
   'draft.tooLarge': 'यह दस्तावेज़ इतना बड़ा है कि इसका ड्राफ़्ट नहीं रखा जा सकता। बीच-बीच में खुद सहेजते रहें।',
   'draft.failed': 'ड्राफ़्ट नहीं लिखा जा सका। बीच-बीच में खुद सहेजते रहें।',
-  'draft.more': '{count} और बाकी हैं।',
 
   /* Clipboard */
   'copy.all': 'पूरा पाठ कॉपी हुआ ({chars} वर्ण)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'यह सही JSON है',
   'json.error': 'JSON त्रुटि: {detail}',
   'json.parseFailed': 'JSON के रूप में नहीं पढ़ा जा सका: {detail}',
+  'json.numberUnsafe': 'कुछ नहीं बदला: {detail} को उसका मान बदले बिना दोबारा नहीं लिखा जा सकता।',
+  'json.duplicateKeyUnsafe': 'कुछ नहीं बदला: कुंजी "{detail}" एक ही ऑब्जेक्ट में दो बार है, और दोबारा लिखने पर एक चली जाएगी।',
 
   /* Settings */
   'settings.title': 'सेटिंग',
