@@ -29,8 +29,9 @@ Your files never leave the device — reading and saving both happen inside the 
 - **Overwrite** — where the browser supports it, you can pick a location and overwrite an
   existing file (with a confirmation)
 - **Copy** — puts the whole document (or the selection) on the clipboard in one tap
+- **Autosave and restore** — keeps a copy of your edits on the device and offers to bring them back
 - **Tools** — format, minify and validate JSON, sort lines, remove duplicates, trim trailing spaces
-- **15 languages** — follows the device language, changeable at any time in settings, including right-to-left layouts
+- **15 languages** — follows the device language and can be changed at any time in settings (the interface mirrors right to left in Arabic)
 - **Works offline** — add it to your home screen and it starts without a connection
 - **Opens from Share** — on Android, share a file to this app to open it directly
 
@@ -52,11 +53,13 @@ Anything not listed falls back to English.
 
 <p><img src="docs/screenshot-ar.png" alt="The interface in Arabic, mirrored right to left" width="300"></p>
 
-In Arabic the interface mirrors right to left. The editing area stays left to right,
-so that line numbers and search highlights keep lining up with the text regardless of
-the interface direction.
+In Arabic **the interface mirrors right to left**. The editing area stays left to right
+whatever the language: changing its writing direction would break the alignment between the
+text, the line numbers and the search highlights — the same choice most code editors make.
+So what is supported is a right-to-left *interface*, not right-to-left text layout in the
+document itself.
 
-Translations other than Japanese and English started from machine translation.
+**Every translation here was written by AI (Claude), Japanese included**, without human review.
 If something reads badly, please correct the matching file in `src/i18n/locales/`.
 
 ## Using it
@@ -128,15 +131,31 @@ If the browser supports the
 Overwriting cannot be undone, so it always asks for confirmation first.
 On browsers without the API (Chrome on Android, for example) these buttons are not shown.
 
+## Autosave and restore
+
+Shortly after you stop typing, your edits are copied to on-device storage (IndexedDB).
+If the tab closes, or the system shuts the browser down, the next launch offers to bring
+that work back.
+
+- The copy exists **only while there are unsaved changes**; saving clears it
+- It never leaves the device
+- Where storage is unavailable (private browsing, no quota) it quietly gives up.
+  It is a safety net, not a substitute for saving
+
 ## Development
 
 No dependencies. Node.js 22 or newer.
 
 ```
-npm test               # unit tests
-npm run serve          # dev server
-npm run test:browser   # full run in a browser (needs Playwright)
+npm test                     # unit tests
+npm run serve                # dev server
+npm run test:browser         # full run in a browser (needs Playwright / Chromium)
+npm run test:browser:firefox # the same run in Firefox
+npm run test:browser:webkit  # the same run in WebKit
 ```
+
+For what automation cannot reach — iOS Safari, sharing on a real device, screen readers —
+work through the list in [docs/manual-checks.md](docs/manual-checks.md).
 
 The browser run needs Playwright:
 
@@ -161,7 +180,7 @@ src/
     position.js         offset ⇔ line and column
     binary.js           "does this look binary?"
   i18n/               language switching and the string catalogs (one file per language in locales/)
-  io/                 reading, saving, share target, clipboard
+  io/                 reading, saving, share target, clipboard, autosave
   ui/                 editor, search panel, settings and the rest of the screen
   tools/              editing commands and their registry
   util/               small helpers
@@ -260,6 +279,12 @@ still leaves a working screen.
 - Even in right-to-left languages the editing area stays left to right. Changing the writing
   direction would break the alignment between the mirror layer, the line numbers and the text —
   the same choice most code editors make
+
+## Also here
+
+- [CHANGELOG.md](CHANGELOG.md) — what changed and when
+- [docs/manual-checks.md](docs/manual-checks.md) — the manual test checklist
+- [docs/publishing.md](docs/publishing.md) — repository About, Pages and release settings
 
 ## License
 

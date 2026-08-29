@@ -22,8 +22,8 @@
   --shadow: 0 8px 28px rgba(16, 24, 32, 0.18);
 
   --editor-font: ui-monospace, SFMono-Regular, "SF Mono", "Roboto Mono", "Noto Sans Mono CJK JP", Menlo, Consolas, monospace;
-  --editor-font-size: 15px;
-  --editor-line-height: 24px;
+  --editor-font-size: 16px;
+  --editor-line-height: 26px;
   --editor-tab-size: 2;
   --editor-pad-x: 12px;
   --editor-pad-y: 10px;
@@ -261,7 +261,8 @@ body {
   background: var(--bg);
   color: var(--fg);
   font: inherit;
-  font-size: 15px; /* 16px 未満だと iOS で拡大されるため注意 */
+  /* iOS は 16px 未満の入力欄に触れると画面を勝手に拡大するので、下回らないこと */
+  font-size: 16px;
 }
 .field:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
@@ -281,7 +282,23 @@ body {
 .sbtn:active { transform: scale(0.96); }
 
 .chk { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-.chk input { width: 17px; height: 17px; accent-color: var(--accent); }
+.chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ---------- キーボード操作 ---------- */
+
+/*
+ * どこを選んでいるかが分かるようにする。
+ * :focus-visible なので、指やマウスで押したときには出ない。
+ */
+:is(button, select, .tool-item, .status-btn, .toast-action):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* ツールバーとステータスバーは横スクロールで枠が切れるため、内側に描く */
+.tbtn:focus-visible,
+.status-btn:focus-visible {
+  outline-offset: -2px;
+}
 
 /* ---------- 編集面 ---------- */
 
@@ -576,6 +593,9 @@ body {
   pointer-events: none;
 }
 .toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 11px 14px;
   border-radius: 12px;
   background: var(--fg);
@@ -584,6 +604,21 @@ body {
   line-height: 1.5;
   box-shadow: var(--shadow);
   animation: toast-in 0.18s ease-out;
+}
+.toast-text { flex: 1; min-width: 0; }
+/* 「再読み込み」のように、その場で押せる操作を添えるとき */
+.toast-action {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
 }
 .toast-error { background: var(--danger); color: #fff; }
 .toast.leaving { opacity: 0; transition: opacity 0.24s; }

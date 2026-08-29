@@ -6,7 +6,7 @@
  *     Cache に置いてから ?share=1 付きでアプリへ転送する
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './styles/app.css',
   './assets/icon.svg',
   './src/main.js',
+  './src/version.js',
   './src/core/binary.js',
   './src/core/encoding.js',
   './src/core/encoder.js',
@@ -41,6 +42,7 @@ const APP_SHELL = [
   './src/i18n/locales/zh-hans.js',
   './src/i18n/locales/zh-hant.js',
   './src/io/clipboard.js',
+  './src/io/draft.js',
   './src/io/file-system.js',
   './src/io/open.js',
   './src/io/save.js',

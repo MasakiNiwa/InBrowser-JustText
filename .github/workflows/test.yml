@@ -17,7 +17,7 @@ jobs:
       - run: npm test
 
   browser:
-    name: ブラウザでの通し確認
+    name: ブラウザでの通し確認 (chromium)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,3 +27,24 @@ jobs:
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+
+  # Firefox と WebKit は動作の違いが残っている可能性があるため、
+  # まずは参考情報として動かす（結果が安定したら continue-on-error を外す）
+  browser-others:
+    name: ブラウザでの通し確認 (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:browser
+        env:
+          JUSTTEXT_BROWSER: ${{ matrix.browser }}

@@ -8,7 +8,7 @@ const KEY = 'justtext.settings.v1';
 export const DEFAULTS = {
   language: null, // null なら端末の言語から推定する
   theme: 'auto', // auto | light | dark
-  fontSize: 15,
+  fontSize: 16, // iOS は 16px 未満の入力欄に触れると画面を拡大するので、既定は下回らせない
   wrap: true,
   gutter: true,
   tabSize: 2,

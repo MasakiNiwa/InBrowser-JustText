@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Speichern abgebrochen',
   'save.overwriteConfirm': 'Der Inhalt von {name} wird ersetzt. Das Original lässt sich nicht wiederherstellen. Fortfahren?',
   'save.permissionDenied': 'Die Berechtigung zum Schreiben wurde nicht erteilt',
+  'save.lossyNote': 'In der gespeicherten Datei wurden nicht darstellbare Zeichen zu „?“.',
 
   /* Characters that cannot be saved */
   'loss.title': 'Einige Zeichen lassen sich nicht speichern',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Abbrechen',
   'loss.replace': 'Mit „?“ speichern',
   'loss.utf8': 'Als UTF-8 speichern',
+
+  /* Entwurf wiederherstellen */
+  'draft.title': 'Nicht gespeicherte Arbeit',
+  'draft.body': 'Änderungen an {name} von {time} sind noch da. Wiederherstellen?',
+  'draft.restore': 'Wiederherstellen',
+  'draft.discard': 'Verwerfen',
+  'draft.restored': 'Ihre nicht gespeicherten Änderungen wurden wiederhergestellt',
 
   /* Clipboard */
   'copy.all': 'Gesamten Text kopiert ({chars} Zeichen)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Unter Android eine Datei an diese App teilen, um sie direkt zu öffnen.',
   'help.shortcuts': 'Tastatur: Strg+O öffnen / Strg+S speichern / Strg+F suchen / Strg+G gehe zu Zeile / Strg+Z zurück / Strg+Umschalt+Z vor',
   'help.close': 'Schließen',
+  'help.version': 'Version {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'Nichts geändert',
   'common.commandFailed': 'Konnte nicht ausgeführt werden: {detail}',
   'common.noscript': 'Bitte aktivieren Sie JavaScript, um dieses Werkzeug zu nutzen.',
+
+  /* Aktualisierungen */
+  'update.available': 'Eine neue Version ist verfügbar',
+  'update.reload': 'Neu laden',
 };

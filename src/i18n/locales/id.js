@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Penyimpanan dibatalkan',
   'save.overwriteConfirm': 'Isi {name} akan diganti dan tidak bisa dikembalikan. Lanjutkan?',
   'save.permissionDenied': 'Izin untuk menulis berkas tidak diberikan',
+  'save.lossyNote': 'Pada berkas yang disimpan, karakter yang tidak bisa diwakili menjadi “?”.',
 
   /* Characters that cannot be saved */
   'loss.title': 'Ada karakter yang tidak bisa disimpan',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Batal',
   'loss.replace': 'Simpan dengan “?”',
   'loss.utf8': 'Simpan sebagai UTF-8',
+
+  /* Memulihkan draf */
+  'draft.title': 'Pekerjaan yang belum disimpan',
+  'draft.body': 'Suntingan pada {name} dari {time} masih ada. Pulihkan?',
+  'draft.restore': 'Pulihkan',
+  'draft.discard': 'Buang',
+  'draft.restored': 'Suntingan yang belum disimpan telah dipulihkan',
 
   /* Clipboard */
   'copy.all': 'Seluruh teks disalin ({chars} karakter)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Di Android, bagikan berkas ke aplikasi ini untuk membukanya langsung.',
   'help.shortcuts': 'Papan ketik: Ctrl+O buka / Ctrl+S simpan / Ctrl+F cari / Ctrl+G ke baris / Ctrl+Z urungkan / Ctrl+Shift+Z ulangi',
   'help.close': 'Tutup',
+  'help.version': 'Versi {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'Tidak ada yang berubah',
   'common.commandFailed': 'Tidak bisa dijalankan: {detail}',
   'common.noscript': 'Aktifkan JavaScript untuk memakai alat ini.',
+
+  /* Pembaruan */
+  'update.available': 'Versi baru tersedia',
+  'update.reload': 'Muat ulang',
 };

@@ -91,6 +91,7 @@ export default {
   'save.cancelled': '保存を取りやめました',
   'save.overwriteConfirm': '{name} の内容を書き換えます。元の内容は戻せません。続けますか？',
   'save.permissionDenied': '書き込みの許可が得られませんでした',
+  'save.lossyNote': '保存したファイルでは、表せない文字が ? に置き換わっています。',
 
   /* 保存できない文字 */
   'loss.title': '保存できない文字があります',
@@ -100,6 +101,13 @@ export default {
   'loss.cancel': 'キャンセル',
   'loss.replace': '? に置き換えて保存',
   'loss.utf8': 'UTF-8 で保存',
+
+  /* 下書きの復元 */
+  'draft.title': '前回の続きがあります',
+  'draft.body': '{name}（{time}）の編集内容が残っています。復元しますか？',
+  'draft.restore': '復元する',
+  'draft.discard': '破棄する',
+  'draft.restored': '前回の編集内容を復元しました',
 
   /* コピー */
   'copy.all': '全文をコピーしました（{chars} 文字）',
@@ -185,6 +193,7 @@ export default {
   'help.share': 'Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開けます。',
   'help.shortcuts': 'キーボード操作: Ctrl+O 開く / Ctrl+S 保存 / Ctrl+F 検索 / Ctrl+G 行へ移動 / Ctrl+Z 戻す / Ctrl+Shift+Z 進む',
   'help.close': '閉じる',
+  'help.version': 'バージョン {version}',
 
   /* 改行コード */
   'newline.lf': 'LF (Unix)',
@@ -195,4 +204,8 @@ export default {
   'common.noChange': '変更はありませんでした',
   'common.commandFailed': '実行できませんでした: {detail}',
   'common.noscript': 'このツールは JavaScript を有効にしてお使いください。',
+
+  /* 更新 */
+  'update.available': '新しい版があります',
+  'update.reload': '再読み込み',
 };

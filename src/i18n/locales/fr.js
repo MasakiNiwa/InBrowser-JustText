@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Enregistrement annulé',
   'save.overwriteConfirm': 'Le contenu de {name} va être remplacé. L’original sera perdu. Continuer ?',
   'save.permissionDenied': 'L’autorisation d’écrire le fichier n’a pas été accordée',
+  'save.lossyNote': 'Dans le fichier enregistré, les caractères impossibles à représenter sont devenus « ? ».',
 
   /* Characters that cannot be saved */
   'loss.title': 'Certains caractères ne peuvent pas être enregistrés',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Annuler',
   'loss.replace': 'Enregistrer avec « ? »',
   'loss.utf8': 'Enregistrer en UTF-8',
+
+  /* Restauration d’un brouillon */
+  'draft.title': 'Travail non enregistré',
+  'draft.body': 'Des modifications de {name} datant de {time} sont encore là. Les restaurer ?',
+  'draft.restore': 'Restaurer',
+  'draft.discard': 'Abandonner',
+  'draft.restored': 'Vos modifications non enregistrées ont été restaurées',
 
   /* Clipboard */
   'copy.all': 'Document copié ({chars} caractères)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Sur Android, partagez un fichier vers cette application pour l’ouvrir directement.',
   'help.shortcuts': 'Clavier : Ctrl+O ouvrir / Ctrl+S enregistrer / Ctrl+F rechercher / Ctrl+G aller à la ligne / Ctrl+Z annuler / Ctrl+Shift+Z rétablir',
   'help.close': 'Fermer',
+  'help.version': 'Version {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'Aucun changement',
   'common.commandFailed': 'Exécution impossible : {detail}',
   'common.noscript': 'Veuillez activer JavaScript pour utiliser cet outil.',
+
+  /* Mises à jour */
+  'update.available': 'Une nouvelle version est disponible',
+  'update.reload': 'Recharger',
 };

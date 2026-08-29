@@ -1,13 +1,15 @@
 {
   "name": "inbrowser-justtext",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "ブラウザだけでテキストファイルを開いて編集し、別名でダウンロード保存するツール",
   "type": "module",
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
     "serve": "node scripts/serve.js",
-    "test:browser": "node test/browser/e2e.mjs"
+    "test:browser": "node test/browser/e2e.mjs",
+    "test:browser:firefox": "JUSTTEXT_BROWSER=firefox node test/browser/e2e.mjs",
+    "test:browser:webkit": "JUSTTEXT_BROWSER=webkit node test/browser/e2e.mjs"
   },
   "license": "MIT"
 }

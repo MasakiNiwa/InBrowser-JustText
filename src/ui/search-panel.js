@@ -133,6 +133,20 @@ export function createSearchPanel({ elements, editor, notify }) {
     updateCount();
   }
 
+  /**
+   * 強調表示の上限を超えていて一覧に無い一致へ移動する。
+   * current を外しておかないと、次に押したとき古い位置から探し直して
+   * 同じところを行き来してしまう。
+   */
+  function moveToUnlisted(hit, direction) {
+    current = -1;
+    anchor = direction === 'start' ? hit.start : hit.end;
+    editor.setHighlights(matches, -1);
+    editor.setSelection(hit.start, hit.end);
+    editor.revealOffset(hit.start);
+    updateCount();
+  }
+
   function next() {
     const re = matcher();
     if (!re) return;
@@ -146,12 +160,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     if (!hit) return;
     const index = matches.findIndex((m) => m.start === hit.start);
     if (index >= 0) moveTo(index);
-    else {
-      // 上限で打ち切られていて一覧に無い場合は位置だけ合わせる
-      anchor = hit.end;
-      editor.setSelection(hit.start, hit.end);
-      editor.revealOffset(hit.start);
-    }
+    else moveToUnlisted(hit, 'end');
   }
 
   function prev() {
@@ -167,11 +176,7 @@ export function createSearchPanel({ elements, editor, notify }) {
     if (!hit) return;
     const index = matches.findIndex((m) => m.start === hit.start);
     if (index >= 0) moveTo(index);
-    else {
-      anchor = hit.start;
-      editor.setSelection(hit.start, hit.end);
-      editor.revealOffset(hit.start);
-    }
+    else moveToUnlisted(hit, 'start');
   }
 
   /**

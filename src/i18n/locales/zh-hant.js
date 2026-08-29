@@ -90,6 +90,7 @@ export default {
   'save.cancelled': '已取消儲存',
   'save.overwriteConfirm': '將取代 {name} 的內容，原內容無法復原。要繼續嗎？',
   'save.permissionDenied': '未取得寫入檔案的權限',
+  'save.lossyNote': '儲存的檔案中，無法表示的字元已被換成「?」。',
 
   /* Characters that cannot be saved */
   'loss.title': '有些字元無法儲存',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': '取消',
   'loss.replace': '換成「?」後儲存',
   'loss.utf8': '以 UTF-8 儲存',
+
+  /* 復原草稿 */
+  'draft.title': '還有上次未儲存的內容',
+  'draft.body': '{name}（{time}）的編輯內容還在，要復原嗎？',
+  'draft.restore': '復原',
+  'draft.discard': '捨棄',
+  'draft.restored': '已復原上次未儲存的內容',
 
   /* Clipboard */
   'copy.all': '已複製全文（{chars} 個字元）',
@@ -182,6 +190,7 @@ export default {
   'help.share': '在 Android 上，用「分享」把檔案傳給本應用程式即可直接開啟。',
   'help.shortcuts': '鍵盤：Ctrl+O 開啟 / Ctrl+S 儲存 / Ctrl+F 尋找 / Ctrl+G 跳至指定行 / Ctrl+Z 復原 / Ctrl+Shift+Z 重做',
   'help.close': '關閉',
+  'help.version': '版本 {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': '沒有任何變更',
   'common.commandFailed': '無法執行：{detail}',
   'common.noscript': '請啟用 JavaScript 後再使用本工具。',
+
+  /* 更新 */
+  'update.available': '有新版本可用',
+  'update.reload': '重新載入',
 };

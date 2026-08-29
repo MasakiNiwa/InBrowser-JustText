@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'सहेजना रद्द किया गया',
   'save.overwriteConfirm': '{name} की सामग्री बदल दी जाएगी और वापस नहीं लाई जा सकेगी। जारी रखें?',
   'save.permissionDenied': 'फ़ाइल में लिखने की अनुमति नहीं मिली',
+  'save.lossyNote': 'सहेजी गई फ़ाइल में, जो वर्ण नहीं दिखाए जा सके वे “?” बन गए।',
 
   /* Characters that cannot be saved */
   'loss.title': 'कुछ वर्ण सहेजे नहीं जा सकते',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'रद्द करें',
   'loss.replace': '“?” के साथ सहेजें',
   'loss.utf8': 'UTF-8 में सहेजें',
+
+  /* ड्राफ़्ट वापस लाना */
+  'draft.title': 'पिछली बार का बिना सहेजा काम',
+  'draft.body': '{name} में {time} के बदलाव अब भी मौजूद हैं। इन्हें वापस लाएँ?',
+  'draft.restore': 'वापस लाएँ',
+  'draft.discard': 'छोड़ दें',
+  'draft.restored': 'बिना सहेजे बदलाव वापस ले आए',
 
   /* Clipboard */
   'copy.all': 'पूरा पाठ कॉपी हुआ ({chars} वर्ण)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Android पर किसी फ़ाइल को इस ऐप में साझा करें और वह सीधे खुल जाएगी।',
   'help.shortcuts': 'कीबोर्ड: Ctrl+O खोलें / Ctrl+S सहेजें / Ctrl+F खोजें / Ctrl+G पंक्ति पर जाएँ / Ctrl+Z पूर्ववत / Ctrl+Shift+Z फिर करें',
   'help.close': 'बंद करें',
+  'help.version': 'संस्करण {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'कुछ नहीं बदला',
   'common.commandFailed': 'चलाया नहीं जा सका: {detail}',
   'common.noscript': 'इस उपकरण को चलाने के लिए कृपया JavaScript चालू करें।',
+
+  /* अपडेट */
+  'update.available': 'नया संस्करण उपलब्ध है',
+  'update.reload': 'फिर लोड करें',
 };
