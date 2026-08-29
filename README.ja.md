@@ -159,6 +159,10 @@ npm run test:browser:webkit  # 同上を WebKit で
 iOS Safari の実機、実機での共有、画面読み上げは自動では確かめられないため、
 変更したときは実機でも触って確かめてください。
 
+README と変更履歴は英語版・日本語版の両方を直してください。`README.md` と `README.ja.md`、
+`CHANGELOG.md` と `CHANGELOG.ja.md` が揃っていること、相互にリンクしていること、
+同じ版を扱っていることを `npm test` が確認します。
+
 ブラウザ側の確認には Playwright が必要です。
 
 ```

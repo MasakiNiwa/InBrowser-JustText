@@ -168,6 +168,10 @@ browser does not support the feature:
 Real iOS Safari, sharing on a real device and screen readers are outside what automation
 reaches, so try changes on a device as well.
 
+Editing the README or the changelog means editing both halves: `npm test` checks that
+`README.md`/`README.ja.md` and `CHANGELOG.md`/`CHANGELOG.ja.md` exist, link to each other, and
+cover the same releases.
+
 The browser run needs Playwright:
 
 ```
