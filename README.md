@@ -145,8 +145,14 @@ npm run test:browser:firefox # 同上を Firefox で
 npm run test:browser:webkit  # 同上を WebKit で
 ```
 
-自動では確かめられない範囲（iOS Safari、実機の共有、画面読み上げなど）は
-[docs/manual-checks.md](docs/manual-checks.md) の一覧を使ってください。
+通し確認は Chromium・Firefox・WebKit で動かしています。
+ブラウザが対応していない次の 2 つは、その場合だけ飛ばします。
+
+- **共有ターゲット** — Chromium 系（主に Android）だけの仕組みで、Safari には無い
+- **オフラインの再現** — WebKit では自動操作から通信断を作れない
+
+iOS Safari の実機、実機での共有、画面読み上げは自動では確かめられないため、
+変更したときは実機でも触って確かめてください。
 
 ブラウザ側の確認には Playwright が必要です。
 
@@ -270,8 +276,6 @@ register({
 ## そのほか
 
 - [CHANGELOG.md](CHANGELOG.md) — 変更履歴
-- [docs/manual-checks.md](docs/manual-checks.md) — 手で確かめることの一覧
-- [docs/publishing.md](docs/publishing.md) — 公開まわりの設定（About・Pages・リリース）
 
 ## ライセンス
 

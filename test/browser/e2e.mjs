@@ -96,8 +96,18 @@ const browser = await browserType.launch();
 const context = await browser.newContext(phone({ acceptDownloads: true, locale: 'ja-JP' }));
 const page = await context.newPage();
 
+/**
+ * ブラウザ自身が出す無害な注意はエラーとして数えない。
+ * interactive-widget は Android のソフトキーボード向けの指定で、
+ * 知らないブラウザは読み飛ばすだけだが WebKit は console にエラーとして書く。
+ */
+const HARMLESS = [/interactive-widget/i];
+const isHarmless = (text) => HARMLESS.some((pattern) => pattern.test(text));
+
 const errors = [];
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+page.on('console', (m) => {
+  if (m.type() === 'error' && !isHarmless(m.text())) errors.push(m.text());
+});
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 
 await page.goto(BASE, { waitUntil: 'networkidle' });
@@ -112,9 +122,16 @@ check('起動時はドロップ表示が出ていない', !(await page.locator('
 
 const sample = ['{', '  "name": "テスト",', '  "items": [1, 2, 3],', '  "note": "foo bar foo"', '}'].join('\n');
 await page.fill('#input', sample);
-await page.waitForTimeout(150);
-check('文字数が表示される', (await page.textContent('#statusCount')).includes(`${sample.length} 文字`));
-check('行数が表示される', (await page.textContent('#statusCount')).startsWith('5 行'));
+// 画面の更新は次の描画にまとめているので、待ち時間ではなく内容の変化を待つ
+const statusUpdated = await page
+  .waitForFunction(
+    (expected) => document.querySelector('#statusCount').textContent === expected,
+    `5 行 / ${sample.length} 文字`,
+    { timeout: 5000 },
+  )
+  .then(() => true)
+  .catch(() => false);
+check('文字数と行数が表示される', statusUpdated, await page.textContent('#statusCount'));
 check('未保存マークが出る', await page.locator('#dirtyMark').isVisible());
 
 /* ---------- 検索 ---------- */
@@ -616,37 +633,48 @@ const cachedCount = await page.evaluate(async () => {
 });
 check('アプリ一式がキャッシュされる', cachedCount >= 20, `${cachedCount} 件`);
 
-await context.setOffline(true);
-await page.reload({ waitUntil: 'domcontentloaded' });
-await page.waitForTimeout(1500);
-await dismissDraft(page);
-check('オフラインでも起動する', await page.locator('#input').isVisible());
-const offlineStatus = await page.evaluate(async () => {
-  const ta = document.querySelector('#input');
-  ta.value = 'オフライン編集';
-  ta.dispatchEvent(new Event('input', { bubbles: true }));
-  await new Promise((r) => setTimeout(r, 200));
-  return document.querySelector('#statusCount').textContent;
-});
-check('オフラインでも編集できる', offlineStatus.includes('7 文字'));
-// 辞書は必要になったときに読み込むため、オフラインでも届くことを確かめる
-check('オフラインでも表示言語が保たれる', (await page.textContent('#btnOpen')) === '開く', await page.textContent('#btnOpen'));
-await context.setOffline(false);
+// WebKit は Playwright から通信断を再現できない（再読み込みが内部エラーになる）ため飛ばす
+if (BROWSER_NAME === 'webkit') {
+  console.log('  --   オフラインの確認は WebKit では再現できないため飛ばしました');
+} else {
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+  await dismissDraft(page);
+  check('オフラインでも起動する', await page.locator('#input').isVisible());
+  const offlineStatus = await page.evaluate(async () => {
+    const ta = document.querySelector('#input');
+    ta.value = 'オフライン編集';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    return document.querySelector('#statusCount').textContent;
+  });
+  check('オフラインでも編集できる', offlineStatus.includes('7 文字'), offlineStatus);
+  // 辞書は必要になったときに読み込むため、オフラインでも届くことを確かめる
+  check('オフラインでも表示言語が保たれる', (await page.textContent('#btnOpen')) === '開く', await page.textContent('#btnOpen'));
+  await context.setOffline(false);
+}
 
-const shared = await page.evaluate(async () => {
-  const form = new FormData();
-  form.append('file', new File(['{\n  "共有": "テスト"\n}\n'], '共有されたデータ.json', { type: 'application/json' }));
-  const res = await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
-  return res.type;
-});
-check('共有 POST を Service Worker が受ける', shared === 'opaqueredirect' || shared === 'basic');
+// 共有ターゲットは Chromium 系（主に Android）だけの仕組みで、WebKit は
+// そもそも共有先として登録されない。Service Worker 内で multipart を読めないため飛ばす。
+if (BROWSER_NAME === 'webkit') {
+  console.log('  --   共有の確認は WebKit が共有ターゲットに対応しないため飛ばしました');
+} else {
+  const shared = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append('file', new File(['{\n  "共有": "テスト"\n}\n'], '共有されたデータ.json', { type: 'application/json' }));
+    const res = await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
+    return res.type;
+  });
+  check('共有 POST を Service Worker が受ける', shared === 'opaqueredirect' || shared === 'basic');
 
-await page.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(800);
-check('共有で開いたときは復元を尋ねない', !(await page.locator('#draftDialog').isVisible()));
-check('共有されたファイルが開かれる', (await page.inputValue('#input')).includes('"共有": "テスト"'));
-check('ファイル名も引き継がれる', (await page.textContent('#fileName')) === '共有されたデータ.json');
-check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
+  await page.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+  check('共有で開いたときは復元を尋ねない', !(await page.locator('#draftDialog').isVisible()));
+  check('共有されたファイルが開かれる', (await page.inputValue('#input')).includes('"共有": "テスト"'));
+  check('ファイル名も引き継がれる', (await page.textContent('#fileName')) === '共有されたデータ.json');
+  check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
+}
 
 check('通しでブラウザのエラーが出ない', errors.length === 0, errors.slice(0, 3).join(' | '));
 
@@ -729,6 +757,9 @@ for (const [browserLocale, expectedCode, expectedOpen] of detection) {
   const p2 = await ctx.newPage();
   const localeErrors = [];
   p2.on('pageerror', (e) => localeErrors.push(e.message));
+  p2.on('console', (m) => {
+    if (m.type() === 'error' && !isHarmless(m.text())) localeErrors.push(m.text());
+  });
   await p2.goto(BASE, { waitUntil: 'networkidle' });
   await p2.waitForTimeout(400);
   const r = await p2.evaluate(() => ({

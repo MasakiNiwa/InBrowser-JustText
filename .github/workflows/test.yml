@@ -28,12 +28,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
 
-  # Firefox と WebKit は動作の違いが残っている可能性があるため、
-  # まずは参考情報として動かす（結果が安定したら continue-on-error を外す）
+  # Firefox と WebKit。ブラウザが対応していない機能の確認は
+  # 通し確認の中で飛ばしている（test/browser/e2e.mjs を参照）
   browser-others:
     name: ブラウザでの通し確認 (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
