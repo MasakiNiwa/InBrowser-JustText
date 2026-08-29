@@ -29,8 +29,9 @@ Your files never leave the device — reading and saving both happen inside the 
 - **Overwrite** — where the browser supports it, you can pick a location and overwrite an
   existing file (with a confirmation)
 - **Copy** — puts the whole document (or the selection) on the clipboard in one tap
+- **Tab and symbol row** — types Tab and the punctuation that soft keyboards bury, without closing the keyboard
 - **Autosave and restore** — keeps a copy of your edits on the device and offers to bring them back
-- **Tools** — format, minify and validate JSON, sort lines, remove duplicates, trim trailing spaces
+- **Tools** — format, minify, validate and key-sort JSON; duplicate, delete, move, sort and dedupe lines; trim trailing spaces
 - **15 languages** — follows the device language and can be changed at any time in settings (the interface mirrors right to left in Arabic)
 - **Works offline** — add it to your home screen and it starts without a connection
 - **Opens from Share** — on Android, share a file to this app to open it directly
@@ -136,14 +137,33 @@ If the browser supports the
 Overwriting cannot be undone, so it always asks for confirmation first.
 On browsers without the API (Chrome on Android, for example) these buttons are not shown.
 
+## The Tab and symbol row
+
+Soft keyboards have no Tab key, and the punctuation that JSON and config files are made of
+usually sits two layers deep. The row above the status bar puts both one tap away, and it
+never takes focus, so the keyboard stays open while you use it.
+
+Tab follows your indent settings, exactly as the Tab key does on a hardware keyboard.
+Turn the row off in settings if you do not want it.
+
 ## Autosave and restore
 
 Shortly after you stop typing, your edits are copied to on-device storage (IndexedDB).
 If the tab closes, or the system shuts the browser down, the next launch offers to bring
 that work back.
 
+The dot beside the file name says where things stand: it appears when there are unsaved
+changes, and turns **orange** when those changes are *not* being kept — because the
+document is too large, or storage is unavailable.
+
 - The copy exists **only while there are unsaved changes**; saving clears it
 - It never leaves the device
+- Above about **4 MB** a document is too large to keep a copy of, and you are told so once.
+  Beyond about 2 MB the original bytes are dropped from the copy, so a restored document
+  cannot be reopened under a different encoding
+- Each tab, and each file arriving from the share menu, keeps a copy of its own. Nothing
+  writes over work you have not been asked about; leftover copies are offered one per
+  launch, and any never claimed are dropped after 30 days
 - Where storage is unavailable (private browsing, no quota) it quietly gives up.
   It is a safety net, not a substitute for saving
 
@@ -196,7 +216,7 @@ src/
     binary.js           "does this look binary?"
   i18n/               language switching and the string catalogs (one file per language in locales/)
   io/                 reading, saving, share target, clipboard, autosave
-  ui/                 editor, search panel, settings and the rest of the screen
+  ui/                 editor, key row, search panel, settings and the rest of the screen
   tools/              editing commands and their registry
   util/               small helpers
 ```

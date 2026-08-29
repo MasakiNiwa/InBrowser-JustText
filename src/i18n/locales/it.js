@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'File corrente',
   'header.dirty': 'Modifiche non salvate',
+  'header.dirtyKept': 'Modifiche non salvate, conservate su questo dispositivo',
   'header.settings': 'Impostazioni',
   'header.help': 'Guida',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Codifica (tocca per riaprire con un’altra)',
   'status.newlineHint': 'Fine riga usata al salvataggio (tocca per cambiarla)',
   'status.counts': '{lines} righe / {chars} caratteri',
+  'status.selected': '{chars} caratteri selezionati',
+  'status.selectedLines': '{chars} caratteri / {lines} righe selezionati',
 
   /* Files */
   'file.untitled': 'senza-titolo.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Le modifiche non salvate sono state ripristinate',
   'draft.tooLarge': 'Questo documento è troppo grande per tenerne una bozza. Salva tu stesso ogni tanto.',
   'draft.failed': 'Non è stato possibile scrivere la bozza. Salva tu stesso ogni tanto.',
+  'draft.more': 'Ne restano altre {count}.',
 
   /* Clipboard */
   'copy.all': 'Documento copiato ({chars} caratteri)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Formatta il JSON (tabulazioni)',
   'cmd.json.minify': 'Minifica il JSON',
   'cmd.json.minifyHint': 'Toglie a capo e spazi',
+  'cmd.json.sortKeys': 'Ordina le chiavi JSON',
+  'cmd.json.sortKeysHint': 'Formatta con le chiavi in ordine, per confrontare più facilmente',
   'cmd.json.validate': 'Verifica il JSON',
   'cmd.json.validateHint': 'Controlla la sintassi senza modificare nulla',
   'cmd.text.trimTrailing': 'Togli gli spazi a fine riga',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Ordina le righe (crescente)',
   'cmd.line.sortDesc': 'Ordina le righe (decrescente)',
   'cmd.line.unique': 'Togli le righe doppie',
+  'cmd.line.duplicate': 'Duplica la riga',
+  'cmd.line.delete': 'Elimina la riga',
+  'cmd.line.moveUp': 'Sposta la riga in alto',
+  'cmd.line.moveDown': 'Sposta la riga in basso',
   'cmd.text.tabsToSpaces': 'Tabulazioni → spazi',
   'cmd.text.spacesToTabs': 'Spazi iniziali → tabulazioni',
   'cmd.text.indent': 'Aumenta il rientro',
   'cmd.text.outdent': 'Riduci il rientro',
+  'cmd.text.insertTab': 'Inserisci una tabulazione',
   'cmd.app.goto': 'Vai alla riga',
   'cmd.app.reopen': 'Riapri con un’altra codifica',
   'cmd.app.copy': 'Copia tutto',
   'json.formatted': 'JSON formattato',
   'json.minified': 'JSON minificato',
+  'json.sorted': 'Chiavi ordinate',
   'json.valid': 'Il JSON è valido',
   'json.error': 'Errore JSON: {detail}',
   'json.parseFailed': 'Impossibile interpretarlo come JSON: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Ampiezza della tabulazione',
   'settings.wrap': 'Manda a capo le righe lunghe',
   'settings.gutter': 'Mostra i numeri di riga (se non si va a capo)',
+  'settings.keybar': 'Mostra la riga di tabulazione e simboli',
+  'keybar.label': 'Inserisci un carattere',
+  'keybar.tab': 'Tabulazione',
   'settings.insertSpaces': 'Inserisci spazi con il tasto Tab',
   'settings.autoIndent': 'Mantieni il rientro nella riga nuova',
   'settings.close': 'Chiudi',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'La codifica e la fine riga in basso si cambiano toccandole.',
   'help.pwa': 'Aggiungilo alla schermata Home per avviarlo come app; funziona anche offline.',
   'help.share': 'Su Android, condividi un file con questa app per aprirlo direttamente.',
+  'help.keybar': 'La riga sopra la barra di stato digita la tabulazione e la punteggiatura che le tastiere a schermo nascondono.',
+  'help.draft': 'Il lavoro non salvato viene conservato su questo dispositivo mentre scrivi e riproposto al successivo avvio. Oltre i 4 MB circa è troppo grande e il punto accanto al nome del file diventa arancione.',
   'help.shortcuts': 'Tastiera: Ctrl+O apri / Ctrl+S salva / Ctrl+F trova / Ctrl+G vai alla riga / Ctrl+Z annulla / Ctrl+Maiusc+Z ripeti',
   'help.close': 'Chiudi',
   'help.version': 'Versione {version}',
+  'help.source': 'Codice sorgente su GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

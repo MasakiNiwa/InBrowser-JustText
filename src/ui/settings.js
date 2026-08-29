@@ -12,6 +12,7 @@ export const DEFAULTS = {
   fontSize: 16, // iOS zooms in on any input below 16px, so never default under it
   wrap: true,
   gutter: true,
+  keybar: true, // soft keyboards have no Tab key, so this is on by default
   tabSize: 2,
   insertSpaces: true,
   autoIndent: true,

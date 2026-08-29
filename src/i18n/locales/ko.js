@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': '현재 파일',
   'header.dirty': '저장하지 않은 변경 사항',
+  'header.dirtyKept': '저장하지 않은 변경 사항, 이 기기에 보관됨',
   'header.settings': '설정',
   'header.help': '도움말',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': '문자 인코딩 (누르면 다른 인코딩으로 다시 엽니다)',
   'status.newlineHint': '저장할 때 쓰는 줄바꿈 (누르면 바뀝니다)',
   'status.counts': '{lines}줄 / {chars}자',
+  'status.selected': '{chars}자 선택',
+  'status.selectedLines': '{chars}자 / {lines}줄 선택',
 
   /* Files */
   'file.untitled': '제목없음.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': '저장하지 않았던 편집 내용을 되살렸습니다',
   'draft.tooLarge': '문서가 너무 커서 임시 저장을 할 수 없습니다. 가끔 직접 저장해 주세요.',
   'draft.failed': '임시 저장에 실패했습니다. 가끔 직접 저장해 주세요.',
+  'draft.more': '{count}개가 더 남아 있습니다.',
 
   /* Clipboard */
   'copy.all': '전체를 복사했습니다 ({chars}자)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'JSON 정리 (탭)',
   'cmd.json.minify': 'JSON 압축',
   'cmd.json.minifyHint': '줄바꿈과 공백을 없앱니다',
+  'cmd.json.sortKeys': 'JSON 키 정렬',
+  'cmd.json.sortKeysHint': '키를 순서대로 정렬해 서식을 맞춥니다. 비교하기 쉬워집니다',
   'cmd.json.validate': 'JSON 검사',
   'cmd.json.validateHint': '내용은 그대로 두고 문법만 확인합니다',
   'cmd.text.trimTrailing': '줄 끝 공백 지우기',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': '줄을 오름차순으로 정렬',
   'cmd.line.sortDesc': '줄을 내림차순으로 정렬',
   'cmd.line.unique': '중복된 줄 지우기',
+  'cmd.line.duplicate': '줄 복제',
+  'cmd.line.delete': '줄 삭제',
+  'cmd.line.moveUp': '줄 위로 이동',
+  'cmd.line.moveDown': '줄 아래로 이동',
   'cmd.text.tabsToSpaces': '탭 → 공백',
   'cmd.text.spacesToTabs': '줄 앞 공백 → 탭',
   'cmd.text.indent': '들여쓰기 늘리기',
   'cmd.text.outdent': '들여쓰기 줄이기',
+  'cmd.text.insertTab': '탭 삽입',
   'cmd.app.goto': '줄로 이동',
   'cmd.app.reopen': '다른 인코딩으로 다시 열기',
   'cmd.app.copy': '전체 복사',
   'json.formatted': 'JSON을 정리했습니다',
   'json.minified': 'JSON을 압축했습니다',
+  'json.sorted': '키를 정렬했습니다',
   'json.valid': '올바른 JSON입니다',
   'json.error': 'JSON 오류: {detail}',
   'json.parseFailed': 'JSON으로 해석하지 못했습니다: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': '탭 너비',
   'settings.wrap': '긴 줄 자동 줄바꿈',
   'settings.gutter': '줄 번호 표시 (자동 줄바꿈이 꺼져 있을 때)',
+  'settings.keybar': '탭·기호 줄 표시',
+  'keybar.label': '문자 삽입',
+  'keybar.tab': '탭',
   'settings.insertSpaces': 'Tab 키로 공백 넣기',
   'settings.autoIndent': '줄을 바꿀 때 들여쓰기 이어가기',
   'settings.close': '닫기',
@@ -190,9 +205,12 @@ export default {
   'help.status': '화면 아래의 문자 인코딩과 줄바꿈은 눌러서 바꿀 수 있습니다.',
   'help.pwa': '홈 화면에 추가하면 앱처럼 실행되고, 오프라인에서도 씁니다.',
   'help.share': 'Android에서 파일을 “공유”로 이 앱에 보내면 바로 열립니다.',
+  'help.keybar': '상태 표시줄 위의 줄에서 탭과 소프트 키보드 깊숙이 있는 문장 부호를 입력할 수 있습니다.',
+  'help.draft': '저장하지 않은 작업은 입력하는 동안 이 기기에 보관되고 다음 실행 때 복원할 수 있습니다. 약 4 MB를 넘으면 보관할 수 없어 파일 이름 옆 점이 주황색으로 바뀝니다.',
   'help.shortcuts': '키보드: Ctrl+O 열기 / Ctrl+S 저장 / Ctrl+F 찾기 / Ctrl+G 줄로 이동 / Ctrl+Z 실행 취소 / Ctrl+Shift+Z 다시 실행',
   'help.close': '닫기',
   'help.version': '버전 {version}',
+  'help.source': 'GitHub에서 소스 코드 보기',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

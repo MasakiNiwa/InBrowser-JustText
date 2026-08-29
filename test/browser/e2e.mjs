@@ -63,6 +63,27 @@ async function dismissDraft(target) {
   await target.waitForTimeout(200);
 }
 
+/**
+ * Every draft the store holds, newest first, as plain text.
+ * Drafts are keyed per session now, so the whole store is what matters.
+ */
+function readDraftTexts(target) {
+  return target.evaluate(async () => {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('justtext', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const all = await new Promise((resolve) => {
+      const request = db.transaction('drafts', 'readonly').objectStore('drafts').getAll();
+      request.onsuccess = () => resolve(request.result ?? []);
+      request.onerror = () => resolve([]);
+    });
+    db.close();
+    return all.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)).map((draft) => draft.text);
+  });
+}
+
 /* ---------- The server ---------- */
 
 const server = spawn(process.execPath, [join(import.meta.dirname, '../../scripts/serve.js'), String(PORT)], {
@@ -132,7 +153,39 @@ const statusUpdated = await page
   .then(() => true)
   .catch(() => false);
 check('the line and character counts are shown', statusUpdated, await page.textContent('#statusCount'));
+
+// Selecting swaps the totals for how much is picked out.
+await page.evaluate(() => {
+  const ta = document.querySelector('#input');
+  ta.focus();
+  ta.setSelectionRange(0, 6);
+  ta.dispatchEvent(new Event('select', { bubbles: true }));
+});
+await page.waitForTimeout(250);
+check('a selection is counted instead', (await page.textContent('#statusCount')).startsWith('6 chars'), await page.textContent('#statusCount'));
+await page.evaluate(() => {
+  const ta = document.querySelector('#input');
+  ta.setSelectionRange(0, sample_length_probe());
+  function sample_length_probe() { return ta.value.indexOf('items'); }
+  ta.dispatchEvent(new Event('select', { bubbles: true }));
+});
+await page.waitForTimeout(250);
+check('and a selection over lines says how many', (await page.textContent('#statusCount')).includes('lines'), await page.textContent('#statusCount'));
+await page.evaluate(() => {
+  const ta = document.querySelector('#input');
+  ta.setSelectionRange(0, 0);
+  ta.dispatchEvent(new Event('select', { bubbles: true }));
+});
+await page.waitForTimeout(250);
 check('the unsaved mark appears', await page.locator('#dirtyMark').isVisible());
+
+// The mark also says whether a crash would cost anything.
+const draftKept = await page
+  .waitForFunction(() => document.querySelector('#dirtyMark').dataset.draft === 'kept', null, { timeout: 5000 })
+  .then(() => true)
+  .catch(() => false);
+check('and says the work is being kept on the device', draftKept, await page.getAttribute('#dirtyMark', 'data-draft'));
+check('with wording a reader can hover or hear', ((await page.getAttribute('#dirtyMark', 'title')) ?? '').length > 0);
 
 /* ---------- Find and replace ---------- */
 
@@ -249,6 +302,104 @@ check('Ctrl+F opens the search', await page.locator('#searchPanel').isVisible())
 await page.keyboard.press('Escape');
 await page.waitForTimeout(150);
 check('Esc closes it again', !(await page.locator('#searchPanel').isVisible()));
+
+/* ---------- The key row ---------- */
+
+/*
+ * The whole point of the row is that a soft keyboard has no Tab and buries the
+ * punctuation. So what matters is not only that it types, but that it never
+ * takes focus away from the textarea — a keyboard that closes on every tap
+ * would be worse than no row at all.
+ */
+await page.fill('#input', '');
+await page.click('#input');
+check('the key row is there', await page.locator('#keyBar').isVisible());
+check('it holds a good spread of keys', (await page.locator('#keyBar .key').count()) >= 20);
+
+await page.keyboard.type('a');
+await page.click('#keyBar .key[data-key="tab"]');
+await page.click('#keyBar .key[data-key="brace-open"]');
+await page.waitForTimeout(200);
+check('Tab and a symbol both type', (await page.inputValue('#input')) === 'a  {', JSON.stringify(await page.inputValue('#input')));
+check('and focus never leaves the editor', (await page.evaluate(() => document.activeElement?.id)) === 'input');
+
+// Tab follows the indent settings, like the Tab key does.
+await page.click('#btnSettings');
+await page.waitForTimeout(200);
+await page.uncheck('#setInsertSpaces');
+await page.click('#settingsClose');
+await page.waitForTimeout(250);
+await page.fill('#input', '');
+await page.click('#input');
+await page.click('#keyBar .key[data-key="tab"]');
+await page.waitForTimeout(200);
+check('Tab follows the indent setting', (await page.inputValue('#input')) === '\t', JSON.stringify(await page.inputValue('#input')));
+
+// For a keyboard it is one stop with arrow keys inside, not two dozen stops.
+const roving = await page.evaluate(() => {
+  const keys = [...document.querySelectorAll('#keyBar .key')];
+  return { stops: keys.filter((k) => k.tabIndex === 0).length, total: keys.length };
+});
+check('the row is a single tab stop', roving.stops === 1, JSON.stringify(roving));
+await page.focus('#keyBar .key');
+await page.keyboard.press('ArrowRight');
+await page.waitForTimeout(150);
+check('and the arrow keys move along it', (await page.evaluate(() => document.activeElement?.dataset.key)) === 'brace-open', await page.evaluate(() => document.activeElement?.dataset.key));
+
+await page.click('#btnSettings');
+await page.waitForTimeout(200);
+await page.check('#setInsertSpaces');
+await page.uncheck('#setKeybar');
+await page.click('#settingsClose');
+await page.waitForTimeout(250);
+check('the row can be turned off', !(await page.locator('#keyBar').isVisible()));
+await page.click('#btnSettings');
+await page.waitForTimeout(200);
+await page.check('#setKeybar');
+await page.click('#settingsClose');
+await page.waitForTimeout(250);
+
+/* ---------- Whole-line editing ---------- */
+
+async function runTool(id) {
+  await page.click('#btnTools');
+  await page.waitForTimeout(250);
+  await page.click(`.tool-item[data-id="${id}"]`);
+  await page.waitForTimeout(350);
+  return page.inputValue('#input');
+}
+
+async function caretAt(value, offset) {
+  await page.fill('#input', value);
+  await page.waitForTimeout(150);
+  await page.evaluate((at) => {
+    const ta = document.querySelector('#input');
+    ta.focus();
+    ta.setSelectionRange(at, at);
+  }, offset);
+  await page.waitForTimeout(100);
+}
+
+await caretAt('one\ntwo\nthree', 4);
+check('duplicates the line at the caret', (await runTool('line.duplicate')) === 'one\ntwo\ntwo\nthree');
+await caretAt('one\ntwo\nthree', 4);
+check('deletes the line at the caret', (await runTool('line.delete')) === 'one\nthree');
+await caretAt('one\ntwo\nthree', 4);
+check('moves a line up', (await runTool('line.moveUp')) === 'two\none\nthree');
+await caretAt('one\ntwo\nthree', 0);
+check('moves a line down', (await runTool('line.moveDown')) === 'two\none\nthree');
+await caretAt('one\ntwo', 0);
+check('a move with nowhere to go changes nothing', (await runTool('line.moveUp')) === 'one\ntwo');
+await caretAt('one\ntwo', 4);
+check('a tab can be typed from the tools too', (await runTool('text.insertTab')) === 'one\n  two');
+
+await page.fill('#input', '{"b":1,"a":{"d":2,"c":3}}');
+await page.waitForTimeout(150);
+check(
+  'JSON keys can be put in order',
+  JSON.parse(await runTool('json.sortKeys')) && (await page.inputValue('#input')).indexOf('"a"') < (await page.inputValue('#input')).indexOf('"b"'),
+  await page.inputValue('#input'),
+);
 
 /* ---------- Opening a file: Shift_JIS with CRLF ---------- */
 
@@ -475,6 +626,17 @@ const affordance = await page.evaluate(() => {
 });
 check('the encoding is presented as a button', affordance.tag === 'BUTTON' && affordance.marker.includes('▾'), JSON.stringify(affordance));
 check('and says what pressing it does', affordance.title.includes('tap'), affordance.title);
+
+/* ---------- Help ---------- */
+
+await page.click('#btnHelp');
+await page.waitForTimeout(250);
+check('the help screen links to the source', (await page.getAttribute('#helpSource', 'href')) === 'https://github.com/MasakiNiwa/InBrowser-JustText');
+check('the link opens in a new tab, safely', (await page.getAttribute('#helpSource', 'rel'))?.includes('noopener'));
+check('and it says what it is', ((await page.textContent('#helpSource')) ?? '').trim().length > 0);
+check('the help screen shows the version', ((await page.textContent('#helpVersion')) ?? '').match(/\d+\.\d+\.\d+/) !== null);
+await page.click('#helpClose');
+await page.waitForTimeout(200);
 
 /* ---------- Line numbers ---------- */
 
@@ -770,22 +932,8 @@ await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
 check('the restore dialog is up', await draftPage.locator('#draftDialog').isVisible());
 await draftPage.waitForTimeout(3000); // longer than the autosave interval
-const draftStillThere = await draftPage.evaluate(async () => {
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open('justtext', 1);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  const db = await open();
-  const value = await new Promise((resolve) => {
-    const request = db.transaction('drafts', 'readonly').objectStore('drafts').get('current');
-    request.onsuccess = () => resolve(request.result ?? null);
-    request.onerror = () => resolve(null);
-  });
-  db.close();
-  return value?.text ?? null;
-});
-check('the draft survives while the question waits', draftStillThere === '消えては困る内容', JSON.stringify(draftStillThere));
+const draftStillThere = await readDraftTexts(draftPage);
+check('the draft survives while the question waits', draftStillThere.includes('消えては困る内容'), JSON.stringify(draftStillThere));
 await draftPage.click('#draftDialog button[value="restore"]');
 await draftPage.waitForTimeout(400);
 check('and can be restored after the wait', (await draftPage.inputValue('#input')) === '消えては困る内容');
@@ -797,43 +945,100 @@ await draftPage.fill('#saveName', 'synced.txt');
 const [syncedSave] = await Promise.all([draftPage.waitForEvent('download'), draftPage.click('#saveConfirm')]);
 await syncedSave.saveAs(join(WORK, 'synced.txt'));
 await draftPage.waitForTimeout(400); // shorter than the autosave interval
-const afterSave = await draftPage.evaluate(async () => {
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open('justtext', 1);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  const db = await open();
-  const value = await new Promise((resolve) => {
-    const request = db.transaction('drafts', 'readonly').objectStore('drafts').get('current');
-    request.onsuccess = () => resolve(request.result ?? null);
-    request.onerror = () => resolve(null);
-  });
-  db.close();
-  return value;
-});
-check('saving clears the draft immediately', afterSave === null || afterSave === undefined, JSON.stringify(afterSave)?.slice(0, 60));
+const afterSave = await readDraftTexts(draftPage);
+check('saving clears the draft immediately', afterSave.length === 0, JSON.stringify(afterSave).slice(0, 60));
 
-// Opening a shared file must not throw away a draft nobody has been asked about.
+/*
+ * Opening a shared file must not throw away a draft nobody has been asked
+ * about — and neither must working on that shared file afterwards. The session
+ * writing the shared file's draft owns a key of its own, so editing it and
+ * saving it both leave the earlier work exactly where it was.
+ */
 if (BROWSER_NAME !== 'webkit') {
+  const shareIn = async (body, filename) => {
+    await draftPage.evaluate(async ([text, name]) => {
+      const form = new FormData();
+      form.append('file', new File([text], name, { type: 'text/plain' }));
+      await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
+    }, [body, filename]);
+    await draftPage.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
+    await draftPage.waitForTimeout(1200);
+  };
+
   await draftPage.fill('#input', 'must survive the share');
   await draftPage.waitForTimeout(2000);
-  await draftPage.evaluate(async () => {
-    const form = new FormData();
-    form.append('file', new File(['the shared text'], 'shared.txt', { type: 'text/plain' }));
-    await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
-  });
-  await draftPage.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
-  await draftPage.waitForTimeout(2500); // longer than the autosave interval
+  await shareIn('the shared text', 'shared.txt');
   check('a shared launch asks nothing about the draft', !(await draftPage.locator('#draftDialog').isVisible()));
   check('and opens the shared file', (await draftPage.inputValue('#input')) === 'the shared text', await draftPage.inputValue('#input'));
+
+  // Editing the shared file autosaves it — beside the earlier draft, not over it.
+  await draftPage.fill('#input', 'the shared text, edited');
+  await draftPage.waitForTimeout(2200);
+  const afterShareEdit = await readDraftTexts(draftPage);
+  check(
+    'editing a shared file leaves the earlier draft alone',
+    afterShareEdit.includes('must survive the share') && afterShareEdit.includes('the shared text, edited'),
+    JSON.stringify(afterShareEdit),
+  );
+
+  // Saving it clears only its own draft.
+  await draftPage.click('#btnSave');
+  await draftPage.waitForTimeout(250);
+  await draftPage.fill('#saveName', 'shared-out.txt');
+  const [sharedSave] = await Promise.all([draftPage.waitForEvent('download'), draftPage.click('#saveConfirm')]);
+  await sharedSave.saveAs(join(WORK, 'shared-out.txt'));
+  await draftPage.waitForTimeout(500);
+  const afterShareSave = await readDraftTexts(draftPage);
+  check(
+    'saving a shared file leaves the earlier draft alone',
+    afterShareSave.length === 1 && afterShareSave[0] === 'must survive the share',
+    JSON.stringify(afterShareSave),
+  );
+
   await draftPage.goto(BASE, { waitUntil: 'networkidle' });
-  await draftPage.waitForTimeout(700);
+  await draftPage.waitForTimeout(900);
   check('the draft is still there afterwards', await draftPage.locator('#draftDialog').isVisible());
   await draftPage.click('#draftDialog button[value="restore"]');
   await draftPage.waitForTimeout(400);
   check('and can be recovered on the next plain launch', (await draftPage.inputValue('#input')) === 'must survive the share');
 }
+
+/*
+ * Two tabs at once. Each writes under a key of its own, so neither can land on
+ * the other's work — the failing case behind everything above.
+ */
+const secondTab = await draftContext.newPage();
+await secondTab.goto(BASE, { waitUntil: 'networkidle' });
+await secondTab.waitForTimeout(900);
+await dismissDraft(secondTab);
+await secondTab.fill('#input', 'written in the second tab');
+await secondTab.waitForTimeout(2200);
+// The first tab is still open and still autosaving to its own key.
+await draftPage.fill('#input', 'written in the first tab');
+await draftPage.waitForTimeout(2200);
+const bothTabs = await readDraftTexts(secondTab);
+check(
+  'two tabs keep drafts of their own',
+  bothTabs.includes('written in the first tab') && bothTabs.includes('written in the second tab'),
+  JSON.stringify(bothTabs),
+);
+await secondTab.close();
+
+// Every draft is offered in its turn, so none is thrown away unasked. How many
+// there are to get through comes from the store rather than a fixed number,
+// which would only be a guess about how the autosaves interleaved.
+const waiting = (await readDraftTexts(draftPage)).length;
+let offeredInTurn = 0;
+for (let attempt = 0; attempt <= waiting; attempt++) {
+  await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+  await draftPage.waitForTimeout(900);
+  if (!(await draftPage.locator('#draftDialog').isVisible())) break;
+  offeredInTurn++;
+  await draftPage.click('#draftDialog button[value="discard"]');
+  await draftPage.waitForTimeout(400);
+}
+check('each draft is offered in its turn', waiting >= 2 && offeredInTurn === waiting, `${offeredInTurn} of ${waiting}`);
+check('and the store is empty once they are all dealt with', (await readDraftTexts(draftPage)).length === 0);
 
 // Work that has been saved leaves no draft behind.
 await draftPage.fill('#input', 'this one gets saved');

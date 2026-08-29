@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': '当前文件',
   'header.dirty': '有未保存的修改',
+  'header.dirtyKept': '有未保存的更改，已在本设备留存',
   'header.settings': '设置',
   'header.help': '帮助',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': '字符编码（点按可换一种编码重新打开）',
   'status.newlineHint': '保存时使用的换行符（点按可切换）',
   'status.counts': '{lines} 行 / {chars} 字符',
+  'status.selected': '已选 {chars} 个字符',
+  'status.selectedLines': '已选 {chars} 个字符 / {lines} 行',
 
   /* Files */
   'file.untitled': '未命名.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': '已恢复上次未保存的内容',
   'draft.tooLarge': '文档过大，无法自动保存草稿。请自行不时保存。',
   'draft.failed': '草稿保存失败。请自行不时保存。',
+  'draft.more': '另有 {count} 份待处理。',
 
   /* Clipboard */
   'copy.all': '已复制全文（{chars} 个字符）',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': '格式化 JSON（制表符）',
   'cmd.json.minify': '压缩 JSON',
   'cmd.json.minifyHint': '去掉换行和空格',
+  'cmd.json.sortKeys': '排序 JSON 键',
+  'cmd.json.sortKeysHint': '按键名排序后格式化，便于比较',
   'cmd.json.validate': '校验 JSON',
   'cmd.json.validateHint': '只检查语法，不改动内容',
   'cmd.text.trimTrailing': '删除行尾空白',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': '按升序排列行',
   'cmd.line.sortDesc': '按降序排列行',
   'cmd.line.unique': '删除重复行',
+  'cmd.line.duplicate': '复制该行',
+  'cmd.line.delete': '删除该行',
+  'cmd.line.moveUp': '上移该行',
+  'cmd.line.moveDown': '下移该行',
   'cmd.text.tabsToSpaces': '制表符 → 空格',
   'cmd.text.spacesToTabs': '行首空格 → 制表符',
   'cmd.text.indent': '增加缩进',
   'cmd.text.outdent': '减少缩进',
+  'cmd.text.insertTab': '插入制表符',
   'cmd.app.goto': '跳转到行',
   'cmd.app.reopen': '换一种编码重新打开',
   'cmd.app.copy': '复制全文',
   'json.formatted': '已格式化 JSON',
   'json.minified': '已压缩 JSON',
+  'json.sorted': '已排序键名',
   'json.valid': '这是有效的 JSON',
   'json.error': 'JSON 错误：{detail}',
   'json.parseFailed': '无法解析为 JSON：{detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': '制表符宽度',
   'settings.wrap': '自动换行显示长行',
   'settings.gutter': '显示行号（关闭自动换行时）',
+  'settings.keybar': '显示制表符与符号行',
+  'keybar.label': '插入字符',
+  'keybar.tab': '制表符',
   'settings.insertSpaces': '按 Tab 键输入空格',
   'settings.autoIndent': '换行时保留缩进',
   'settings.close': '关闭',
@@ -190,9 +205,12 @@ export default {
   'help.status': '屏幕底部的字符编码和换行符，点按即可更改。',
   'help.pwa': '添加到主屏幕后可像应用一样启动，离线也能使用。',
   'help.share': '在 Android 上，通过“分享”把文件发送给本应用即可直接打开。',
+  'help.keybar': '状态栏上方的一行可输入制表符，以及软键盘里藏得很深的标点。',
+  'help.draft': '未保存的内容会在输入时留存在本设备，下次启动时可恢复。超过约 4 MB 便无法留存，文件名旁的圆点会变为橙色。',
   'help.shortcuts': '键盘：Ctrl+O 打开 / Ctrl+S 保存 / Ctrl+F 查找 / Ctrl+G 跳转到行 / Ctrl+Z 撤销 / Ctrl+Shift+Z 重做',
   'help.close': '关闭',
   'help.version': '版本 {version}',
+  'help.source': '在 GitHub 查看源代码',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

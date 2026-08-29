@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': '目前檔案',
   'header.dirty': '有未儲存的變更',
+  'header.dirtyKept': '有未儲存的變更，已在本裝置留存',
   'header.settings': '設定',
   'header.help': '說明',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': '字元編碼（點一下可換一種編碼重新開啟）',
   'status.newlineHint': '儲存時使用的換行字元（點一下可切換）',
   'status.counts': '{lines} 行 / {chars} 字元',
+  'status.selected': '已選 {chars} 個字元',
+  'status.selectedLines': '已選 {chars} 個字元 / {lines} 行',
 
   /* Files */
   'file.untitled': '未命名.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': '已復原上次未儲存的內容',
   'draft.tooLarge': '文件過大，無法自動儲存草稿。請自行不時儲存。',
   'draft.failed': '草稿儲存失敗。請自行不時儲存。',
+  'draft.more': '另有 {count} 份待處理。',
 
   /* Clipboard */
   'copy.all': '已複製全文（{chars} 個字元）',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': '格式化 JSON（Tab）',
   'cmd.json.minify': '壓縮 JSON',
   'cmd.json.minifyHint': '去掉換行與空白',
+  'cmd.json.sortKeys': '排序 JSON 鍵',
+  'cmd.json.sortKeysHint': '依鍵名排序後格式化，便於比較',
   'cmd.json.validate': '驗證 JSON',
   'cmd.json.validateHint': '只檢查語法，不更動內容',
   'cmd.text.trimTrailing': '刪除行尾空白',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': '依遞增排序行',
   'cmd.line.sortDesc': '依遞減排序行',
   'cmd.line.unique': '刪除重複的行',
+  'cmd.line.duplicate': '複製該行',
+  'cmd.line.delete': '刪除該行',
+  'cmd.line.moveUp': '上移該行',
+  'cmd.line.moveDown': '下移該行',
   'cmd.text.tabsToSpaces': 'Tab → 空格',
   'cmd.text.spacesToTabs': '行首空格 → Tab',
   'cmd.text.indent': '增加縮排',
   'cmd.text.outdent': '減少縮排',
+  'cmd.text.insertTab': '插入定位字元',
   'cmd.app.goto': '跳至指定行',
   'cmd.app.reopen': '換一種編碼重新開啟',
   'cmd.app.copy': '複製全文',
   'json.formatted': '已格式化 JSON',
   'json.minified': '已壓縮 JSON',
+  'json.sorted': '已排序鍵名',
   'json.valid': '這是有效的 JSON',
   'json.error': 'JSON 錯誤：{detail}',
   'json.parseFailed': '無法解析為 JSON：{detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Tab 寬度',
   'settings.wrap': '自動換行顯示長行',
   'settings.gutter': '顯示行號（關閉自動換行時）',
+  'settings.keybar': '顯示定位字元與符號列',
+  'keybar.label': '插入字元',
+  'keybar.tab': '定位字元',
   'settings.insertSpaces': '按 Tab 鍵輸入空格',
   'settings.autoIndent': '換行時保留縮排',
   'settings.close': '關閉',
@@ -190,9 +205,12 @@ export default {
   'help.status': '畫面下方的字元編碼與換行字元，點一下即可變更。',
   'help.pwa': '加到主畫面後可像應用程式一樣啟動，離線也能使用。',
   'help.share': '在 Android 上，用「分享」把檔案傳給本應用程式即可直接開啟。',
+  'help.keybar': '狀態列上方的一列可輸入定位字元，以及軟鍵盤裡藏得很深的標點。',
+  'help.draft': '未儲存的內容會在輸入時留存在本裝置，下次啟動時可還原。超過約 4 MB 便無法留存，檔名旁的圓點會變為橘色。',
   'help.shortcuts': '鍵盤：Ctrl+O 開啟 / Ctrl+S 儲存 / Ctrl+F 尋找 / Ctrl+G 跳至指定行 / Ctrl+Z 復原 / Ctrl+Shift+Z 重做',
   'help.close': '關閉',
   'help.version': '版本 {version}',
+  'help.source': '在 GitHub 檢視原始碼',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

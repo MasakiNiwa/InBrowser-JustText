@@ -3,6 +3,43 @@
 Dates are release dates. The layout follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 A Japanese version of this file is kept at [CHANGELOG.ja.md](CHANGELOG.ja.md).
 
+## [0.4.0]
+
+### Added
+
+- A row of keys above the status bar for Tab and the punctuation that soft
+  keyboards bury — `{}`, `[]`, quotes, colons and the rest. It never takes
+  focus, so the keyboard stays open while you use it, and Tab follows the indent
+  settings. It can be turned off in settings
+- Whole-line editing: duplicate, delete, move up and move down
+- **Sort JSON keys**, which formats with every key in order so that two config
+  files can be compared line for line
+- **Insert a tab** in the tools menu, for when the key row is hidden
+- The status bar shows how much is selected while there is a selection
+- A link to the source on GitHub, from the help screen
+
+### Changed
+
+- The dot beside the file name now says whether unsaved work is actually being
+  kept on the device, and turns orange when it is not — because the document is
+  too large, or storage is unavailable
+- Drafts are kept per editing session rather than under one shared key. Two tabs,
+  or a file arriving from the share menu, each keep a copy of their own; leftover
+  copies are offered one per launch, and any never claimed are dropped after
+  30 days
+- What the autosave keeps, and where it stops, is written down in the help screen
+  and the README
+
+### Fixed
+
+- A file opened from the share menu could take the earlier draft with it. Editing
+  it wrote over that draft, and saving it deleted it — in both cases losing work
+  that had never been offered back. Every session now writes under a key of its
+  own, so it can only ever clear what it wrote itself
+- Saving now waits for the draft to be brought in line before it reports success,
+  closing the gap where a crash in that moment could resurrect the state from
+  before the save
+
 ## [0.3.0]
 
 ### Changed

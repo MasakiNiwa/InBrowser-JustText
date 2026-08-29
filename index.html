@@ -100,6 +100,10 @@
     <div class="drop-overlay" id="dropOverlay" hidden><span data-i18n="editor.drop">Drop a file to open it</span></div>
   </main>
 
+  <!-- Tab and the punctuation that soft keyboards bury; see src/ui/keybar.js -->
+  <div class="keybar" id="keyBar" dir="ltr" role="toolbar"
+       data-i18n-aria-label="keybar.label" aria-label="Insert a character"></div>
+
   <footer class="statusbar">
     <button type="button" class="status-btn" id="statusPos" dir="ltr" data-i18n-title="status.goToLine" title="Go to line">1 : 1</button>
     <span class="status-item" id="statusCount">0 lines / 0 chars</span>
@@ -215,6 +219,7 @@
     </label>
     <label class="chk chk-row"><input type="checkbox" id="setWrap"><span data-i18n="settings.wrap">Wrap long lines</span></label>
     <label class="chk chk-row"><input type="checkbox" id="setGutter"><span data-i18n="settings.gutter">Show line numbers (when wrapping is off)</span></label>
+    <label class="chk chk-row"><input type="checkbox" id="setKeybar"><span data-i18n="settings.keybar">Show the Tab and symbol row</span></label>
     <label class="chk chk-row"><input type="checkbox" id="setInsertSpaces"><span data-i18n="settings.insertSpaces">Insert spaces with the Tab key</span></label>
     <label class="chk chk-row"><input type="checkbox" id="setAutoIndent"><span data-i18n="settings.autoIndent">Keep the indent on a new line</span></label>
     <div class="sheet-actions">
@@ -268,9 +273,15 @@
       <li><span data-i18n="help.status">The encoding and line ending at the bottom of the screen can be changed by tapping them.</span></li>
       <li><span data-i18n="help.pwa">Add it to your home screen to launch it as an app; it works offline too.</span></li>
       <li><span data-i18n="help.share">On Android, share a file to this app to open it directly.</span></li>
+      <li><span data-i18n="help.keybar">The row above the status bar types Tab and the punctuation that soft keyboards bury.</span></li>
+      <li><span data-i18n="help.draft">Unsaved work is kept on this device as you type, and offered back next time. Above about 4 MB it is too large to keep, and the dot beside the file name turns orange to say so.</span></li>
     </ul>
     <p class="sheet-note" data-i18n="help.shortcuts">Keyboard: Ctrl+O open / Ctrl+S save / Ctrl+F find / Ctrl+G go to line / Ctrl+Z undo / Ctrl+Shift+Z redo</p>
     <p class="sheet-note" id="helpVersion"></p>
+    <p class="sheet-note">
+      <a class="link" id="helpSource" href="https://github.com/MasakiNiwa/InBrowser-JustText"
+         target="_blank" rel="noopener noreferrer" data-i18n="help.source">Source code on GitHub</a>
+    </p>
     <div class="sheet-actions">
       <button type="button" class="btn" id="helpClose" data-i18n="help.close">Close</button>
     </div>

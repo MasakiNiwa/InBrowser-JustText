@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'ไฟล์ปัจจุบัน',
   'header.dirty': 'มีการแก้ไขที่ยังไม่ได้บันทึก',
+  'header.dirtyKept': 'มีการแก้ไขที่ยังไม่บันทึก เก็บไว้ในเครื่องนี้แล้ว',
   'header.settings': 'การตั้งค่า',
   'header.help': 'วิธีใช้',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'การเข้ารหัส (แตะเพื่อเปิดใหม่ด้วยการเข้ารหัสอื่น)',
   'status.newlineHint': 'อักขระขึ้นบรรทัดใหม่เมื่อบันทึก (แตะเพื่อเปลี่ยน)',
   'status.counts': '{lines} บรรทัด / {chars} อักขระ',
+  'status.selected': 'เลือก {chars} อักขระ',
+  'status.selectedLines': 'เลือก {chars} อักขระ / {lines} บรรทัด',
 
   /* Files */
   'file.untitled': 'ไม่มีชื่อ.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'กู้คืนการแก้ไขที่ยังไม่ได้บันทึกแล้ว',
   'draft.tooLarge': 'เอกสารนี้ใหญ่เกินกว่าจะเก็บฉบับร่างไว้ได้ กรุณาบันทึกเองเป็นระยะ',
   'draft.failed': 'บันทึกฉบับร่างไม่สำเร็จ กรุณาบันทึกเองเป็นระยะ',
+  'draft.more': 'ยังเหลืออีก {count} รายการ',
 
   /* Clipboard */
   'copy.all': 'คัดลอกทั้งหมดแล้ว ({chars} อักขระ)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'จัดรูปแบบ JSON (แท็บ)',
   'cmd.json.minify': 'ย่อ JSON',
   'cmd.json.minifyHint': 'ตัดการขึ้นบรรทัดและช่องว่างออก',
+  'cmd.json.sortKeys': 'เรียงคีย์ JSON',
+  'cmd.json.sortKeysHint': 'จัดรูปแบบโดยเรียงคีย์ตามลำดับ เพื่อให้เปรียบเทียบง่ายขึ้น',
   'cmd.json.validate': 'ตรวจสอบ JSON',
   'cmd.json.validateHint': 'ตรวจไวยากรณ์โดยไม่แก้เนื้อหา',
   'cmd.text.trimTrailing': 'ลบช่องว่างท้ายบรรทัด',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'เรียงบรรทัดจากน้อยไปมาก',
   'cmd.line.sortDesc': 'เรียงบรรทัดจากมากไปน้อย',
   'cmd.line.unique': 'ลบบรรทัดที่ซ้ำกัน',
+  'cmd.line.duplicate': 'ทำสำเนาบรรทัด',
+  'cmd.line.delete': 'ลบบรรทัด',
+  'cmd.line.moveUp': 'ย้ายบรรทัดขึ้น',
+  'cmd.line.moveDown': 'ย้ายบรรทัดลง',
   'cmd.text.tabsToSpaces': 'แท็บ → ช่องว่าง',
   'cmd.text.spacesToTabs': 'ช่องว่างต้นบรรทัด → แท็บ',
   'cmd.text.indent': 'เพิ่มการเยื้อง',
   'cmd.text.outdent': 'ลดการเยื้อง',
+  'cmd.text.insertTab': 'แทรกแท็บ',
   'cmd.app.goto': 'ไปที่บรรทัด',
   'cmd.app.reopen': 'เปิดใหม่ด้วยการเข้ารหัสอื่น',
   'cmd.app.copy': 'คัดลอกทั้งหมด',
   'json.formatted': 'จัดรูปแบบ JSON แล้ว',
   'json.minified': 'ย่อ JSON แล้ว',
+  'json.sorted': 'เรียงคีย์แล้ว',
   'json.valid': 'เป็น JSON ที่ถูกต้อง',
   'json.error': 'ข้อผิดพลาด JSON: {detail}',
   'json.parseFailed': 'แปลงเป็น JSON ไม่ได้: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'ความกว้างแท็บ',
   'settings.wrap': 'ตัดบรรทัดยาว',
   'settings.gutter': 'แสดงหมายเลขบรรทัด (เมื่อปิดการตัดบรรทัด)',
+  'settings.keybar': 'แสดงแถวแท็บและสัญลักษณ์',
+  'keybar.label': 'แทรกอักขระ',
+  'keybar.tab': 'แท็บ',
   'settings.insertSpaces': 'ใส่ช่องว่างด้วยปุ่ม Tab',
   'settings.autoIndent': 'คงการเยื้องไว้เมื่อขึ้นบรรทัดใหม่',
   'settings.close': 'ปิด',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'การเข้ารหัสและอักขระขึ้นบรรทัดใหม่ที่ด้านล่างจอ เปลี่ยนได้โดยแตะที่มัน',
   'help.pwa': 'เพิ่มไปยังหน้าจอหลักเพื่อเปิดเหมือนแอป ใช้งานแบบออฟไลน์ได้ด้วย',
   'help.share': 'บน Android แชร์ไฟล์มาที่แอปนี้เพื่อเปิดได้ทันที',
+  'help.keybar': 'แถวเหนือแถบสถานะพิมพ์แท็บและเครื่องหมายวรรคตอนที่แป้นพิมพ์บนจอซ่อนไว้ลึก',
+  'help.draft': 'งานที่ยังไม่บันทึกจะถูกเก็บไว้ในเครื่องนี้ขณะพิมพ์ และเสนอให้กู้คืนในครั้งถัดไป หากเกินราว 4 MB จะใหญ่เกินกว่าจะเก็บได้ และจุดข้างชื่อไฟล์จะเปลี่ยนเป็นสีส้ม',
   'help.shortcuts': 'แป้นพิมพ์: Ctrl+O เปิด / Ctrl+S บันทึก / Ctrl+F ค้นหา / Ctrl+G ไปที่บรรทัด / Ctrl+Z เลิกทำ / Ctrl+Shift+Z ทำซ้ำ',
   'help.close': 'ปิด',
   'help.version': 'เวอร์ชัน {version}',
+  'help.source': 'ซอร์สโค้ดบน GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

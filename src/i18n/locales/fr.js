@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Fichier en cours',
   'header.dirty': 'Modifications non enregistrées',
+  'header.dirtyKept': 'Modifications non enregistrées, conservées sur cet appareil',
   'header.settings': 'Paramètres',
   'header.help': 'Aide',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Encodage (appuyez pour rouvrir avec un autre)',
   'status.newlineHint': 'Fin de ligne utilisée à l’enregistrement (appuyez pour changer)',
   'status.counts': '{lines} lignes / {chars} car.',
+  'status.selected': '{chars} caractères sélectionnés',
+  'status.selectedLines': '{chars} caractères / {lines} lignes sélectionnés',
 
   /* Files */
   'file.untitled': 'sans-titre.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Vos modifications non enregistrées ont été restaurées',
   'draft.tooLarge': 'Ce document est trop volumineux pour en garder un brouillon. Pensez à enregistrer vous-même.',
   'draft.failed': 'Le brouillon n’a pas pu être écrit. Pensez à enregistrer vous-même.',
+  'draft.more': '{count} autre(s) en attente.',
 
   /* Clipboard */
   'copy.all': 'Document copié ({chars} caractères)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Formater le JSON (tabulations)',
   'cmd.json.minify': 'Minifier le JSON',
   'cmd.json.minifyHint': 'Supprimer les sauts de ligne et les espaces',
+  'cmd.json.sortKeys': 'Trier les clés JSON',
+  'cmd.json.sortKeysHint': 'Mettre en forme avec les clés triées, pour comparer plus facilement',
   'cmd.json.validate': 'Vérifier le JSON',
   'cmd.json.validateHint': 'Contrôler la syntaxe sans rien modifier',
   'cmd.text.trimTrailing': 'Supprimer les espaces en fin de ligne',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Trier les lignes (croissant)',
   'cmd.line.sortDesc': 'Trier les lignes (décroissant)',
   'cmd.line.unique': 'Supprimer les lignes en double',
+  'cmd.line.duplicate': 'Dupliquer la ligne',
+  'cmd.line.delete': 'Supprimer la ligne',
+  'cmd.line.moveUp': 'Monter la ligne',
+  'cmd.line.moveDown': 'Descendre la ligne',
   'cmd.text.tabsToSpaces': 'Tabulations → espaces',
   'cmd.text.spacesToTabs': 'Espaces initiaux → tabulations',
   'cmd.text.indent': 'Augmenter le retrait',
   'cmd.text.outdent': 'Diminuer le retrait',
+  'cmd.text.insertTab': 'Insérer une tabulation',
   'cmd.app.goto': 'Aller à la ligne',
   'cmd.app.reopen': 'Rouvrir avec un autre encodage',
   'cmd.app.copy': 'Tout copier',
   'json.formatted': 'JSON formaté',
   'json.minified': 'JSON minifié',
+  'json.sorted': 'Clés triées',
   'json.valid': 'Ce JSON est valide',
   'json.error': 'Erreur JSON : {detail}',
   'json.parseFailed': 'Analyse JSON impossible : {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Largeur des tabulations',
   'settings.wrap': 'Renvoyer les lignes longues',
   'settings.gutter': 'Numéros de ligne (si le renvoi est désactivé)',
+  'settings.keybar': 'Afficher la rangée de tabulation et de symboles',
+  'keybar.label': 'Insérer un caractère',
+  'keybar.tab': 'Tabulation',
   'settings.insertSpaces': 'Insérer des espaces avec la touche Tab',
   'settings.autoIndent': 'Conserver le retrait à la ligne suivante',
   'settings.close': 'Fermer',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'L’encodage et la fin de ligne en bas de l’écran se changent en appuyant dessus.',
   'help.pwa': 'Ajoutez l’outil à l’écran d’accueil pour le lancer comme une application ; il fonctionne hors ligne.',
   'help.share': 'Sur Android, partagez un fichier vers cette application pour l’ouvrir directement.',
+  'help.keybar': 'La rangée au-dessus de la barre d’état saisit la tabulation et la ponctuation enfouie dans les claviers tactiles.',
+  'help.draft': 'Le travail non enregistré est conservé sur cet appareil pendant la saisie et vous est proposé au lancement suivant. Au-delà d’environ 4 Mo, il devient trop volumineux et le point à côté du nom du fichier passe à l’orange.',
   'help.shortcuts': 'Clavier : Ctrl+O ouvrir / Ctrl+S enregistrer / Ctrl+F rechercher / Ctrl+G aller à la ligne / Ctrl+Z annuler / Ctrl+Shift+Z rétablir',
   'help.close': 'Fermer',
   'help.version': 'Version {version}',
+  'help.source': 'Code source sur GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

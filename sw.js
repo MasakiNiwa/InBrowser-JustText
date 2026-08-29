@@ -6,7 +6,7 @@
  *     and sends the browser on to the app with ?share=1.
  */
 
-const VERSION = 'v6';
+const VERSION = 'v7';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 
@@ -53,6 +53,7 @@ const APP_SHELL = [
   './src/ui/editor.js',
   './src/ui/search-panel.js',
   './src/ui/toast.js',
+  './src/ui/keybar.js',
   './src/ui/keymap.js',
   './src/ui/settings.js',
   './src/util/dom.js',
