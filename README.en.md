@@ -154,8 +154,14 @@ npm run test:browser:firefox # the same run in Firefox
 npm run test:browser:webkit  # the same run in WebKit
 ```
 
-iOS Safari, sharing on a real device and screen readers are outside what automation reaches,
-so try changes on a real device as well.
+The browser run covers Chromium, Firefox and WebKit. Two checks are skipped where the
+browser does not support the feature:
+
+- **Share target** — a Chromium (mainly Android) capability that Safari does not implement
+- **Offline emulation** — automation cannot cut the connection in WebKit
+
+Real iOS Safari, sharing on a real device and screen readers are outside what automation
+reaches, so try changes on a device as well.
 
 The browser run needs Playwright:
 

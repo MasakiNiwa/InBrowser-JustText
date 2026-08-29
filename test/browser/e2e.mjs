@@ -655,20 +655,26 @@ if (BROWSER_NAME === 'webkit') {
   await context.setOffline(false);
 }
 
-const shared = await page.evaluate(async () => {
-  const form = new FormData();
-  form.append('file', new File(['{\n  "共有": "テスト"\n}\n'], '共有されたデータ.json', { type: 'application/json' }));
-  const res = await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
-  return res.type;
-});
-check('共有 POST を Service Worker が受ける', shared === 'opaqueredirect' || shared === 'basic');
+// 共有ターゲットは Chromium 系（主に Android）だけの仕組みで、WebKit は
+// そもそも共有先として登録されない。Service Worker 内で multipart を読めないため飛ばす。
+if (BROWSER_NAME === 'webkit') {
+  console.log('  --   共有の確認は WebKit が共有ターゲットに対応しないため飛ばしました');
+} else {
+  const shared = await page.evaluate(async () => {
+    const form = new FormData();
+    form.append('file', new File(['{\n  "共有": "テスト"\n}\n'], '共有されたデータ.json', { type: 'application/json' }));
+    const res = await fetch('./share-target', { method: 'POST', body: form, redirect: 'manual' });
+    return res.type;
+  });
+  check('共有 POST を Service Worker が受ける', shared === 'opaqueredirect' || shared === 'basic');
 
-await page.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(800);
-check('共有で開いたときは復元を尋ねない', !(await page.locator('#draftDialog').isVisible()));
-check('共有されたファイルが開かれる', (await page.inputValue('#input')).includes('"共有": "テスト"'));
-check('ファイル名も引き継がれる', (await page.textContent('#fileName')) === '共有されたデータ.json');
-check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
+  await page.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+  check('共有で開いたときは復元を尋ねない', !(await page.locator('#draftDialog').isVisible()));
+  check('共有されたファイルが開かれる', (await page.inputValue('#input')).includes('"共有": "テスト"'));
+  check('ファイル名も引き継がれる', (await page.textContent('#fileName')) === '共有されたデータ.json');
+  check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
+}
 
 check('通しでブラウザのエラーが出ない', errors.length === 0, errors.slice(0, 3).join(' | '));
 

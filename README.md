@@ -145,7 +145,13 @@ npm run test:browser:firefox # 同上を Firefox で
 npm run test:browser:webkit  # 同上を WebKit で
 ```
 
-iOS Safari、実機での共有、画面読み上げは自動では確かめられないため、
+通し確認は Chromium・Firefox・WebKit で動かしています。
+ブラウザが対応していない次の 2 つは、その場合だけ飛ばします。
+
+- **共有ターゲット** — Chromium 系（主に Android）だけの仕組みで、Safari には無い
+- **オフラインの再現** — WebKit では自動操作から通信断を作れない
+
+iOS Safari の実機、実機での共有、画面読み上げは自動では確かめられないため、
 変更したときは実機でも触って確かめてください。
 
 ブラウザ側の確認には Playwright が必要です。
