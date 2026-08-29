@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Tệp hiện tại',
   'header.dirty': 'Có thay đổi chưa lưu',
+  'header.dirtyKept': 'Thay đổi chưa lưu, đã giữ trên thiết bị này',
   'header.settings': 'Cài đặt',
   'header.help': 'Trợ giúp',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Bảng mã (chạm để mở lại bằng bảng mã khác)',
   'status.newlineHint': 'Ký tự xuống dòng khi lưu (chạm để đổi)',
   'status.counts': '{lines} dòng / {chars} ký tự',
+  'status.selected': 'Đã chọn {chars} ký tự',
+  'status.selectedLines': 'Đã chọn {chars} ký tự / {lines} dòng',
 
   /* Files */
   'file.untitled': 'khong-ten.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Đã khôi phục các thay đổi chưa lưu',
   'draft.tooLarge': 'Tài liệu này quá lớn để giữ bản nháp. Hãy tự lưu thỉnh thoảng.',
   'draft.failed': 'Không ghi được bản nháp. Hãy tự lưu thỉnh thoảng.',
+  'draft.more': 'Còn {count} bản nữa.',
 
   /* Clipboard */
   'copy.all': 'Đã sao chép toàn bộ ({chars} ký tự)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Định dạng JSON (tab)',
   'cmd.json.minify': 'Rút gọn JSON',
   'cmd.json.minifyHint': 'Bỏ xuống dòng và dấu cách',
+  'cmd.json.sortKeys': 'Sắp xếp khoá JSON',
+  'cmd.json.sortKeysHint': 'Định dạng với khoá theo thứ tự, để dễ so sánh hơn',
   'cmd.json.validate': 'Kiểm tra JSON',
   'cmd.json.validateHint': 'Chỉ kiểm tra cú pháp, không đổi nội dung',
   'cmd.text.trimTrailing': 'Xóa khoảng trắng cuối dòng',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Sắp xếp dòng tăng dần',
   'cmd.line.sortDesc': 'Sắp xếp dòng giảm dần',
   'cmd.line.unique': 'Xóa dòng trùng lặp',
+  'cmd.line.duplicate': 'Nhân đôi dòng',
+  'cmd.line.delete': 'Xoá dòng',
+  'cmd.line.moveUp': 'Chuyển dòng lên',
+  'cmd.line.moveDown': 'Chuyển dòng xuống',
   'cmd.text.tabsToSpaces': 'Tab → dấu cách',
   'cmd.text.spacesToTabs': 'Dấu cách đầu dòng → tab',
   'cmd.text.indent': 'Tăng thụt lề',
   'cmd.text.outdent': 'Giảm thụt lề',
+  'cmd.text.insertTab': 'Chèn tab',
   'cmd.app.goto': 'Tới dòng',
   'cmd.app.reopen': 'Mở lại bằng bảng mã khác',
   'cmd.app.copy': 'Sao chép tất cả',
   'json.formatted': 'Đã định dạng JSON',
   'json.minified': 'Đã rút gọn JSON',
+  'json.sorted': 'Đã sắp xếp khoá',
   'json.valid': 'JSON hợp lệ',
   'json.error': 'Lỗi JSON: {detail}',
   'json.parseFailed': 'Không phân tích được thành JSON: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Độ rộng tab',
   'settings.wrap': 'Ngắt dòng dài',
   'settings.gutter': 'Hiện số dòng (khi tắt ngắt dòng)',
+  'settings.keybar': 'Hiện hàng tab và ký hiệu',
+  'keybar.label': 'Chèn ký tự',
+  'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Chèn dấu cách bằng phím Tab',
   'settings.autoIndent': 'Giữ thụt lề khi xuống dòng',
   'settings.close': 'Đóng',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'Bảng mã và ký tự xuống dòng ở cuối màn hình có thể đổi bằng cách chạm vào.',
   'help.pwa': 'Thêm vào màn hình chính để mở như một ứng dụng; dùng được cả khi ngoại tuyến.',
   'help.share': 'Trên Android, chia sẻ một tệp tới ứng dụng này để mở ngay.',
+  'help.keybar': 'Hàng phía trên thanh trạng thái gõ được tab và những dấu câu bị bàn phím ảo giấu sâu.',
+  'help.draft': 'Phần chưa lưu được giữ trên thiết bị này trong lúc bạn gõ và được mời khôi phục ở lần mở sau. Trên khoảng 4 MB thì quá lớn để giữ, và chấm cạnh tên tệp chuyển sang màu cam.',
   'help.shortcuts': 'Bàn phím: Ctrl+O mở / Ctrl+S lưu / Ctrl+F tìm / Ctrl+G tới dòng / Ctrl+Z hoàn tác / Ctrl+Shift+Z làm lại',
   'help.close': 'Đóng',
   'help.version': 'Phiên bản {version}',
+  'help.source': 'Mã nguồn trên GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

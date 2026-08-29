@@ -180,6 +180,28 @@ export function formatJson(text, indent = 2) {
   return { ok: true, text: JSON.stringify(parsed.value, null, indent) };
 }
 
+/** Puts every object's keys in order, all the way down. */
+function withSortedKeys(value) {
+  if (Array.isArray(value)) return value.map(withSortedKeys);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value).sort()) out[key] = withSortedKeys(value[key]);
+    return out;
+  }
+  return value;
+}
+
+/**
+ * Formats with every object's keys in order.
+ * Two config files that differ only in the order they were written then compare
+ * line for line, which is what makes a diff worth reading.
+ */
+export function sortJsonKeys(text, indent = 2) {
+  const parsed = parseJson(text);
+  if (!parsed.ok) return parsed;
+  return { ok: true, text: JSON.stringify(withSortedKeys(parsed.value), null, indent) };
+}
+
 /** Minifies, dropping all the whitespace. */
 export function minifyJson(text) {
   const parsed = parseJson(text);
@@ -249,5 +271,15 @@ register({
     }
     if (result.offset != null) ctx.setSelection(result.offset, result.offset, { reveal: true });
     ctx.notify(t('json.error', { detail: result.message }), 'error');
+  },
+});
+
+register({
+  id: 'json.sortKeys',
+  group: 'json',
+  label: 'cmd.json.sortKeys',
+  hint: 'cmd.json.sortKeysHint',
+  run: (ctx) => {
+    if (applyJson(ctx, (text) => sortJsonKeys(text, 2), 'cmd.json.sortKeys')) ctx.notify(t('json.sorted'));
   },
 });

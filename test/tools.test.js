@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { findErrorOffset, formatJson, minifyJson, parseJson } from '../src/tools/json-tools.js';
+import { findErrorOffset, formatJson, minifyJson, parseJson, sortJsonKeys } from '../src/tools/json-tools.js';
 import {
+  deleteLines,
+  duplicateLines,
   indentLines,
+  moveLines,
   outdentLines,
   removeEmptyLines,
   sortLines,
@@ -122,6 +125,26 @@ test('formatting leaves the value itself alone', () => {
   assert.equal(minifyJson(formatJson(source, 4).text).text, source);
 });
 
+test('sorts every object\'s keys, all the way down', () => {
+  const sorted = JSON.parse(sortJsonKeys('{"b":1,"a":{"d":2,"c":[{"f":3,"e":4}]}}').text);
+  assert.deepEqual(Object.keys(sorted), ['a', 'b']);
+  assert.deepEqual(Object.keys(sorted.a), ['c', 'd']);
+  assert.deepEqual(Object.keys(sorted.a.c[0]), ['e', 'f']);
+});
+
+test('sorting keys changes nothing about the value', () => {
+  const source = '{"b":1,"a":[3,1,2],"c":{"z":null,"y":true}}';
+  assert.deepEqual(JSON.parse(sortJsonKeys(source).text), JSON.parse(source));
+  // Arrays keep their order; only object keys move.
+  assert.deepEqual(JSON.parse(sortJsonKeys(source).text).a, [3, 1, 2]);
+});
+
+test('sorting broken JSON reports the failure instead', () => {
+  const result = sortJsonKeys('{"a":}');
+  assert.equal(result.ok, false);
+  assert.equal(typeof result.offset, 'number');
+});
+
 /* ---------- Tidying text ---------- */
 
 test('strips trailing whitespace', () => {
@@ -153,6 +176,64 @@ test('indents and outdents', () => {
   assert.equal(indentLines('a\nb', '  '), '  a\n  b');
   assert.equal(outdentLines('  a\n\tb\nc', '  '), 'a\nb\nc');
   assert.equal(outdentLines(' a', '  '), 'a'); // a part-width indent still counts as one step
+});
+
+/* ---------- Whole-line edits ---------- */
+
+test('duplicates the line the caret is on', () => {
+  const r = duplicateLines('a\nb\nc', 2, 2);
+  assert.equal(r.text, 'a\nb\nb\nc');
+  // The caret follows the copy, so typing straight away edits the new line.
+  assert.deepEqual([r.start, r.end], [4, 4]);
+});
+
+test('duplicates every line a selection touches', () => {
+  const r = duplicateLines('a\nb\nc', 1, 3);
+  assert.equal(r.text, 'a\nb\na\nb\nc');
+});
+
+test('deletes the line the caret is on', () => {
+  const r = deleteLines('a\nb\nc', 2, 2);
+  assert.equal(r.text, 'a\nc');
+  assert.deepEqual([r.start, r.end], [2, 2]);
+});
+
+test('deleting the last line takes the break before it', () => {
+  const r = deleteLines('a\nb', 2, 2);
+  assert.equal(r.text, 'a');
+  assert.deepEqual([r.start, r.end], [1, 1]);
+});
+
+test('deleting the only line leaves nothing', () => {
+  assert.equal(deleteLines('only', 1, 1).text, '');
+});
+
+test('moves a line up and down', () => {
+  const up = moveLines('a\nb\nc', 2, 2, 'up');
+  assert.equal(up.text, 'b\na\nc');
+  assert.deepEqual([up.start, up.end], [0, 0]);
+
+  const down = moveLines('a\nb\nc', 0, 0, 'down');
+  assert.equal(down.text, 'b\na\nc');
+  assert.deepEqual([down.start, down.end], [2, 2]);
+});
+
+test('a move that has nowhere to go reports back', () => {
+  assert.equal(moveLines('a\nb', 0, 0, 'up'), null);
+  assert.equal(moveLines('a\nb', 2, 2, 'down'), null);
+});
+
+test('moving carries a whole selection with it', () => {
+  const r = moveLines('a\nb\nc\nd', 2, 5, 'down');
+  assert.equal(r.text, 'a\nd\nb\nc');
+  assert.equal(r.text.slice(r.start, r.end), 'b\nc');
+});
+
+test('moving down then up puts the text back', () => {
+  const source = 'one\ntwo\nthree';
+  const down = moveLines(source, 0, 0, 'down');
+  const back = moveLines(down.text, down.start, down.end, 'up');
+  assert.equal(back.text, source);
 });
 
 /* ---------- The register ---------- */

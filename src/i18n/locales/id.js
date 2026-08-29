@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Berkas saat ini',
   'header.dirty': 'Ada perubahan yang belum disimpan',
+  'header.dirtyKept': 'Perubahan belum disimpan, tersimpan di perangkat ini',
   'header.settings': 'Pengaturan',
   'header.help': 'Bantuan',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Pengodean (ketuk untuk membuka ulang dengan pengodean lain)',
   'status.newlineHint': 'Akhir baris saat menyimpan (ketuk untuk mengganti)',
   'status.counts': '{lines} baris / {chars} karakter',
+  'status.selected': '{chars} karakter dipilih',
+  'status.selectedLines': '{chars} karakter / {lines} baris dipilih',
 
   /* Files */
   'file.untitled': 'tanpa-judul.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Suntingan yang belum disimpan telah dipulihkan',
   'draft.tooLarge': 'Dokumen ini terlalu besar untuk disimpan sebagai draf. Simpan sendiri sesekali.',
   'draft.failed': 'Draf tidak bisa ditulis. Simpan sendiri sesekali.',
+  'draft.more': '{count} lagi menunggu.',
 
   /* Clipboard */
   'copy.all': 'Seluruh teks disalin ({chars} karakter)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Rapikan JSON (tab)',
   'cmd.json.minify': 'Padatkan JSON',
   'cmd.json.minifyHint': 'Menghapus baris baru dan spasi',
+  'cmd.json.sortKeys': 'Urutkan kunci JSON',
+  'cmd.json.sortKeysHint': 'Rapikan dengan kunci terurut, agar lebih mudah dibandingkan',
   'cmd.json.validate': 'Periksa JSON',
   'cmd.json.validateHint': 'Memeriksa sintaks tanpa mengubah apa pun',
   'cmd.text.trimTrailing': 'Hapus spasi di akhir baris',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Urutkan baris menaik',
   'cmd.line.sortDesc': 'Urutkan baris menurun',
   'cmd.line.unique': 'Hapus baris ganda',
+  'cmd.line.duplicate': 'Gandakan baris',
+  'cmd.line.delete': 'Hapus baris',
+  'cmd.line.moveUp': 'Pindahkan baris ke atas',
+  'cmd.line.moveDown': 'Pindahkan baris ke bawah',
   'cmd.text.tabsToSpaces': 'Tab → spasi',
   'cmd.text.spacesToTabs': 'Spasi awal → tab',
   'cmd.text.indent': 'Perbesar indentasi',
   'cmd.text.outdent': 'Perkecil indentasi',
+  'cmd.text.insertTab': 'Sisipkan tab',
   'cmd.app.goto': 'Ke baris',
   'cmd.app.reopen': 'Buka ulang dengan pengodean lain',
   'cmd.app.copy': 'Salin semua',
   'json.formatted': 'JSON dirapikan',
   'json.minified': 'JSON dipadatkan',
+  'json.sorted': 'Kunci telah diurutkan',
   'json.valid': 'JSON ini valid',
   'json.error': 'Galat JSON: {detail}',
   'json.parseFailed': 'Tidak bisa diurai sebagai JSON: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Lebar tab',
   'settings.wrap': 'Bungkus baris panjang',
   'settings.gutter': 'Tampilkan nomor baris (saat pembungkusan mati)',
+  'settings.keybar': 'Tampilkan baris tab dan simbol',
+  'keybar.label': 'Sisipkan karakter',
+  'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Sisipkan spasi dengan tombol Tab',
   'settings.autoIndent': 'Pertahankan indentasi di baris baru',
   'settings.close': 'Tutup',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'Pengodean dan akhir baris di bagian bawah layar bisa diubah dengan mengetuknya.',
   'help.pwa': 'Tambahkan ke layar utama agar terbuka seperti aplikasi; bisa dipakai tanpa internet.',
   'help.share': 'Di Android, bagikan berkas ke aplikasi ini untuk membukanya langsung.',
+  'help.keybar': 'Baris di atas bilah status mengetikkan tab dan tanda baca yang tersembunyi di papan ketik layar.',
+  'help.draft': 'Pekerjaan yang belum disimpan disimpan di perangkat ini sambil Anda mengetik, lalu ditawarkan kembali lain kali. Di atas sekitar 4 MB ukurannya terlalu besar, dan titik di samping nama berkas berubah oranye.',
   'help.shortcuts': 'Papan ketik: Ctrl+O buka / Ctrl+S simpan / Ctrl+F cari / Ctrl+G ke baris / Ctrl+Z urungkan / Ctrl+Shift+Z ulangi',
   'help.close': 'Tutup',
   'help.version': 'Versi {version}',
+  'help.source': 'Kode sumber di GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

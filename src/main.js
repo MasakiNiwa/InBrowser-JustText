@@ -12,7 +12,7 @@ import { canEncode } from './core/encoder.js';
 import { NEWLINES, newlineShort, normalizeToLf } from './core/newline.js';
 import { LOCALES, applyTranslations, detectLocale, getLocale, isSupported, setLocale, t } from './i18n/index.js';
 import { copyText } from './io/clipboard.js';
-import { clearDraft, loadDraft, saveDraft } from './io/draft.js';
+import { clearDraft, dropDraftsBefore, listDrafts, saveDraft } from './io/draft.js';
 import { canPickSaveLocation, pickSaveLocation, writeToHandle } from './io/file-system.js';
 import { buildDocument, readFile, emptyDocument, LARGE_FILE_BYTES } from './io/open.js';
 import { buildFileBytes, downloadBytes, guessMimeType, suggestCopyName } from './io/save.js';
@@ -21,6 +21,7 @@ import { listByGroup, runCommand } from './tools/registry.js';
 import './tools/json-tools.js';
 import './tools/text-tools.js';
 import { createEditor } from './ui/editor.js';
+import { createKeyBar } from './ui/keybar.js';
 import { createSearchPanel } from './ui/search-panel.js';
 import { createToast } from './ui/toast.js';
 import { installKeymap } from './ui/keymap.js';
@@ -46,6 +47,16 @@ const editor = createEditor({
   measureLayer: $('#measureLayer'),
   gutter: $('#gutter'),
   gutterInner: $('#gutterInner'),
+});
+
+/** One indent step, spaces or a tab depending on the settings. */
+const indentUnit = () => (settings.insertSpaces ? ' '.repeat(settings.tabSize) : '\t');
+
+const keyBar = createKeyBar({
+  container: $('#keyBar'),
+  editor,
+  indentUnit,
+  translate: t,
 });
 
 const search = createSearchPanel({
@@ -76,6 +87,7 @@ function applySettings() {
   editor.setWrap(settings.wrap);
   editor.setShowGutter(settings.gutter);
   editor.setTabSize(settings.tabSize);
+  keyBar.setVisible(settings.keybar);
   saveSettings(settings);
 }
 
@@ -86,6 +98,7 @@ async function applyLanguage(code) {
   saveSettings(settings);
   applyTranslations();
   buildToolList();
+  keyBar.applyLabels();
   $('#helpVersion').textContent = t('help.version', { version: APP_VERSION });
   // A document still carrying a placeholder name takes the new language's.
   if (doc.untitled) doc = { ...doc, name: t('file.untitled') };
@@ -100,23 +113,49 @@ const isDirty = () => editor.getText() !== savedText;
 
 function updateFileInfo() {
   $('#fileName').textContent = doc.name;
-  $('#dirtyMark').hidden = !isDirty();
   $('#statusEncoding').textContent = encodingLabel(doc.encoding);
   $('#statusNewline').textContent = newlineShort(doc.newline);
+  updateDraftIndicator();
+}
+
+/**
+ * The unsaved mark also says whether the work is being kept on the device.
+ * A reader who can see that a crash would not cost them anything can carry on
+ * editing; one whose autosave is failing needs to know before it matters.
+ */
+function updateDraftIndicator() {
+  const mark = $('#dirtyMark');
+  const dirty = isDirty();
+  mark.hidden = !dirty;
+  if (!dirty) return;
+  const kept = draftState === 'kept';
+  const problem = draftState === 'failed' || draftState === 'tooLarge';
+  mark.dataset.draft = problem ? 'unkept' : draftState;
+  const label = kept ? t('header.dirtyKept') : problem ? t(`draft.${draftState}`) : t('header.dirty');
+  mark.setAttribute('aria-label', label);
+  mark.title = label;
 }
 
 const updateStatus = rafThrottle(() => {
   const text = editor.getText();
-  const { start } = editor.getSelection();
+  const { start, end } = editor.getSelection();
   const index = editor.lineIndex;
   $('#statusPos').textContent = `${index.lineAt(start)} : ${index.columnAt(start)}`;
-  $('#statusCount').textContent = t('status.counts', {
-    lines: formatNumber(index.lineCount),
-    chars: formatNumber(text.length),
-  });
+  // With something selected, how much of it there is says more than the totals.
+  // The line count only appears once the selection actually spans lines, which
+  // keeps "1 line" — awkward in every language — off the screen.
+  const spanned = end > start ? index.lineAt(end) - index.lineAt(start) + 1 : 0;
+  $('#statusCount').textContent = end > start
+    ? (spanned > 1
+      ? t('status.selectedLines', { chars: formatNumber(end - start), lines: formatNumber(spanned) })
+      : t('status.selected', { chars: formatNumber(end - start) }))
+    : t('status.counts', {
+      lines: formatNumber(index.lineCount),
+      chars: formatNumber(text.length),
+    });
   $('#btnUndo').disabled = !editor.canUndo;
   $('#btnRedo').disabled = !editor.canRedo;
-  $('#dirtyMark').hidden = !isDirty();
+  updateDraftIndicator();
 });
 
 editor.on('change', updateStatus);
@@ -349,11 +388,10 @@ async function performSave(mode) {
   updateFileInfo();
   updateStatus();
 
-  // Bring the draft in line straight away, so that a crash right after saving
-  // does not bring back the state from before the save.
-  draftSettled = true;
+  // Bring the draft in line straight away, and wait for it: a crash in the
+  // moment after saving must not be able to bring back the state from before it.
   scheduleDraftSync.cancel();
-  syncDraft();
+  await syncDraft();
 
   const lossy = written !== text;
   notify(lossy ? `${outcome.message} ${t('save.lossyNote')}` : outcome.message);
@@ -394,6 +432,9 @@ const DRAFT_BYTES_LIMIT = 2 * 1024 * 1024;
 /** Above this the text itself is too large to keep a draft of. */
 const DRAFT_TEXT_LIMIT = 4 * 1024 * 1024;
 
+/** A draft nobody has come back for is dropped after this long. */
+const DRAFT_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
  * True while the editor content is being swapped programmatically.
  * Loading a document fires the same change event as typing does, and acting on
@@ -401,11 +442,27 @@ const DRAFT_TEXT_LIMIT = 4 * 1024 * 1024;
  */
 let swappingDocument = false;
 
-/** Set once the reader has been asked what to do with a leftover draft. */
-let draftSettled = false;
+/**
+ * The one key this session writes its draft to.
+ *
+ * A brand new key every launch, and null until start-up has settled what to do
+ * with whatever was already stored. Between them those two rules mean a session
+ * can only ever clear work it wrote itself: a second tab, a reload, or a file
+ * arriving from the share menu all leave earlier drafts to be offered in turn.
+ */
+let draftKey = null;
+
+/** How the autosave is going, for the interface to show. */
+let draftState = 'idle';
 
 /** Whether we have already said that the draft could not be written. */
 let draftProblemReported = false;
+
+/** A key nothing else is using. */
+function freshKey() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function currentDraft() {
   return {
@@ -424,26 +481,41 @@ function currentDraft() {
 async function writeDraft() {
   const draft = currentDraft();
   if (draft.text.length > DRAFT_TEXT_LIMIT) {
+    setDraftState('tooLarge');
     if (!draftProblemReported) {
       draftProblemReported = true;
       notify(t('draft.tooLarge'), 'error');
     }
     return;
   }
-  const written = await saveDraft(draft);
-  if (!written && !draftProblemReported) {
+  const written = await saveDraft(draftKey, draft);
+  setDraftState(written ? 'kept' : 'failed');
+  if (written) {
+    // Working again: a later failure is worth saying out loud once more.
+    draftProblemReported = false;
+    return;
+  }
+  if (!draftProblemReported) {
     draftProblemReported = true;
     notify(t('draft.failed'), 'error');
   }
 }
 
 /**
- * Bring the stored draft in line with what is on screen right now.
+ * Bring this session's draft in line with what is on screen right now.
  * Unsaved work is kept; once everything is saved the draft is dropped.
+ *
+ * Nothing happens before start-up has handed this session a key, so an autosave
+ * can never land on a draft that is still being offered to the reader.
  */
-function syncDraft() {
-  if (isDirty()) writeDraft();
-  else if (draftSettled) clearDraft();
+async function syncDraft() {
+  if (!draftKey) return;
+  if (isDirty()) {
+    await writeDraft();
+  } else {
+    await clearDraft(draftKey);
+    setDraftState('idle');
+  }
 }
 
 /** Called after the reader edits. Programmatic swaps do not come through here. */
@@ -451,6 +523,13 @@ const scheduleDraftSync = debounce(() => {
   if (swappingDocument) return;
   syncDraft();
 }, DRAFT_DELAY_MS);
+
+/** Records how the autosave is going and shows it beside the unsaved mark. */
+function setDraftState(state) {
+  if (draftState === state) return;
+  draftState = state;
+  updateDraftIndicator();
+}
 
 editor.on('change', () => {
   if (swappingDocument) return;
@@ -478,14 +557,15 @@ function swapDocument(run) {
 }
 
 /**
- * Drop the draft because the reader chose to leave the work behind.
- * A draft that has not been offered yet is left alone, so that opening the app
- * through a shared file does not silently throw away earlier work.
+ * Drop this session's draft, because the reader chose to leave the work behind.
+ * Only ever touches the one key this session owns, so drafts belonging to
+ * another tab — or waiting to be offered — are left exactly as they are.
  */
 function abandonDraft() {
-  if (!draftSettled) return;
+  if (!draftKey) return;
   scheduleDraftSync.cancel();
-  clearDraft();
+  setDraftState('idle');
+  return clearDraft(draftKey);
 }
 
 /** Format a time for display. */
@@ -500,24 +580,39 @@ function formatTime(at) {
 
 /**
  * If work from last time is still around, ask whether to bring it back.
+ *
+ * Only the newest is offered. Any others stay where they are and come up on a
+ * later launch, so nothing is thrown away on the reader's behalf.
+ *
  * @returns {Promise<boolean>} whether it was restored
  */
 async function offerDraftRestore() {
-  const draft = await loadDraft();
+  const drafts = await listDrafts();
+  const [draft, ...rest] = drafts;
   // An empty document is a perfectly good edit, so only the draft itself
   // being absent counts as "nothing to restore".
-  if (!draft || typeof draft.text !== 'string') {
-    draftSettled = true;
+  if (!draft) {
+    draftKey = freshKey();
     return false;
   }
 
-  $('#draftBody').textContent = t('draft.body', { name: draft.name, time: formatTime(draft.at) });
+  const body = t('draft.body', { name: draft.name, time: formatTime(draft.at) });
+  $('#draftBody').textContent = rest.length > 0
+    ? `${body} ${t('draft.more', { count: formatNumber(rest.length) })}`
+    : body;
   const choice = await askDialog($('#draftDialog'));
-  draftSettled = true;
+  // Whatever the answer, this session writes under a key of its own from here.
+  // Taking the offered one over would mean holding a key another tab may still
+  // be autosaving to, and clearing it later as though the work were ours.
+  draftKey = freshKey();
   if (choice !== 'restore') {
-    await clearDraft();
+    await clearDraft(draft.key);
     return false;
   }
+  // Take the work over under this session's key before letting the old one go,
+  // so that a crash in between cannot lose it.
+  await saveDraft(draftKey, draft);
+  await clearDraft(draft.key);
 
   swapDocument(() => {
     doc = {
@@ -544,7 +639,7 @@ async function offerDraftRestore() {
 
 const context = {
   settings,
-  indentUnit: () => (settings.insertSpaces ? ' '.repeat(settings.tabSize) : '\t'),
+  indentUnit,
   getText: () => editor.getText(),
   setText: (text, opts) => editor.setText(text, opts),
   getSelection: () => editor.getSelection(),
@@ -654,6 +749,7 @@ function openSettingsDialog() {
   $('#setTabSize').value = String(settings.tabSize);
   $('#setWrap').checked = settings.wrap;
   $('#setGutter').checked = settings.gutter;
+  $('#setKeybar').checked = settings.keybar;
   $('#setInsertSpaces').checked = settings.insertSpaces;
   $('#setAutoIndent').checked = settings.autoIndent;
   $('#settingsDialog').showModal();
@@ -757,6 +853,7 @@ $('#setTabSize').addEventListener('change', (e) => {
 for (const [id, key] of [
   ['#setWrap', 'wrap'],
   ['#setGutter', 'gutter'],
+  ['#setKeybar', 'keybar'],
   ['#setInsertSpaces', 'insertSpaces'],
   ['#setAutoIndent', 'autoIndent'],
 ]) {
@@ -827,9 +924,16 @@ async function boot() {
     }
   }
 
-  // A shared file is an explicit request for that file, so the leftover draft is
-  // not raised here. It stays untouched and is offered on the next plain launch.
-  if (!openedFromShare) await offerDraftRestore();
+  // A shared file is an explicit request for that file, so a leftover draft is
+  // not raised here. This session takes a key of its own instead, leaving what
+  // is stored to be offered on the next plain launch — editing or saving the
+  // shared file cannot reach it.
+  if (openedFromShare) draftKey = freshKey();
+  else await offerDraftRestore();
+  updateDraftIndicator();
+
+  // Clear out drafts nobody ever came back for.
+  dropDraftsBefore(Date.now() - DRAFT_KEEP_MS);
 
   // "Open with this app", chosen against the installed PWA.
   if ('launchQueue' in window && typeof LaunchParams !== 'undefined' && 'files' in LaunchParams.prototype) {

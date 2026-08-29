@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': '編集中のファイル',
   'header.dirty': '未保存の変更あり',
+  'header.dirtyKept': '未保存の変更あり（この端末に控えを保存済み）',
   'header.settings': '設定',
   'header.help': '使い方',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': '文字コード（押すと指定して開き直せます）',
   'status.newlineHint': '保存時の改行コード（押すと切り替わります）',
   'status.counts': '{lines} 行 / {chars} 文字',
+  'status.selected': '{chars} 文字を選択',
+  'status.selectedLines': '{chars} 文字 / {lines} 行を選択',
 
   /* Files */
   'file.untitled': '無題.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': '前回の編集内容を復元しました',
   'draft.tooLarge': '大きすぎるため、編集内容の自動保存ができません。こまめに保存してください。',
   'draft.failed': '編集内容の自動保存ができませんでした。こまめに保存してください。',
+  'draft.more': 'ほかに {count} 件残っています。',
 
   /* Clipboard */
   'copy.all': '全文をコピーしました（{chars} 文字）',
@@ -130,6 +134,8 @@ export default {
   'cmd.json.formatTab': 'JSON を整形（タブ）',
   'cmd.json.minify': 'JSON を最小化',
   'cmd.json.minifyHint': '改行と空白を取り除く',
+  'cmd.json.sortKeys': 'JSON のキーを並べ替え',
+  'cmd.json.sortKeysHint': 'キーを順に並べて整形する（比較しやすくなります）',
   'cmd.json.validate': 'JSON を検証',
   'cmd.json.validateHint': '内容は変えずに構文だけ確認する',
   'cmd.text.trimTrailing': '行末の空白を削除',
@@ -137,16 +143,22 @@ export default {
   'cmd.line.sortAsc': '行を昇順で並べ替え',
   'cmd.line.sortDesc': '行を降順で並べ替え',
   'cmd.line.unique': '重複行を削除',
+  'cmd.line.duplicate': '行を複製',
+  'cmd.line.delete': '行を削除',
+  'cmd.line.moveUp': '行を上へ移動',
+  'cmd.line.moveDown': '行を下へ移動',
   'cmd.text.tabsToSpaces': 'タブ → 空白',
   'cmd.text.spacesToTabs': '行頭の空白 → タブ',
   'cmd.text.indent': 'インデントを深くする',
   'cmd.text.outdent': 'インデントを浅くする',
+  'cmd.text.insertTab': 'タブを挿入',
   'cmd.app.goto': '行へ移動',
   'cmd.app.reopen': '文字コードを指定して開き直す',
   'cmd.app.copy': '全文をコピー',
 
   'json.formatted': 'JSON を整形しました',
   'json.minified': 'JSON を最小化しました',
+  'json.sorted': 'キーを並べ替えました',
   'json.valid': 'JSON として正しい形式です',
   'json.error': 'JSON エラー: {detail}',
   'json.parseFailed': 'JSON として解析できません: {detail}',
@@ -164,6 +176,9 @@ export default {
   'settings.tabSize': 'タブ幅',
   'settings.wrap': '長い行を折り返す',
   'settings.gutter': '行番号を表示（折り返しオフのとき）',
+  'settings.keybar': 'タブと記号の行を表示する',
+  'keybar.label': '文字を挿入',
+  'keybar.tab': 'タブ',
   'settings.insertSpaces': 'Tab キーでスペースを入力',
   'settings.autoIndent': '改行時にインデントを引き継ぐ',
   'settings.close': '閉じる',
@@ -192,9 +207,12 @@ export default {
   'help.status': '画面下の文字コードと改行コードは、押すと変更できます。',
   'help.pwa': 'ホーム画面に追加するとアプリとして起動でき、オフラインでも使えます。',
   'help.share': 'Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開けます。',
+  'help.keybar': 'ステータスバーの上の行から、タブやソフトキーボードで奥にある記号を入力できます。',
+  'help.draft': '未保存の内容は入力中にこの端末へ控えられ、次回起動時に復元できます。約 4 MB を超えると控えを取れなくなり、ファイル名の横の点がオレンジになります。',
   'help.shortcuts': 'キーボード操作: Ctrl+O 開く / Ctrl+S 保存 / Ctrl+F 検索 / Ctrl+G 行へ移動 / Ctrl+Z 戻す / Ctrl+Shift+Z 進む',
   'help.close': '閉じる',
   'help.version': 'バージョン {version}',
+  'help.source': 'GitHub でソースコードを見る',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

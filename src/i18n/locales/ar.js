@@ -7,6 +7,7 @@ export default {
   /* Header */
   'header.file': 'الملف الحالي',
   'header.dirty': 'تغييرات غير محفوظة',
+  'header.dirtyKept': 'تغييرات غير محفوظة، مُحتفَظ بها على هذا الجهاز',
   'header.settings': 'الإعدادات',
   'header.help': 'المساعدة',
 
@@ -50,6 +51,8 @@ export default {
   'status.encodingHint': 'ترميز المحارف (اضغط لإعادة الفتح بترميز آخر)',
   'status.newlineHint': 'نهاية السطر عند الحفظ (اضغط للتبديل)',
   'status.counts': '{lines} سطرًا / {chars} محرفًا',
+  'status.selected': 'محدَّد {chars} حرفًا',
+  'status.selectedLines': 'محدَّد {chars} حرفًا / {lines} سطرًا',
 
   /* Files */
   'file.untitled': 'بدون-عنوان.txt',
@@ -110,6 +113,7 @@ export default {
   'draft.restored': 'تمت استعادة تعديلاتك غير المحفوظة',
   'draft.tooLarge': 'هذا المستند أكبر من أن نحتفظ له بمسودة. احفظ عملك بنفسك بين الحين والآخر.',
   'draft.failed': 'تعذّرت كتابة المسودة. احفظ عملك بنفسك بين الحين والآخر.',
+  'draft.more': 'تبقّى {count} غيرها.',
 
   /* Clipboard */
   'copy.all': 'تم نسخ النص كاملاً ({chars} محرفًا)',
@@ -130,6 +134,8 @@ export default {
   'cmd.json.formatTab': 'تنسيق JSON (جدولة)',
   'cmd.json.minify': 'ضغط JSON',
   'cmd.json.minifyHint': 'يزيل الأسطر والمسافات',
+  'cmd.json.sortKeys': 'ترتيب مفاتيح JSON',
+  'cmd.json.sortKeysHint': 'التنسيق مع ترتيب المفاتيح، ليسهل المقارنة',
   'cmd.json.validate': 'التحقق من JSON',
   'cmd.json.validateHint': 'يفحص البنية دون تغيير المحتوى',
   'cmd.text.trimTrailing': 'إزالة المسافات في نهاية الأسطر',
@@ -137,15 +143,21 @@ export default {
   'cmd.line.sortAsc': 'ترتيب الأسطر تصاعديًا',
   'cmd.line.sortDesc': 'ترتيب الأسطر تنازليًا',
   'cmd.line.unique': 'إزالة الأسطر المكرّرة',
+  'cmd.line.duplicate': 'تكرار السطر',
+  'cmd.line.delete': 'حذف السطر',
+  'cmd.line.moveUp': 'تحريك السطر لأعلى',
+  'cmd.line.moveDown': 'تحريك السطر لأسفل',
   'cmd.text.tabsToSpaces': 'جدولة ← مسافات',
   'cmd.text.spacesToTabs': 'المسافات في البداية ← جدولة',
   'cmd.text.indent': 'زيادة الإزاحة',
   'cmd.text.outdent': 'إنقاص الإزاحة',
+  'cmd.text.insertTab': 'إدراج جدولة',
   'cmd.app.goto': 'الانتقال إلى سطر',
   'cmd.app.reopen': 'إعادة الفتح بترميز آخر',
   'cmd.app.copy': 'نسخ الكل',
   'json.formatted': 'تم تنسيق JSON',
   'json.minified': 'تم ضغط JSON',
+  'json.sorted': 'تم ترتيب المفاتيح',
   'json.valid': 'هذا JSON صحيح',
   'json.error': 'خطأ في JSON: {detail}',
   'json.parseFailed': 'تعذّر تحليله كـ JSON: {detail}',
@@ -163,6 +175,9 @@ export default {
   'settings.tabSize': 'عرض الجدولة',
   'settings.wrap': 'لفّ الأسطر الطويلة',
   'settings.gutter': 'إظهار أرقام الأسطر (عند إيقاف اللفّ)',
+  'settings.keybar': 'إظهار صف الجدولة والرموز',
+  'keybar.label': 'إدراج حرف',
+  'keybar.tab': 'جدولة',
   'settings.insertSpaces': 'إدراج مسافات بمفتاح Tab',
   'settings.autoIndent': 'الحفاظ على الإزاحة في السطر الجديد',
   'settings.close': 'إغلاق',
@@ -191,9 +206,12 @@ export default {
   'help.status': 'يمكن تغيير ترميز المحارف ونهاية السطر أسفل الشاشة بالضغط عليهما.',
   'help.pwa': 'أضِفه إلى الشاشة الرئيسية ليعمل كتطبيق، ويعمل أيضًا دون اتصال.',
   'help.share': 'على أندرويد، شارك ملفًا مع هذا التطبيق ليُفتح مباشرة.',
+  'help.keybar': 'الصف الذي فوق شريط الحالة يكتب الجدولة وعلامات الترقيم التي تخفيها لوحات المفاتيح على الشاشة.',
+  'help.draft': 'يُحفظ العمل غير المحفوظ على هذا الجهاز أثناء الكتابة، ويُعرض عليك في المرة التالية. وفوق 4 ميغابايت تقريبًا يصبح أكبر من أن يُحفظ، فتتحوّل النقطة بجوار اسم الملف إلى البرتقالي.',
   'help.shortcuts': 'لوحة المفاتيح: Ctrl+O فتح / Ctrl+S حفظ / Ctrl+F بحث / Ctrl+G الانتقال إلى سطر / Ctrl+Z تراجع / Ctrl+Shift+Z إعادة',
   'help.close': 'إغلاق',
   'help.version': 'الإصدار {version}',
+  'help.source': 'الشفرة المصدرية على GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

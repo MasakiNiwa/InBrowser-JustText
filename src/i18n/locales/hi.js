@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'वर्तमान फ़ाइल',
   'header.dirty': 'बिना सहेजे बदलाव',
+  'header.dirtyKept': 'बिना सहेजे बदलाव, इस डिवाइस पर रखे गए',
   'header.settings': 'सेटिंग',
   'header.help': 'मदद',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'एन्कोडिंग (दूसरी एन्कोडिंग से खोलने के लिए दबाएँ)',
   'status.newlineHint': 'सहेजते समय की पंक्ति-समाप्ति (बदलने के लिए दबाएँ)',
   'status.counts': '{lines} पंक्तियाँ / {chars} वर्ण',
+  'status.selected': '{chars} अक्षर चयनित',
+  'status.selectedLines': '{chars} अक्षर / {lines} पंक्तियाँ चयनित',
 
   /* Files */
   'file.untitled': 'बिना-नाम.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'बिना सहेजे बदलाव वापस ले आए',
   'draft.tooLarge': 'यह दस्तावेज़ इतना बड़ा है कि इसका ड्राफ़्ट नहीं रखा जा सकता। बीच-बीच में खुद सहेजते रहें।',
   'draft.failed': 'ड्राफ़्ट नहीं लिखा जा सका। बीच-बीच में खुद सहेजते रहें।',
+  'draft.more': '{count} और बाकी हैं।',
 
   /* Clipboard */
   'copy.all': 'पूरा पाठ कॉपी हुआ ({chars} वर्ण)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'JSON सजाएँ (टैब)',
   'cmd.json.minify': 'JSON छोटा करें',
   'cmd.json.minifyHint': 'लाइन ब्रेक और स्पेस हटाता है',
+  'cmd.json.sortKeys': 'JSON कुंजियाँ क्रम में लगाएँ',
+  'cmd.json.sortKeysHint': 'कुंजियों को क्रम में लगाकर सजाएँ, तुलना आसान होती है',
   'cmd.json.validate': 'JSON जाँचें',
   'cmd.json.validateHint': 'बिना कुछ बदले केवल वाक्य-रचना जाँचता है',
   'cmd.text.trimTrailing': 'पंक्ति के अंत की खाली जगह हटाएँ',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'पंक्तियाँ बढ़ते क्रम में लगाएँ',
   'cmd.line.sortDesc': 'पंक्तियाँ घटते क्रम में लगाएँ',
   'cmd.line.unique': 'दोहरी पंक्तियाँ हटाएँ',
+  'cmd.line.duplicate': 'पंक्ति की प्रतिलिपि',
+  'cmd.line.delete': 'पंक्ति हटाएँ',
+  'cmd.line.moveUp': 'पंक्ति ऊपर ले जाएँ',
+  'cmd.line.moveDown': 'पंक्ति नीचे ले जाएँ',
   'cmd.text.tabsToSpaces': 'टैब → स्पेस',
   'cmd.text.spacesToTabs': 'शुरू के स्पेस → टैब',
   'cmd.text.indent': 'हाशिया बढ़ाएँ',
   'cmd.text.outdent': 'हाशिया घटाएँ',
+  'cmd.text.insertTab': 'टैब डालें',
   'cmd.app.goto': 'पंक्ति पर जाएँ',
   'cmd.app.reopen': 'दूसरी एन्कोडिंग से दोबारा खोलें',
   'cmd.app.copy': 'सब कुछ कॉपी करें',
   'json.formatted': 'JSON सजा दिया गया',
   'json.minified': 'JSON छोटा कर दिया गया',
+  'json.sorted': 'कुंजियाँ क्रम में लगा दीं',
   'json.valid': 'यह सही JSON है',
   'json.error': 'JSON त्रुटि: {detail}',
   'json.parseFailed': 'JSON के रूप में नहीं पढ़ा जा सका: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'टैब की चौड़ाई',
   'settings.wrap': 'लंबी पंक्तियाँ मोड़ें',
   'settings.gutter': 'पंक्ति संख्या दिखाएँ (जब मोड़ना बंद हो)',
+  'settings.keybar': 'टैब और चिह्नों की पंक्ति दिखाएँ',
+  'keybar.label': 'अक्षर डालें',
+  'keybar.tab': 'टैब',
   'settings.insertSpaces': 'Tab कुंजी से स्पेस डालें',
   'settings.autoIndent': 'नई पंक्ति में हाशिया बनाए रखें',
   'settings.close': 'बंद करें',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'स्क्रीन के नीचे दी गई एन्कोडिंग और पंक्ति-समाप्ति दबाकर बदली जा सकती है।',
   'help.pwa': 'होम स्क्रीन पर जोड़ें तो यह ऐप की तरह खुलता है और बिना इंटरनेट भी चलता है।',
   'help.share': 'Android पर किसी फ़ाइल को इस ऐप में साझा करें और वह सीधे खुल जाएगी।',
+  'help.keybar': 'स्थिति पट्टी के ऊपर की पंक्ति से टैब और वे चिह्न लिखे जा सकते हैं जो स्क्रीन कीबोर्ड में गहरे छिपे रहते हैं।',
+  'help.draft': 'बिना सहेजा काम लिखते समय इसी डिवाइस पर रखा जाता है और अगली बार वापस देने की पेशकश की जाती है। लगभग 4 MB से ऊपर यह बहुत बड़ा हो जाता है और फ़ाइल नाम के पास का बिंदु नारंगी हो जाता है।',
   'help.shortcuts': 'कीबोर्ड: Ctrl+O खोलें / Ctrl+S सहेजें / Ctrl+F खोजें / Ctrl+G पंक्ति पर जाएँ / Ctrl+Z पूर्ववत / Ctrl+Shift+Z फिर करें',
   'help.close': 'बंद करें',
   'help.version': 'संस्करण {version}',
+  'help.source': 'GitHub पर स्रोत कोड',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

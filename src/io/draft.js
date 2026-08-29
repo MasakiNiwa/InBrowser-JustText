@@ -6,12 +6,15 @@
  * reader is asked whether to restore it. This is only ever a safety net, so
  * when it cannot be written — private browsing, no room left — it gives up
  * quietly rather than getting in the way.
+ *
+ * Every draft is stored under a key of its own, and a session only ever writes
+ * to the one key it owns. That is what keeps two tabs, or a file arriving from
+ * the share menu, from writing over work that nobody has been asked about yet.
  */
 
 const DB_NAME = 'justtext';
 const DB_VERSION = 1;
 const STORE = 'drafts';
-const KEY = 'current';
 
 /** After one failure, stop trying: repeated failures only cost time. */
 let unavailable = false;
@@ -61,24 +64,48 @@ async function withStore(mode, run) {
 }
 
 /**
- * Writes the draft out.
+ * Writes a draft out under the given key.
+ * @param {string} key the writing session's own key
  * @param {{name:string, text:string, savedText:string, encoding:string,
  *          newline:string, bom:boolean, bytes:Uint8Array, untitled:boolean}} draft
  * @returns {Promise<boolean>} whether it was stored
  */
-export async function saveDraft(draft) {
-  const { ok } = await withStore('readwrite', (store) => store.put({ ...draft, at: Date.now() }, KEY));
+export async function saveDraft(key, draft) {
+  const { ok } = await withStore('readwrite', (store) => store.put({ ...draft, key, at: Date.now() }, key));
   return ok;
 }
 
-/** Reads back a leftover draft, or null when there is none. */
-export async function loadDraft() {
-  const { ok, value } = await withStore('readonly', (store) => store.get(KEY));
+/** Reads one draft back, or null when that key holds nothing. */
+export async function loadDraft(key) {
+  const { ok, value } = await withStore('readonly', (store) => store.get(key));
   return ok ? (value ?? null) : null;
 }
 
-/** Deletes the draft. */
-export async function clearDraft() {
-  const { ok } = await withStore('readwrite', (store) => store.delete(KEY));
+/** Deletes one draft. */
+export async function clearDraft(key) {
+  const { ok } = await withStore('readwrite', (store) => store.delete(key));
   return ok;
+}
+
+/**
+ * Every draft that is still around, newest first.
+ * Each carries the `key` it is stored under, so the caller can act on it.
+ */
+export async function listDrafts() {
+  const { ok, value } = await withStore('readonly', (store) => store.getAll());
+  if (!ok || !Array.isArray(value)) return [];
+  return value
+    .filter((draft) => draft && typeof draft.text === 'string' && typeof draft.key === 'string')
+    .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+}
+
+/**
+ * Deletes drafts older than the cut-off, so that one nobody ever came back for
+ * does not sit in storage indefinitely.
+ * @returns {Promise<number>} how many were dropped
+ */
+export async function dropDraftsBefore(cutoff) {
+  const stale = (await listDrafts()).filter((draft) => (draft.at ?? 0) < cutoff);
+  for (const draft of stale) await clearDraft(draft.key);
+  return stale.length;
 }

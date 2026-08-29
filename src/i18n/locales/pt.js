@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Arquivo atual',
   'header.dirty': 'Alterações não salvas',
+  'header.dirtyKept': 'Alterações não guardadas, mantidas neste dispositivo',
   'header.settings': 'Configurações',
   'header.help': 'Ajuda',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Codificação (toque para reabrir com outra)',
   'status.newlineHint': 'Fim de linha usado ao salvar (toque para mudar)',
   'status.counts': '{lines} linhas / {chars} caracteres',
+  'status.selected': '{chars} caracteres selecionados',
+  'status.selectedLines': '{chars} caracteres / {lines} linhas selecionados',
 
   /* Files */
   'file.untitled': 'sem-titulo.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Suas alterações não salvas foram restauradas',
   'draft.tooLarge': 'Este documento é grande demais para manter um rascunho. Salve você mesmo de vez em quando.',
   'draft.failed': 'Não foi possível gravar o rascunho. Salve você mesmo de vez em quando.',
+  'draft.more': 'Faltam mais {count}.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Formatar JSON (tabulações)',
   'cmd.json.minify': 'Minificar JSON',
   'cmd.json.minifyHint': 'Remove quebras de linha e espaços',
+  'cmd.json.sortKeys': 'Ordenar as chaves JSON',
+  'cmd.json.sortKeysHint': 'Formatar com as chaves em ordem, para comparar mais facilmente',
   'cmd.json.validate': 'Validar JSON',
   'cmd.json.validateHint': 'Confere a sintaxe sem alterar nada',
   'cmd.text.trimTrailing': 'Remover espaços no fim das linhas',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Ordenar linhas (crescente)',
   'cmd.line.sortDesc': 'Ordenar linhas (decrescente)',
   'cmd.line.unique': 'Remover linhas repetidas',
+  'cmd.line.duplicate': 'Duplicar a linha',
+  'cmd.line.delete': 'Eliminar a linha',
+  'cmd.line.moveUp': 'Mover a linha para cima',
+  'cmd.line.moveDown': 'Mover a linha para baixo',
   'cmd.text.tabsToSpaces': 'Tabulações → espaços',
   'cmd.text.spacesToTabs': 'Espaços iniciais → tabulações',
   'cmd.text.indent': 'Aumentar o recuo',
   'cmd.text.outdent': 'Diminuir o recuo',
+  'cmd.text.insertTab': 'Inserir uma tabulação',
   'cmd.app.goto': 'Ir para a linha',
   'cmd.app.reopen': 'Reabrir com outra codificação',
   'cmd.app.copy': 'Copiar tudo',
   'json.formatted': 'JSON formatado',
   'json.minified': 'JSON minificado',
+  'json.sorted': 'Chaves ordenadas',
   'json.valid': 'Este JSON é válido',
   'json.error': 'Erro de JSON: {detail}',
   'json.parseFailed': 'Não foi possível interpretar como JSON: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Largura da tabulação',
   'settings.wrap': 'Quebrar linhas longas',
   'settings.gutter': 'Mostrar números de linha (sem quebra de linha)',
+  'settings.keybar': 'Mostrar a linha de tabulação e símbolos',
+  'keybar.label': 'Inserir um carácter',
+  'keybar.tab': 'Tabulação',
   'settings.insertSpaces': 'Inserir espaços com a tecla Tab',
   'settings.autoIndent': 'Manter o recuo na linha nova',
   'settings.close': 'Fechar',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'A codificação e o fim de linha na parte de baixo mudam ao serem tocados.',
   'help.pwa': 'Adicione à tela inicial para abrir como um app; funciona até sem internet.',
   'help.share': 'No Android, compartilhe um arquivo com este app para abri-lo direto.',
+  'help.keybar': 'A linha acima da barra de estado escreve a tabulação e a pontuação que os teclados no ecrã escondem.',
+  'help.draft': 'O trabalho não guardado fica neste dispositivo enquanto escreve e é oferecido da próxima vez. Acima de cerca de 4 MB é grande demais, e o ponto junto ao nome do ficheiro fica laranja.',
   'help.shortcuts': 'Teclado: Ctrl+O abrir / Ctrl+S salvar / Ctrl+F localizar / Ctrl+G ir para a linha / Ctrl+Z desfazer / Ctrl+Shift+Z refazer',
   'help.close': 'Fechar',
   'help.version': 'Versão {version}',
+  'help.source': 'Código-fonte no GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

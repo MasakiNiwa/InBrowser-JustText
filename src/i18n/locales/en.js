@@ -7,6 +7,7 @@ export default {
   /* Header */
   'header.file': 'Current file',
   'header.dirty': 'Unsaved changes',
+  'header.dirtyKept': 'Unsaved changes, kept on this device',
   'header.settings': 'Settings',
   'header.help': 'Help',
 
@@ -50,6 +51,8 @@ export default {
   'status.encodingHint': 'Encoding (tap to reopen with another one)',
   'status.newlineHint': 'Line ending used when saving (tap to change)',
   'status.counts': '{lines} lines / {chars} chars',
+  'status.selected': '{chars} chars selected',
+  'status.selectedLines': '{chars} chars selected / {lines} lines',
 
   /* Files */
   'file.untitled': 'untitled.txt',
@@ -110,6 +113,7 @@ export default {
   'draft.restored': 'Restored your unsaved edits',
   'draft.tooLarge': 'This document is too large to keep a draft of. Please save it yourself now and then.',
   'draft.failed': 'The draft could not be written. Please save your work yourself now and then.',
+  'draft.more': '{count} more waiting.',
 
   /* Clipboard */
   'copy.all': 'Copied the whole document ({chars} characters)',
@@ -131,6 +135,8 @@ export default {
   'cmd.json.formatTab': 'Format JSON (tabs)',
   'cmd.json.minify': 'Minify JSON',
   'cmd.json.minifyHint': 'Remove line breaks and spaces',
+  'cmd.json.sortKeys': 'Sort JSON keys',
+  'cmd.json.sortKeysHint': 'Format with every key in order, for easier comparison',
   'cmd.json.validate': 'Validate JSON',
   'cmd.json.validateHint': 'Check the syntax without changing anything',
   'cmd.text.trimTrailing': 'Trim trailing whitespace',
@@ -138,16 +144,22 @@ export default {
   'cmd.line.sortAsc': 'Sort lines ascending',
   'cmd.line.sortDesc': 'Sort lines descending',
   'cmd.line.unique': 'Remove duplicate lines',
+  'cmd.line.duplicate': 'Duplicate line',
+  'cmd.line.delete': 'Delete line',
+  'cmd.line.moveUp': 'Move line up',
+  'cmd.line.moveDown': 'Move line down',
   'cmd.text.tabsToSpaces': 'Tabs → spaces',
   'cmd.text.spacesToTabs': 'Leading spaces → tabs',
   'cmd.text.indent': 'Increase indent',
   'cmd.text.outdent': 'Decrease indent',
+  'cmd.text.insertTab': 'Insert a tab',
   'cmd.app.goto': 'Go to line',
   'cmd.app.reopen': 'Reopen with another encoding',
   'cmd.app.copy': 'Copy everything',
 
   'json.formatted': 'Formatted the JSON',
   'json.minified': 'Minified the JSON',
+  'json.sorted': 'Sorted the keys',
   'json.valid': 'This is valid JSON',
   'json.error': 'JSON error: {detail}',
   'json.parseFailed': 'Could not parse as JSON: {detail}',
@@ -165,6 +177,9 @@ export default {
   'settings.tabSize': 'Tab width',
   'settings.wrap': 'Wrap long lines',
   'settings.gutter': 'Show line numbers (when wrapping is off)',
+  'settings.keybar': 'Show the Tab and symbol row',
+  'keybar.label': 'Insert a character',
+  'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Insert spaces with the Tab key',
   'settings.autoIndent': 'Keep the indent on a new line',
   'settings.close': 'Close',
@@ -193,9 +208,12 @@ export default {
   'help.status': 'The encoding and line ending at the bottom of the screen can be changed by tapping them.',
   'help.pwa': 'Add it to your home screen to launch it as an app; it works offline too.',
   'help.share': 'On Android, share a file to this app to open it directly.',
+  'help.keybar': 'The row above the status bar types Tab and the punctuation that soft keyboards bury.',
+  'help.draft': 'Unsaved work is kept on this device as you type, and offered back next time. Above about 4 MB it is too large to keep, and the dot beside the file name turns orange to say so.',
   'help.shortcuts': 'Keyboard: Ctrl+O open / Ctrl+S save / Ctrl+F find / Ctrl+G go to line / Ctrl+Z undo / Ctrl+Shift+Z redo',
   'help.close': 'Close',
   'help.version': 'Version {version}',
+  'help.source': 'Source code on GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

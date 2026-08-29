@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Archivo actual',
   'header.dirty': 'Cambios sin guardar',
+  'header.dirtyKept': 'Cambios sin guardar, conservados en este dispositivo',
   'header.settings': 'Ajustes',
   'header.help': 'Ayuda',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Codificación (toca para reabrir con otra)',
   'status.newlineHint': 'Fin de línea al guardar (toca para cambiar)',
   'status.counts': '{lines} líneas / {chars} caract.',
+  'status.selected': '{chars} caracteres seleccionados',
+  'status.selectedLines': '{chars} caracteres / {lines} líneas seleccionados',
 
   /* Files */
   'file.untitled': 'sin-titulo.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Se restauraron tus cambios sin guardar',
   'draft.tooLarge': 'Este documento es demasiado grande para guardar un borrador. Guarda tú mismo de vez en cuando.',
   'draft.failed': 'No se pudo guardar el borrador. Guarda tú mismo de vez en cuando.',
+  'draft.more': 'Quedan {count} más.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'Formatear JSON (tabulaciones)',
   'cmd.json.minify': 'Minificar JSON',
   'cmd.json.minifyHint': 'Quitar saltos de línea y espacios',
+  'cmd.json.sortKeys': 'Ordenar las claves JSON',
+  'cmd.json.sortKeysHint': 'Formatear con las claves ordenadas, para comparar más fácilmente',
   'cmd.json.validate': 'Validar JSON',
   'cmd.json.validateHint': 'Comprobar la sintaxis sin cambiar nada',
   'cmd.text.trimTrailing': 'Quitar espacios al final de línea',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Ordenar líneas (ascendente)',
   'cmd.line.sortDesc': 'Ordenar líneas (descendente)',
   'cmd.line.unique': 'Quitar líneas duplicadas',
+  'cmd.line.duplicate': 'Duplicar la línea',
+  'cmd.line.delete': 'Eliminar la línea',
+  'cmd.line.moveUp': 'Subir la línea',
+  'cmd.line.moveDown': 'Bajar la línea',
   'cmd.text.tabsToSpaces': 'Tabulaciones → espacios',
   'cmd.text.spacesToTabs': 'Espacios iniciales → tabulaciones',
   'cmd.text.indent': 'Aumentar la sangría',
   'cmd.text.outdent': 'Reducir la sangría',
+  'cmd.text.insertTab': 'Insertar una tabulación',
   'cmd.app.goto': 'Ir a la línea',
   'cmd.app.reopen': 'Reabrir con otra codificación',
   'cmd.app.copy': 'Copiar todo',
   'json.formatted': 'JSON formateado',
   'json.minified': 'JSON minificado',
+  'json.sorted': 'Claves ordenadas',
   'json.valid': 'Es JSON válido',
   'json.error': 'Error de JSON: {detail}',
   'json.parseFailed': 'No se pudo analizar como JSON: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Ancho de tabulación',
   'settings.wrap': 'Ajustar líneas largas',
   'settings.gutter': 'Mostrar números de línea (sin ajuste de línea)',
+  'settings.keybar': 'Mostrar la fila de tabulación y símbolos',
+  'keybar.label': 'Insertar un carácter',
+  'keybar.tab': 'Tabulación',
   'settings.insertSpaces': 'Insertar espacios con la tecla Tab',
   'settings.autoIndent': 'Mantener la sangría en la línea nueva',
   'settings.close': 'Cerrar',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'La codificación y el fin de línea de la parte inferior se cambian tocándolos.',
   'help.pwa': 'Añádelo a la pantalla de inicio para abrirlo como una app; también funciona sin conexión.',
   'help.share': 'En Android, comparte un archivo con esta app para abrirlo directamente.',
+  'help.keybar': 'La fila sobre la barra de estado escribe la tabulación y los signos que los teclados táctiles esconden.',
+  'help.draft': 'El trabajo sin guardar se conserva en este dispositivo mientras escribes y se te ofrece la próxima vez. Por encima de unos 4 MB es demasiado grande y el punto junto al nombre del archivo se vuelve naranja.',
   'help.shortcuts': 'Teclado: Ctrl+O abrir / Ctrl+S guardar / Ctrl+F buscar / Ctrl+G ir a la línea / Ctrl+Z deshacer / Ctrl+Mayús+Z rehacer',
   'help.close': 'Cerrar',
   'help.version': 'Versión {version}',
+  'help.source': 'Código fuente en GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',

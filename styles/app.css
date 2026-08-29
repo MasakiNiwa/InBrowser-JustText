@@ -17,6 +17,7 @@
   --accent: #0a66c2;
   --accent-fg: #ffffff;
   --danger: #b3261e;
+  --warn: #a8600a;
   --hit: #ffe9a3;
   --hit-current: #ffb01f;
   --shadow: 0 8px 28px rgba(16, 24, 32, 0.18);
@@ -41,6 +42,7 @@
     --accent: #58a6ff;
     --accent-fg: #0b1017;
     --danger: #ff7b72;
+  --warn: #e3a008;
     --hit: #6b551f;
     --hit-current: #c58a12;
     --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
@@ -57,6 +59,7 @@
   --accent: #58a6ff;
   --accent-fg: #0b1017;
   --danger: #ff7b72;
+  --warn: #e3a008;
   --hit: #6b551f;
   --hit-current: #c58a12;
   --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
@@ -163,6 +166,8 @@ body {
   font-size: 13px;
 }
 .dirty { color: var(--accent); font-size: 10px; flex: none; }
+/* Unsaved and not kept on the device: worth noticing before it matters. */
+.dirty[data-draft="unkept"] { color: var(--warn); }
 
 .icon-btn {
   display: grid;
@@ -408,6 +413,43 @@ body {
 }
 
 /* ---------- Status bar ---------- */
+
+/*
+ * The row of keys above the status bar.
+ * Scrolls sideways rather than wrapping, so it never eats into the editor.
+ */
+.keybar {
+  display: flex;
+  gap: 4px;
+  padding: 5px 8px;
+  background: var(--bg-sub);
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  flex: none;
+}
+.keybar::-webkit-scrollbar { display: none; }
+
+.key {
+  flex: none;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fg);
+  font-family: var(--editor-font);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  /* A press must not select the glyph on it, or Android shows its own menu. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.key:active { background: var(--bg-sub); transform: scale(0.94); }
 
 .statusbar {
   display: flex;

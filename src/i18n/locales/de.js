@@ -6,6 +6,7 @@ export default {
   /* Header */
   'header.file': 'Aktuelle Datei',
   'header.dirty': 'Nicht gespeicherte Änderungen',
+  'header.dirtyKept': 'Nicht gespeicherte Änderungen, auf diesem Gerät gesichert',
   'header.settings': 'Einstellungen',
   'header.help': 'Hilfe',
 
@@ -49,6 +50,8 @@ export default {
   'status.encodingHint': 'Kodierung (tippen, um mit einer anderen zu öffnen)',
   'status.newlineHint': 'Zeilenende beim Speichern (tippen zum Wechseln)',
   'status.counts': '{lines} Zeilen / {chars} Zeichen',
+  'status.selected': '{chars} Zeichen ausgewählt',
+  'status.selectedLines': '{chars} Zeichen / {lines} Zeilen ausgewählt',
 
   /* Files */
   'file.untitled': 'unbenannt.txt',
@@ -109,6 +112,7 @@ export default {
   'draft.restored': 'Ihre nicht gespeicherten Änderungen wurden wiederhergestellt',
   'draft.tooLarge': 'Dieses Dokument ist zu groß, um einen Entwurf davon zu behalten. Bitte speichern Sie zwischendurch selbst.',
   'draft.failed': 'Der Entwurf konnte nicht geschrieben werden. Bitte speichern Sie zwischendurch selbst.',
+  'draft.more': '{count} weitere warten.',
 
   /* Clipboard */
   'copy.all': 'Gesamten Text kopiert ({chars} Zeichen)',
@@ -129,6 +133,8 @@ export default {
   'cmd.json.formatTab': 'JSON formatieren (Tabulatoren)',
   'cmd.json.minify': 'JSON minimieren',
   'cmd.json.minifyHint': 'Zeilenumbrüche und Leerzeichen entfernen',
+  'cmd.json.sortKeys': 'JSON-Schlüssel sortieren',
+  'cmd.json.sortKeysHint': 'Mit sortierten Schlüsseln formatieren, für einfacheres Vergleichen',
   'cmd.json.validate': 'JSON prüfen',
   'cmd.json.validateHint': 'Nur die Syntax prüfen, ohne etwas zu ändern',
   'cmd.text.trimTrailing': 'Leerzeichen am Zeilenende entfernen',
@@ -136,15 +142,21 @@ export default {
   'cmd.line.sortAsc': 'Zeilen aufsteigend sortieren',
   'cmd.line.sortDesc': 'Zeilen absteigend sortieren',
   'cmd.line.unique': 'Doppelte Zeilen entfernen',
+  'cmd.line.duplicate': 'Zeile duplizieren',
+  'cmd.line.delete': 'Zeile löschen',
+  'cmd.line.moveUp': 'Zeile nach oben',
+  'cmd.line.moveDown': 'Zeile nach unten',
   'cmd.text.tabsToSpaces': 'Tabulatoren → Leerzeichen',
   'cmd.text.spacesToTabs': 'Führende Leerzeichen → Tabulatoren',
   'cmd.text.indent': 'Einzug vergrößern',
   'cmd.text.outdent': 'Einzug verkleinern',
+  'cmd.text.insertTab': 'Tabulator einfügen',
   'cmd.app.goto': 'Gehe zu Zeile',
   'cmd.app.reopen': 'Mit anderer Kodierung neu öffnen',
   'cmd.app.copy': 'Alles kopieren',
   'json.formatted': 'JSON formatiert',
   'json.minified': 'JSON minimiert',
+  'json.sorted': 'Schlüssel sortiert',
   'json.valid': 'Das ist gültiges JSON',
   'json.error': 'JSON-Fehler: {detail}',
   'json.parseFailed': 'Konnte nicht als JSON gelesen werden: {detail}',
@@ -162,6 +174,9 @@ export default {
   'settings.tabSize': 'Tabulatorbreite',
   'settings.wrap': 'Lange Zeilen umbrechen',
   'settings.gutter': 'Zeilennummern anzeigen (wenn kein Umbruch)',
+  'settings.keybar': 'Tabulator- und Symbolzeile anzeigen',
+  'keybar.label': 'Zeichen einfügen',
+  'keybar.tab': 'Tabulator',
   'settings.insertSpaces': 'Mit der Tabulatortaste Leerzeichen einfügen',
   'settings.autoIndent': 'Einzug in die neue Zeile übernehmen',
   'settings.close': 'Schließen',
@@ -190,9 +205,12 @@ export default {
   'help.status': 'Kodierung und Zeilenende am unteren Rand lassen sich durch Antippen ändern.',
   'help.pwa': 'Zum Startbildschirm hinzufügen, um es wie eine App zu starten; es funktioniert auch offline.',
   'help.share': 'Unter Android eine Datei an diese App teilen, um sie direkt zu öffnen.',
+  'help.keybar': 'Die Zeile über der Statusleiste tippt den Tabulator und die Satzzeichen, die Bildschirmtastaturen verstecken.',
+  'help.draft': 'Nicht gespeicherte Arbeit wird beim Tippen auf diesem Gerät gesichert und beim nächsten Start angeboten. Ab etwa 4 MB ist sie zu groß dafür, und der Punkt neben dem Dateinamen wird orange.',
   'help.shortcuts': 'Tastatur: Strg+O öffnen / Strg+S speichern / Strg+F suchen / Strg+G gehe zu Zeile / Strg+Z zurück / Strg+Umschalt+Z vor',
   'help.close': 'Schließen',
   'help.version': 'Version {version}',
+  'help.source': 'Quellcode auf GitHub',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
