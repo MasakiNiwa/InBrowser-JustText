@@ -91,6 +91,7 @@ export default {
   'save.cancelled': 'أُلغي الحفظ',
   'save.overwriteConfirm': 'سيُستبدل محتوى {name} ولا يمكن استرجاع الأصل. هل تتابع؟',
   'save.permissionDenied': 'لم يُمنح إذن الكتابة في الملف',
+  'save.lossyNote': 'في الملف المحفوظ، صارت المحارف التي تعذّر تمثيلها «؟».',
 
   /* Characters that cannot be saved */
   'loss.title': 'بعض المحارف لا يمكن حفظها',
@@ -100,6 +101,13 @@ export default {
   'loss.cancel': 'إلغاء',
   'loss.replace': 'الحفظ مع «؟»',
   'loss.utf8': 'الحفظ بترميز UTF-8',
+
+  /* استعادة مسودة */
+  'draft.title': 'عمل غير محفوظ من المرة السابقة',
+  'draft.body': 'ما زالت تعديلات {name} من {time} موجودة. هل تستعيدها؟',
+  'draft.restore': 'استعادة',
+  'draft.discard': 'تجاهل',
+  'draft.restored': 'تمت استعادة تعديلاتك غير المحفوظة',
 
   /* Clipboard */
   'copy.all': 'تم نسخ النص كاملاً ({chars} محرفًا)',
@@ -183,6 +191,7 @@ export default {
   'help.share': 'على أندرويد، شارك ملفًا مع هذا التطبيق ليُفتح مباشرة.',
   'help.shortcuts': 'لوحة المفاتيح: Ctrl+O فتح / Ctrl+S حفظ / Ctrl+F بحث / Ctrl+G الانتقال إلى سطر / Ctrl+Z تراجع / Ctrl+Shift+Z إعادة',
   'help.close': 'إغلاق',
+  'help.version': 'الإصدار {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -193,4 +202,8 @@ export default {
   'common.noChange': 'لم يتغيّر شيء',
   'common.commandFailed': 'تعذّر التنفيذ: {detail}',
   'common.noscript': 'يُرجى تفعيل JavaScript لاستخدام هذه الأداة.',
+
+  /* التحديثات */
+  'update.available': 'تتوفّر نسخة جديدة',
+  'update.reload': 'إعادة التحميل',
 };

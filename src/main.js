@@ -6,11 +6,12 @@
  */
 
 import { looksBinary } from './core/binary.js';
-import { ENCODINGS, encodingLabel } from './core/encoding.js';
+import { ENCODINGS, decodeText, encodingLabel } from './core/encoding.js';
 import { canEncode } from './core/encoder.js';
-import { NEWLINES, newlineShort } from './core/newline.js';
+import { NEWLINES, newlineShort, normalizeToLf } from './core/newline.js';
 import { LOCALES, applyTranslations, detectLocale, getLocale, isSupported, setLocale, t } from './i18n/index.js';
 import { copyText } from './io/clipboard.js';
+import { clearDraft, loadDraft, saveDraft } from './io/draft.js';
 import { canPickSaveLocation, pickSaveLocation, writeToHandle } from './io/file-system.js';
 import { buildDocument, readFile, emptyDocument, LARGE_FILE_BYTES } from './io/open.js';
 import { buildFileBytes, downloadBytes, guessMimeType, suggestCopyName } from './io/save.js';
@@ -23,7 +24,8 @@ import { createSearchPanel } from './ui/search-panel.js';
 import { createToast } from './ui/toast.js';
 import { installKeymap } from './ui/keymap.js';
 import { loadSettings, saveSettings } from './ui/settings.js';
-import { $, formatBytes, formatNumber, rafThrottle } from './util/dom.js';
+import { APP_VERSION } from './version.js';
+import { $, debounce, formatBytes, formatNumber, rafThrottle } from './util/dom.js';
 
 /* ---------- 状態 ---------- */
 
@@ -83,6 +85,7 @@ async function applyLanguage(code) {
   saveSettings(settings);
   applyTranslations();
   buildToolList();
+  $('#helpVersion').textContent = t('help.version', { version: APP_VERSION });
   // 名前をまだ付けていない書類は、その言語の既定名に付け替える
   if (doc.untitled) doc = { ...doc, name: t('file.untitled') };
   updateFileInfo();
@@ -181,6 +184,7 @@ async function openFromFile(file, { handle = null } = {}) {
 function newDocument() {
   if (!confirmDiscard('file.discardNew')) return;
   loadDocument(emptyDocument(t('file.untitled')), { announce: false });
+  clearDraft();
   editor.focus();
 }
 
@@ -249,43 +253,35 @@ function askAboutLostCharacters(encoding, unencodable) {
 
 /**
  * 実際に書き出す。
+ * 通知の文言は呼び出し側でまとめるため、ここでは結果だけを返す。
  * @param {'download'|'pick'|'overwrite'} mode
- * @returns {Promise<{ok:boolean, name?:string, handle?:object}>}
+ * @returns {Promise<{ok:boolean, name?:string, handle?:object, message?:string, type?:string}>}
  */
 async function writeOut(mode, { name, bytes }) {
   if (mode === 'download') {
     downloadBytes(bytes, name, guessMimeType(name));
-    notify(t('save.done', { name }));
-    return { ok: true, name };
+    return { ok: true, name, message: t('save.done', { name }) };
   }
 
   if (mode === 'pick') {
     const handle = await pickSaveLocation({ suggestedName: name, mime: guessMimeType(name) });
-    if (!handle) {
-      notify(t('save.cancelled'));
-      return { ok: false };
-    }
+    if (!handle) return { ok: false, message: t('save.cancelled') };
     if (!(await writeToHandle(handle, bytes))) {
-      notify(t('save.permissionDenied'), 'error');
-      return { ok: false };
+      return { ok: false, message: t('save.permissionDenied'), type: 'error' };
     }
-    notify(t('save.savedTo', { name: handle.name }));
-    return { ok: true, name: handle.name, handle };
+    return { ok: true, name: handle.name, handle, message: t('save.savedTo', { name: handle.name }) };
   }
 
   // 上書きは元に戻せないので、必ず確認してから書き込む
   const target = doc.handle;
   if (!target) return { ok: false };
   if (!window.confirm(t('save.overwriteConfirm', { name: target.name }))) {
-    notify(t('save.cancelled'));
-    return { ok: false };
+    return { ok: false, message: t('save.cancelled') };
   }
   if (!(await writeToHandle(target, bytes))) {
-    notify(t('save.permissionDenied'), 'error');
-    return { ok: false };
+    return { ok: false, message: t('save.permissionDenied'), type: 'error' };
   }
-  notify(t('save.overwritten', { name: target.name }));
-  return { ok: true, name: target.name, handle: target };
+  return { ok: true, name: target.name, handle: target, message: t('save.overwritten', { name: target.name }) };
 }
 
 /** 保存の一連の流れ。文字が失われる場合は書き出す前に止める。 */
@@ -324,11 +320,20 @@ async function performSave(mode) {
     notify(t('save.failed', { detail: e.message }), 'error');
     return false;
   }
-  if (!outcome.ok) return false;
+  if (!outcome.ok) {
+    if (outcome.message) notify(outcome.message, outcome.type);
+    return false;
+  }
 
-  savedText = text;
+  // 書き出したバイト列を読み直したものを「いま保存されている内容」とする。
+  //   - 開き直しはこのバイト列を使うので、保存後の内容と食い違わない
+  //   - ? に置き換えて保存した場合は編集中の内容と一致しないため、
+  //     未保存マークが残り、ファイルと手元が違うことが画面から分かる
+  const written = normalizeToLf(decodeText(result.bytes, encoding));
+  savedText = written;
   doc = {
     ...doc,
+    bytes: result.bytes,
     name: outcome.name ?? name,
     handle: outcome.handle ?? doc.handle,
     encoding,
@@ -337,6 +342,10 @@ async function performSave(mode) {
     untitled: false,
   };
   updateFileInfo();
+  updateStatus();
+
+  const lossy = written !== text;
+  notify(lossy ? `${outcome.message} ${t('save.lossyNote')}` : outcome.message);
   return true;
 }
 
@@ -357,6 +366,92 @@ async function copyToClipboard() {
     return;
   }
   notify(t(selected ? 'copy.selection' : 'copy.all', { chars: formatNumber(text.length) }));
+}
+
+/* ---------- 下書きの自動保存 ---------- */
+
+/** 入力が落ち着いてから控えを取るまでの待ち時間。 */
+const DRAFT_DELAY_MS = 1500;
+
+/**
+ * 控えに元のバイト列まで残す上限。
+ * これを超えるファイルでは本文だけを残す（復元後は文字コードの指定し直しができない）。
+ * 書き込みが重くなるのを避けるための割り切り。
+ */
+const DRAFT_BYTES_LIMIT = 2 * 1024 * 1024;
+
+function currentDraft() {
+  return {
+    name: doc.name,
+    text: editor.getText(),
+    savedText,
+    encoding: doc.encoding,
+    newline: doc.newline,
+    bom: doc.bom,
+    bytes: doc.bytes.length <= DRAFT_BYTES_LIMIT ? doc.bytes : null,
+    untitled: doc.untitled,
+  };
+}
+
+/**
+ * 未保存の変更があるあいだだけ控えを残す。
+ * 保存が済んだら消すので、次の起動で古い内容を勧めてしまうことはない。
+ */
+const storeDraft = debounce(() => {
+  if (isDirty()) saveDraft(currentDraft());
+  else clearDraft();
+}, DRAFT_DELAY_MS);
+
+editor.on('change', storeDraft);
+
+// アプリを切り替えたり閉じたりする直前は、待たずに書き出す
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') storeDraft.flush();
+});
+window.addEventListener('pagehide', () => storeDraft.flush());
+
+/** 日時を表示用に整える。 */
+function formatTime(at) {
+  if (!at) return '';
+  try {
+    return new Intl.DateTimeFormat(getLocale(), { dateStyle: 'short', timeStyle: 'short' }).format(new Date(at));
+  } catch {
+    return new Date(at).toLocaleString();
+  }
+}
+
+/**
+ * 前回の編集内容が残っていれば、復元するか尋ねる。
+ * @returns {Promise<boolean>} 復元したか
+ */
+async function offerDraftRestore() {
+  const draft = await loadDraft();
+  if (!draft?.text) return false;
+
+  $('#draftBody').textContent = t('draft.body', { name: draft.name, time: formatTime(draft.at) });
+  const choice = await askDialog($('#draftDialog'));
+  if (choice !== 'restore') {
+    await clearDraft();
+    return false;
+  }
+
+  doc = {
+    name: draft.name || t('file.untitled'),
+    bytes: draft.bytes ?? new Uint8Array(0),
+    encoding: draft.encoding ?? 'utf-8',
+    bom: draft.bom ?? false,
+    newline: draft.newline ?? 'lf',
+    detectionReason: 'draft',
+    text: draft.text,
+    handle: null, // 書き込み先は持ち越せないので、上書きは選び直しになる
+    untitled: draft.untitled ?? false,
+  };
+  editor.load(draft.text);
+  savedText = draft.savedText ?? draft.text;
+  updateFileInfo();
+  updateStatus();
+  notify(t('draft.restored'));
+  return true;
 }
 
 /* ---------- コマンドから使う文脈 ---------- */
@@ -632,12 +727,21 @@ async function boot() {
   loadDocument(emptyDocument(t('file.untitled')), { announce: false });
   editor.refresh();
 
+  $('#helpVersion').textContent = t('help.version', { version: APP_VERSION });
+
   // Android の共有メニューから渡されたファイル
+  let openedFromShare = false;
   if (hasSharePayload()) {
     clearShareFlag();
     const shared = await takeSharedFile();
-    if (shared) loadDocument(buildDocument(shared.bytes, shared.name ?? t('file.untitled')));
+    if (shared) {
+      loadDocument(buildDocument(shared.bytes, shared.name ?? t('file.untitled')));
+      openedFromShare = true;
+    }
   }
+
+  // 共有で開いた場合を除き、前回の編集内容が残っていれば尋ねる
+  if (!openedFromShare) await offerDraftRestore();
 
   // PWA として「このアプリで開く」を選んだとき
   if ('launchQueue' in window && typeof LaunchParams !== 'undefined' && 'files' in LaunchParams.prototype) {
@@ -656,9 +760,25 @@ function registerServiceWorker() {
   if (!location.protocol.startsWith('http')) return;
   const url = new URL('sw.js', document.baseURI);
   const scope = new URL('./', document.baseURI);
-  navigator.serviceWorker.register(url, { scope }).catch(() => {
-    /* オフライン対応が使えないだけなので無視する */
-  });
+  navigator.serviceWorker
+    .register(url, { scope })
+    .then((registration) => {
+      registration.addEventListener('updatefound', () => {
+        const installing = registration.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+          // すでに動いている版がある状態で新しい版が入ったときだけ知らせる
+          if (installing.state !== 'installed' || !navigator.serviceWorker.controller) return;
+          notify(t('update.available'), 'info', {
+            label: t('update.reload'),
+            onClick: () => location.reload(),
+          });
+        });
+      });
+    })
+    .catch(() => {
+      /* オフライン対応が使えないだけなので無視する */
+    });
 }
 
 boot();

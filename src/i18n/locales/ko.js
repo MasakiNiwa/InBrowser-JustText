@@ -90,6 +90,7 @@ export default {
   'save.cancelled': '저장을 취소했습니다',
   'save.overwriteConfirm': '{name}의 내용을 바꿉니다. 원래 내용은 되돌릴 수 없습니다. 계속할까요?',
   'save.permissionDenied': '파일에 쓸 권한을 받지 못했습니다',
+  'save.lossyNote': '저장한 파일에서는 나타낼 수 없는 문자가 “?”로 바뀌었습니다.',
 
   /* Characters that cannot be saved */
   'loss.title': '저장할 수 없는 문자가 있습니다',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': '취소',
   'loss.replace': '“?”로 바꿔 저장',
   'loss.utf8': 'UTF-8로 저장',
+
+  /* 임시 저장 되살리기 */
+  'draft.title': '저장하지 않은 작업이 남아 있습니다',
+  'draft.body': '{name}의 편집 내용({time})이 남아 있습니다. 되살릴까요?',
+  'draft.restore': '되살리기',
+  'draft.discard': '버리기',
+  'draft.restored': '저장하지 않았던 편집 내용을 되살렸습니다',
 
   /* Clipboard */
   'copy.all': '전체를 복사했습니다 ({chars}자)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Android에서 파일을 “공유”로 이 앱에 보내면 바로 열립니다.',
   'help.shortcuts': '키보드: Ctrl+O 열기 / Ctrl+S 저장 / Ctrl+F 찾기 / Ctrl+G 줄로 이동 / Ctrl+Z 실행 취소 / Ctrl+Shift+Z 다시 실행',
   'help.close': '닫기',
+  'help.version': '버전 {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': '바뀐 내용이 없습니다',
   'common.commandFailed': '실행하지 못했습니다: {detail}',
   'common.noscript': '이 도구를 쓰려면 JavaScript를 켜 주세요.',
+
+  /* 업데이트 */
+  'update.available': '새 버전이 있습니다',
+  'update.reload': '새로 고침',
 };

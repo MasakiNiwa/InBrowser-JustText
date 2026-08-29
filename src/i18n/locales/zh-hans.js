@@ -90,6 +90,7 @@ export default {
   'save.cancelled': '已取消保存',
   'save.overwriteConfirm': '将替换 {name} 的内容，原内容无法恢复。要继续吗？',
   'save.permissionDenied': '未获得写入文件的权限',
+  'save.lossyNote': '保存的文件中，无法表示的字符已被替换成“?”。',
 
   /* Characters that cannot be saved */
   'loss.title': '有些字符无法保存',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': '取消',
   'loss.replace': '替换为“?”后保存',
   'loss.utf8': '以 UTF-8 保存',
+
+  /* 恢复草稿 */
+  'draft.title': '还有上次未保存的内容',
+  'draft.body': '{name}（{time}）的编辑内容还在，要恢复吗？',
+  'draft.restore': '恢复',
+  'draft.discard': '丢弃',
+  'draft.restored': '已恢复上次未保存的内容',
 
   /* Clipboard */
   'copy.all': '已复制全文（{chars} 个字符）',
@@ -182,6 +190,7 @@ export default {
   'help.share': '在 Android 上，通过“分享”把文件发送给本应用即可直接打开。',
   'help.shortcuts': '键盘：Ctrl+O 打开 / Ctrl+S 保存 / Ctrl+F 查找 / Ctrl+G 跳转到行 / Ctrl+Z 撤销 / Ctrl+Shift+Z 重做',
   'help.close': '关闭',
+  'help.version': '版本 {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': '没有任何改动',
   'common.commandFailed': '无法执行：{detail}',
   'common.noscript': '请启用 JavaScript 后再使用本工具。',
+
+  /* 更新 */
+  'update.available': '有新版本可用',
+  'update.reload': '重新加载',
 };

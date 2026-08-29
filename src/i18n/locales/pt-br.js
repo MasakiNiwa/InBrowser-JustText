@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Gravação cancelada',
   'save.overwriteConfirm': 'O conteúdo de {name} será substituído. O original não poderá ser recuperado. Continuar?',
   'save.permissionDenied': 'A permissão para gravar o arquivo não foi concedida',
+  'save.lossyNote': 'No arquivo salvo, os caracteres que não podiam ser representados viraram “?”.',
 
   /* Characters that cannot be saved */
   'loss.title': 'Alguns caracteres não podem ser salvos',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Cancelar',
   'loss.replace': 'Salvar com “?”',
   'loss.utf8': 'Salvar em UTF-8',
+
+  /* Restaurar um rascunho */
+  'draft.title': 'Trabalho não salvo',
+  'draft.body': 'Ainda há alterações em {name} de {time}. Restaurar?',
+  'draft.restore': 'Restaurar',
+  'draft.discard': 'Descartar',
+  'draft.restored': 'Suas alterações não salvas foram restauradas',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'No Android, compartilhe um arquivo com este app para abri-lo direto.',
   'help.shortcuts': 'Teclado: Ctrl+O abrir / Ctrl+S salvar / Ctrl+F localizar / Ctrl+G ir para a linha / Ctrl+Z desfazer / Ctrl+Shift+Z refazer',
   'help.close': 'Fechar',
+  'help.version': 'Versão {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'Nada mudou',
   'common.commandFailed': 'Não foi possível executar: {detail}',
   'common.noscript': 'Ative o JavaScript para usar esta ferramenta.',
+
+  /* Atualizações */
+  'update.available': 'Há uma versão nova disponível',
+  'update.reload': 'Recarregar',
 };

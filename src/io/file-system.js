@@ -50,8 +50,12 @@ export async function writeToHandle(handle, bytes) {
   const writable = await handle.createWritable();
   try {
     await writable.write(bytes);
-  } finally {
+    // close() で初めて元のファイルと入れ替わる。ここまで来て初めて確定させる。
     await writable.close();
+  } catch (error) {
+    // 途中で失敗したときは書き込みを捨てて、元のファイルをそのまま残す
+    await writable.abort?.().catch(() => {});
+    throw error;
   }
   return true;
 }

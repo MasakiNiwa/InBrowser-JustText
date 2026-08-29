@@ -15,7 +15,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { chromium, devices } from 'playwright';
+import { chromium, devices, firefox, webkit } from 'playwright';
 
 import { encodeText } from '../../src/core/encoder.js';
 
@@ -23,11 +23,45 @@ const PORT = 8137;
 const BASE = `http://localhost:${PORT}/`;
 const WORK = mkdtempSync(join(tmpdir(), 'justtext-e2e-'));
 
+/**
+ * どのブラウザで確かめるか。JUSTTEXT_BROWSER=firefox のように指定する。
+ * 既定は chromium。
+ */
+const BROWSERS = { chromium, firefox, webkit };
+const BROWSER_NAME = process.env.JUSTTEXT_BROWSER ?? 'chromium';
+const browserType = BROWSERS[BROWSER_NAME];
+if (!browserType) {
+  console.error(`知らないブラウザです: ${BROWSER_NAME}（chromium / firefox / webkit）`);
+  process.exit(2);
+}
+
+/**
+ * 端末の設定。Firefox は isMobile / deviceScaleFactor に対応しないため、
+ * 画面の大きさだけ合わせる。
+ */
+function phone(extra = {}) {
+  const base = BROWSER_NAME === 'firefox'
+    ? { viewport: { width: 412, height: 915 } }
+    : { ...devices['Pixel 7'] };
+  return { ...base, ...extra };
+}
+
 const results = [];
 const check = (name, ok, detail = '') => {
   results.push({ name, ok });
   console.log(`${ok ? '  ok  ' : ' FAIL '} ${name}${detail ? ` — ${detail}` : ''}`);
 };
+
+/**
+ * 起動時に出る「前回の続きがあります」を閉じる。
+ * 復元そのものは専用の節で確かめるので、ここでは邪魔にならないよう破棄する。
+ */
+async function dismissDraft(target) {
+  const visible = await target.locator('#draftDialog').isVisible().catch(() => false);
+  if (!visible) return;
+  await target.click('#draftDialog button[value="discard"]');
+  await target.waitForTimeout(200);
+}
 
 /* ---------- 配信サーバ ---------- */
 
@@ -58,8 +92,8 @@ writeFileSync(sjisPath, encodeText('{\r\n  "設定": "日本語の設定ファ�
 
 /* ---------- 本体 ---------- */
 
-const browser = await chromium.launch();
-const context = await browser.newContext({ ...devices['Pixel 7'], acceptDownloads: true, locale: 'ja-JP' });
+const browser = await browserType.launch();
+const context = await browser.newContext(phone({ acceptDownloads: true, locale: 'ja-JP' }));
 const page = await context.newPage();
 
 const errors = [];
@@ -361,12 +395,22 @@ await page.evaluate(() => { window.confirm = () => true; });
 
 /* ---------- クリップボード ---------- */
 
-await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+// クリップボードの読み出しを許可できるのは Chromium だけ。
+// 他のブラウザでは「書き込めたか」だけを確かめる。
+let clipboardReadable = false;
+try {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  clipboardReadable = true;
+} catch {
+  /* 権限を与えられないブラウザ */
+}
 await page.fill('#input', 'コピーの試験\n2 行目');
 await page.waitForTimeout(150);
 await page.click('#btnCopy');
 await page.waitForTimeout(300);
-check('全文をコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験\n2 行目');
+if (clipboardReadable) {
+  check('全文をコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験\n2 行目');
+}
 check('コピーを知らせる', (await page.textContent('#toastArea')).includes('コピー'));
 
 await page.evaluate(() => {
@@ -377,7 +421,11 @@ await page.evaluate(() => {
 await page.waitForTimeout(150);
 await page.click('#btnCopy');
 await page.waitForTimeout(300);
-check('選択範囲だけコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験');
+if (clipboardReadable) {
+  check('選択範囲だけコピーできる', (await page.evaluate(() => navigator.clipboard.readText())) === 'コピーの試験');
+} else {
+  check('選択範囲のコピーを知らせる', (await page.textContent('#toastArea')).includes('コピー'));
+}
 
 /* ---------- バイナリらしいファイルの警告 ---------- */
 
@@ -483,8 +531,80 @@ check('テーマが切り替わる', (await page.getAttribute('html', 'data-them
 
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForTimeout(400);
+await dismissDraft(page);
 check('設定が再読込後も残る', (await page.getAttribute('html', 'data-theme')) === 'dark');
-check('文字サイズも残る', (await page.evaluate(() => getComputedStyle(document.querySelector('#input')).fontSize)) === '16px');
+check('文字サイズも残る', (await page.evaluate(() => getComputedStyle(document.querySelector('#input')).fontSize)) === '17px');
+
+/* ---------- 保存したあとの状態が食い違わないこと ---------- */
+
+// 新規の書類でも、保存すればその内容を開き直せる
+await page.evaluate(() => { window.confirm = () => true; });
+await page.click('#btnNew');
+await page.waitForTimeout(200);
+await page.fill('#input', '新しく作った内容');
+await page.waitForTimeout(150);
+await page.click('#btnSave');
+await page.waitForTimeout(250);
+await page.fill('#saveName', 'fresh.txt');
+await page.selectOption('#saveEncoding', 'utf-8');
+const [dlFresh] = await Promise.all([page.waitForEvent('download'), page.click('#saveConfirm')]);
+await dlFresh.saveAs(join(WORK, 'fresh.txt'));
+await page.waitForTimeout(300);
+await page.click('#statusEncoding');
+await page.waitForTimeout(250);
+check('新規保存後も文字コードを指定して開き直せる', await page.locator('#reopenDialog').isVisible());
+await page.selectOption('#reopenEncoding', 'utf-8');
+await page.click('#reopenDialog button[type="submit"]');
+await page.waitForTimeout(300);
+check('開き直しても保存した内容が出る', (await page.inputValue('#input')) === '新しく作った内容', await page.inputValue('#input'));
+
+// ? に置き換えて保存したときは、手元とファイルの食い違いが分かること
+await page.fill('#input', 'ABC漢字');
+await page.waitForTimeout(150);
+await page.click('#btnSave');
+await page.waitForTimeout(250);
+await page.fill('#saveName', 'lossy.txt');
+await page.selectOption('#saveEncoding', 'windows-1252');
+await page.click('#saveConfirm');
+await page.waitForTimeout(300);
+const [dlLossy] = await Promise.all([page.waitForEvent('download'), page.click('#lossDialog button[value="replace"]')]);
+await dlLossy.saveAs(join(WORK, 'lossy.txt'));
+await page.waitForTimeout(400);
+check('? 置換保存では食い違いを知らせる', (await page.textContent('#toastArea')).includes('?'), (await page.textContent('#toastArea')).slice(0, 60));
+check('? 置換保存では未保存マークが残る', await page.locator('#dirtyMark').isVisible(), '編集中の内容とファイルが違うため');
+check('編集中の内容は書き換えない', (await page.inputValue('#input')) === 'ABC漢字');
+await page.click('#statusEncoding');
+await page.waitForTimeout(250);
+await page.selectOption('#reopenEncoding', 'windows-1252');
+await page.click('#reopenDialog button[type="submit"]');
+await page.waitForTimeout(300);
+check('開き直すと保存されたとおりの内容になる', (await page.inputValue('#input')) === 'ABC??', await page.inputValue('#input'));
+
+/* ---------- 強調表示の上限を超えた一致でも移動が進むこと ---------- */
+
+const manyLines = Array.from({ length: 3300 }, (_, i) => `hit ${i}`).join('\n');
+await page.fill('#input', manyLines);
+await page.waitForTimeout(400);
+// 上限（3000 件）より後ろにカーソルを置いてから探し始める
+await page.evaluate((text) => {
+  const ta = document.querySelector('#input');
+  const offset = text.split('\n').slice(0, 3100).join('\n').length;
+  ta.focus();
+  ta.setSelectionRange(offset, offset);
+}, manyLines);
+await page.click('#btnSearch');
+await page.fill('#searchQuery', 'hit');
+await page.waitForTimeout(600);
+check('上限を超えた件数は 3,000+ と示す', (await page.textContent('#searchCount')).includes('+'), await page.textContent('#searchCount'));
+const positions = [];
+for (let i = 0; i < 4; i++) {
+  await page.click('#btnFindNext');
+  await page.waitForTimeout(200);
+  positions.push(await page.evaluate(() => document.querySelector('#input').selectionStart));
+}
+const advancing = positions.every((value, i) => i === 0 || value > positions[i - 1]);
+check('上限を超えた一致でも「次へ」が進む', advancing, positions.join(' → '));
+await page.click('#btnSearchClose');
 
 /* ---------- PWA: オフラインと共有受け取り ---------- */
 
@@ -499,6 +619,7 @@ check('アプリ一式がキャッシュされる', cachedCount >= 20, `${cached
 await context.setOffline(true);
 await page.reload({ waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(1500);
+await dismissDraft(page);
 check('オフラインでも起動する', await page.locator('#input').isVisible());
 const offlineStatus = await page.evaluate(async () => {
   const ta = document.querySelector('#input');
@@ -522,11 +643,63 @@ check('共有 POST を Service Worker が受ける', shared === 'opaqueredirect'
 
 await page.goto(`${BASE}?share=1`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
+check('共有で開いたときは復元を尋ねない', !(await page.locator('#draftDialog').isVisible()));
 check('共有されたファイルが開かれる', (await page.inputValue('#input')).includes('"共有": "テスト"'));
 check('ファイル名も引き継がれる', (await page.textContent('#fileName')) === '共有されたデータ.json');
 check('アドレスから share フラグが消える', (await page.evaluate(() => location.search)) === '');
 
 check('通しでブラウザのエラーが出ない', errors.length === 0, errors.slice(0, 3).join(' | '));
+
+/* ---------- 前回の編集内容の自動保存と復元 ---------- */
+
+const draftContext = await browser.newContext(phone({ locale: 'ja-JP' }));
+const draftPage = await draftContext.newPage();
+const draftErrors = [];
+draftPage.on('pageerror', (e) => draftErrors.push(e.message));
+await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+await draftPage.waitForTimeout(300);
+check('初回は復元を尋ねない', !(await draftPage.locator('#draftDialog').isVisible()));
+
+await draftPage.fill('#input', '書きかけの内容');
+await draftPage.waitForTimeout(2000); // 自動保存されるのを待つ
+
+// 端末がアプリを終了させた状況を模して、開き直す
+await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+await draftPage.waitForTimeout(700);
+check('前回の続きがあれば尋ねる', await draftPage.locator('#draftDialog').isVisible());
+check('どのファイルの続きか示す', (await draftPage.textContent('#draftBody')).includes('無題'), await draftPage.textContent('#draftBody'));
+await draftPage.click('#draftDialog button[value="restore"]');
+await draftPage.waitForTimeout(400);
+check('前回の編集内容を復元できる', (await draftPage.inputValue('#input')) === '書きかけの内容', await draftPage.inputValue('#input'));
+check('復元後も未保存のまま', await draftPage.locator('#dirtyMark').isVisible());
+check('復元したことを知らせる', (await draftPage.textContent('#toastArea')).length > 0);
+
+// 破棄を選べば、次からは尋ねない
+await draftPage.fill('#input', 'もう一度書いた内容');
+await draftPage.waitForTimeout(2000);
+await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+await draftPage.waitForTimeout(700);
+await draftPage.click('#draftDialog button[value="discard"]');
+await draftPage.waitForTimeout(300);
+check('破棄すれば空の状態で始まる', (await draftPage.inputValue('#input')) === '');
+await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+await draftPage.waitForTimeout(700);
+check('破棄した控えは残らない', !(await draftPage.locator('#draftDialog').isVisible()));
+
+// 保存が済んだ内容は控えを残さない
+await draftPage.fill('#input', '保存する内容');
+await draftPage.waitForTimeout(200);
+await draftPage.click('#btnSave');
+await draftPage.waitForTimeout(250);
+await draftPage.fill('#saveName', 'saved.txt');
+const [draftDownload] = await Promise.all([draftPage.waitForEvent('download'), draftPage.click('#saveConfirm')]);
+await draftDownload.saveAs(join(WORK, 'saved.txt'));
+await draftPage.waitForTimeout(2000);
+await draftPage.goto(BASE, { waitUntil: 'networkidle' });
+await draftPage.waitForTimeout(700);
+check('保存が済んでいれば復元を尋ねない', !(await draftPage.locator('#draftDialog').isVisible()));
+check('自動保存でエラーが出ない', draftErrors.length === 0, draftErrors.join(' | '));
+await draftContext.close();
 
 /* ---------- 表示言語 ---------- */
 
@@ -552,7 +725,7 @@ const detection = [
 
 const detectionResults = [];
 for (const [browserLocale, expectedCode, expectedOpen] of detection) {
-  const ctx = await browser.newContext({ ...devices['Pixel 7'], locale: browserLocale });
+  const ctx = await browser.newContext(phone({ locale: browserLocale }));
   const p2 = await ctx.newPage();
   const localeErrors = [];
   p2.on('pageerror', (e) => localeErrors.push(e.message));
@@ -579,7 +752,7 @@ check(
 );
 
 // 未対応の言語は英語になること（日本語ではない）
-const svContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'sv-SE' });
+const svContext = await browser.newContext(phone({ locale: 'sv-SE' }));
 const svPage = await svContext.newPage();
 await svPage.goto(BASE, { waitUntil: 'networkidle' });
 await svPage.waitForTimeout(300);
@@ -587,7 +760,7 @@ check('未対応の言語は英語で開く', (await svPage.textContent('#fileNa
 await svContext.close();
 
 // 右から左に書く言語（アラビア語）
-const arContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'ar-EG' });
+const arContext = await browser.newContext(phone({ locale: 'ar-EG' }));
 const arPage = await arContext.newPage();
 const arErrors = [];
 arPage.on('pageerror', (e) => arErrors.push(e.message));
@@ -636,7 +809,7 @@ check('右から左でもエラーが出ない', arErrors.length === 0, arErrors
 await arContext.close();
 
 // 設定からの切り替えと、その保存
-const enContext = await browser.newContext({ ...devices['Pixel 7'], locale: 'en-US' });
+const enContext = await browser.newContext(phone({ locale: 'en-US' }));
 const enPage = await enContext.newPage();
 const enErrors = [];
 enPage.on('pageerror', (e) => enErrors.push(e.message));
@@ -682,6 +855,7 @@ check('件数表示も日本語になる', (await enPage.textContent('#statusCou
 
 await enPage.reload({ waitUntil: 'networkidle' });
 await enPage.waitForTimeout(400);
+await dismissDraft(enPage);
 check('選んだ言語は次回も残る', (await enPage.textContent('#btnOpen')) === '開く');
 
 await enPage.click('#btnSearch');
@@ -701,7 +875,7 @@ stopServer();
 
 const failed = results.filter((r) => !r.ok);
 console.log('-'.repeat(46));
-console.log(`${results.length - failed.length}/${results.length} 件 通過`);
+console.log(`${BROWSER_NAME}: ${results.length - failed.length}/${results.length} 件 通過`);
 if (failed.length > 0) {
   console.log('失敗:', failed.map((f) => f.name).join(' / '));
   process.exit(1);

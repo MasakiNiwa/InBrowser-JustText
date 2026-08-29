@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Saving cancelled',
   'save.overwriteConfirm': 'This replaces the contents of {name}. The original cannot be recovered. Continue?',
   'save.permissionDenied': 'Permission to write the file was not granted',
+  'save.lossyNote': 'In the saved file, characters that could not be represented became “?”.',
 
   /* Characters that cannot be saved */
   'loss.title': 'Some characters cannot be saved',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Cancel',
   'loss.replace': 'Save with “?”',
   'loss.utf8': 'Save as UTF-8',
+
+  /* Restoring a draft */
+  'draft.title': 'Unsaved work from last time',
+  'draft.body': 'Edits to {name} from {time} are still here. Restore them?',
+  'draft.restore': 'Restore',
+  'draft.discard': 'Discard',
+  'draft.restored': 'Restored your unsaved edits',
 
   /* Clipboard */
   'copy.all': 'Copied the whole document ({chars} characters)',
@@ -184,6 +192,7 @@ export default {
   'help.share': 'On Android, share a file to this app to open it directly.',
   'help.shortcuts': 'Keyboard: Ctrl+O open / Ctrl+S save / Ctrl+F find / Ctrl+G go to line / Ctrl+Z undo / Ctrl+Shift+Z redo',
   'help.close': 'Close',
+  'help.version': 'Version {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -194,4 +203,8 @@ export default {
   'common.noChange': 'Nothing changed',
   'common.commandFailed': 'Could not run that: {detail}',
   'common.noscript': 'Please enable JavaScript to use this tool.',
+
+  /* Updates */
+  'update.available': 'A new version is available',
+  'update.reload': 'Reload',
 };

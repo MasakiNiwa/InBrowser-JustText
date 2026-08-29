@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Đã hủy việc lưu',
   'save.overwriteConfirm': 'Nội dung của {name} sẽ bị thay thế và không thể khôi phục. Tiếp tục?',
   'save.permissionDenied': 'Chưa được cấp quyền ghi tệp',
+  'save.lossyNote': 'Trong tệp đã lưu, những ký tự không biểu diễn được đã thành “?”.',
 
   /* Characters that cannot be saved */
   'loss.title': 'Có ký tự không lưu được',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Hủy',
   'loss.replace': 'Lưu và thay bằng “?”',
   'loss.utf8': 'Lưu theo UTF-8',
+
+  /* Khôi phục bản nháp */
+  'draft.title': 'Công việc chưa lưu lần trước',
+  'draft.body': 'Các thay đổi của {name} lúc {time} vẫn còn. Khôi phục chứ?',
+  'draft.restore': 'Khôi phục',
+  'draft.discard': 'Bỏ đi',
+  'draft.restored': 'Đã khôi phục các thay đổi chưa lưu',
 
   /* Clipboard */
   'copy.all': 'Đã sao chép toàn bộ ({chars} ký tự)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'Trên Android, chia sẻ một tệp tới ứng dụng này để mở ngay.',
   'help.shortcuts': 'Bàn phím: Ctrl+O mở / Ctrl+S lưu / Ctrl+F tìm / Ctrl+G tới dòng / Ctrl+Z hoàn tác / Ctrl+Shift+Z làm lại',
   'help.close': 'Đóng',
+  'help.version': 'Phiên bản {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'Không có gì thay đổi',
   'common.commandFailed': 'Không chạy được: {detail}',
   'common.noscript': 'Vui lòng bật JavaScript để dùng công cụ này.',
+
+  /* Cập nhật */
+  'update.available': 'Đã có phiên bản mới',
+  'update.reload': 'Tải lại',
 };

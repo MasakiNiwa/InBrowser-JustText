@@ -157,6 +157,18 @@
   </form>
 </dialog>
 
+<!-- 前回の編集内容の復元 -->
+<dialog class="sheet" id="draftDialog" aria-labelledby="draftTitle">
+  <form method="dialog" class="sheet-body">
+    <h2 class="sheet-title" id="draftTitle" data-i18n="draft.title">前回の続きがあります</h2>
+    <p class="sheet-note" id="draftBody"></p>
+    <div class="sheet-actions">
+      <button type="submit" class="btn" value="discard" data-i18n="draft.discard">破棄する</button>
+      <button type="submit" class="btn accent" value="restore" data-i18n="draft.restore">復元する</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- ツール -->
 <dialog class="sheet" id="toolsDialog" aria-labelledby="toolsTitle">
   <div class="sheet-body">
@@ -188,7 +200,7 @@
       <span class="field-label" data-i18n="settings.fontSize">文字サイズ</span>
       <div class="stepper">
         <button type="button" class="btn" id="fontSmaller" data-i18n-aria-label="settings.smaller" aria-label="小さく">−</button>
-        <output id="fontValue">15</output>
+        <output id="fontValue">16</output>
         <button type="button" class="btn" id="fontLarger" data-i18n-aria-label="settings.larger" aria-label="大きく">＋</button>
       </div>
     </div>
@@ -257,6 +269,7 @@
       <li><span data-i18n="help.share">Android の「共有」メニューからこのアプリを選ぶと、そのファイルを直接開けます。</span></li>
     </ul>
     <p class="sheet-note" data-i18n="help.shortcuts">キーボード操作: Ctrl+O 開く / Ctrl+S 保存 / Ctrl+F 検索 / Ctrl+G 行へ移動 / Ctrl+Z 戻す / Ctrl+Shift+Z 進む</p>
+    <p class="sheet-note" id="helpVersion"></p>
     <div class="sheet-actions">
       <button type="button" class="btn" id="helpClose" data-i18n="help.close">閉じる</button>
     </div>

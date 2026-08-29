@@ -102,6 +102,8 @@ test('英語のまま残っている訳が無い', async () => {
     'fr:toolbar.region', // フランス語でも Actions
     'de:group.text', // ドイツ語でも Text
     'it:group.file', // イタリア語では file をそのまま使う
+    'fr:help.version', // フランス語でも Version
+    'de:help.version', // ドイツ語でも Version
   ]);
   for (const [code, catalog] of await allCatalogs()) {
     if (code === 'en') continue;

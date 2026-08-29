@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'Guardado cancelado',
   'save.overwriteConfirm': 'Se reemplazará el contenido de {name}. El original no se podrá recuperar. ¿Continuar?',
   'save.permissionDenied': 'No se concedió permiso para escribir el archivo',
+  'save.lossyNote': 'En el archivo guardado, los caracteres que no se podían representar quedaron como «?».',
 
   /* Characters that cannot be saved */
   'loss.title': 'Algunos caracteres no se pueden guardar',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'Cancelar',
   'loss.replace': 'Guardar con «?»',
   'loss.utf8': 'Guardar como UTF-8',
+
+  /* Restaurar un borrador */
+  'draft.title': 'Trabajo sin guardar',
+  'draft.body': 'Quedan cambios en {name} de {time}. ¿Restaurarlos?',
+  'draft.restore': 'Restaurar',
+  'draft.discard': 'Descartar',
+  'draft.restored': 'Se restauraron tus cambios sin guardar',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'En Android, comparte un archivo con esta app para abrirlo directamente.',
   'help.shortcuts': 'Teclado: Ctrl+O abrir / Ctrl+S guardar / Ctrl+F buscar / Ctrl+G ir a la línea / Ctrl+Z deshacer / Ctrl+Mayús+Z rehacer',
   'help.close': 'Cerrar',
+  'help.version': 'Versión {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'No hubo cambios',
   'common.commandFailed': 'No se pudo ejecutar: {detail}',
   'common.noscript': 'Activa JavaScript para usar esta herramienta.',
+
+  /* Actualizaciones */
+  'update.available': 'Hay una versión nueva disponible',
+  'update.reload': 'Recargar',
 };

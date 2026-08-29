@@ -90,6 +90,7 @@ export default {
   'save.cancelled': 'ยกเลิกการบันทึกแล้ว',
   'save.overwriteConfirm': 'เนื้อหาของ {name} จะถูกแทนที่และกู้คืนไม่ได้ จะทำต่อไหม',
   'save.permissionDenied': 'ไม่ได้รับสิทธิ์ในการเขียนไฟล์',
+  'save.lossyNote': 'ในไฟล์ที่บันทึก อักขระที่แสดงไม่ได้ถูกแทนด้วย “?” แล้ว',
 
   /* Characters that cannot be saved */
   'loss.title': 'มีอักขระที่บันทึกไม่ได้',
@@ -99,6 +100,13 @@ export default {
   'loss.cancel': 'ยกเลิก',
   'loss.replace': 'บันทึกโดยแทนด้วย “?”',
   'loss.utf8': 'บันทึกเป็น UTF-8',
+
+  /* การกู้คืนฉบับร่าง */
+  'draft.title': 'งานที่ยังไม่ได้บันทึกจากครั้งก่อน',
+  'draft.body': 'การแก้ไข {name} เมื่อ {time} ยังอยู่ ต้องการกู้คืนไหม',
+  'draft.restore': 'กู้คืน',
+  'draft.discard': 'ทิ้งไป',
+  'draft.restored': 'กู้คืนการแก้ไขที่ยังไม่ได้บันทึกแล้ว',
 
   /* Clipboard */
   'copy.all': 'คัดลอกทั้งหมดแล้ว ({chars} อักขระ)',
@@ -182,6 +190,7 @@ export default {
   'help.share': 'บน Android แชร์ไฟล์มาที่แอปนี้เพื่อเปิดได้ทันที',
   'help.shortcuts': 'แป้นพิมพ์: Ctrl+O เปิด / Ctrl+S บันทึก / Ctrl+F ค้นหา / Ctrl+G ไปที่บรรทัด / Ctrl+Z เลิกทำ / Ctrl+Shift+Z ทำซ้ำ',
   'help.close': 'ปิด',
+  'help.version': 'เวอร์ชัน {version}',
 
   /* Line endings */
   'newline.lf': 'LF (Unix)',
@@ -192,4 +201,8 @@ export default {
   'common.noChange': 'ไม่มีอะไรเปลี่ยนแปลง',
   'common.commandFailed': 'ทำงานไม่สำเร็จ: {detail}',
   'common.noscript': 'กรุณาเปิดใช้งาน JavaScript เพื่อใช้เครื่องมือนี้',
+
+  /* การอัปเดต */
+  'update.available': 'มีเวอร์ชันใหม่',
+  'update.reload': 'โหลดใหม่',
 };
