@@ -59,8 +59,8 @@ const check = (name, ok, detail = '') => {
 async function dismissDraft(target) {
   const visible = await target.locator('#draftDialog').isVisible().catch(() => false);
   if (!visible) return;
-  await target.click('#draftDialog button[value="discard"]');
-  await target.waitForTimeout(200);
+  await target.click('#draftDiscardAll');
+  await target.waitForTimeout(250);
 }
 
 /**
@@ -400,6 +400,50 @@ check(
   JSON.parse(await runTool('json.sortKeys')) && (await page.inputValue('#input')).indexOf('"a"') < (await page.inputValue('#input')).indexOf('"b"'),
   await page.inputValue('#input'),
 );
+
+/*
+ * Reformatting must never quietly change what the JSON says. JSON.parse rounds
+ * numbers it cannot hold and keeps only the last of a repeated key, so the
+ * commands stop and point at whatever is in the way instead.
+ */
+async function jsonRefuses(source, id) {
+  await page.fill('#input', source);
+  await page.waitForTimeout(150);
+  const before = await page.inputValue('#input');
+  await page.click('#btnTools');
+  await page.waitForTimeout(250);
+  await page.click(`.tool-item[data-id="${id}"]`);
+  await page.waitForTimeout(400);
+  return {
+    unchanged: (await page.inputValue('#input')) === before,
+    told: (await page.textContent('#toastArea')).trim(),
+    caret: await page.evaluate(() => document.querySelector('#input').selectionStart),
+  };
+}
+
+const bigNumber = await jsonRefuses('{"id":9007199254740993}', 'json.format2');
+check('a number too big to hold stops the reformat', bigNumber.unchanged, JSON.stringify(bigNumber));
+check('and the reader is told which one', bigNumber.told.includes('9007199254740993'), bigNumber.told);
+check('with the caret put on it', bigNumber.caret === 6, String(bigNumber.caret));
+
+const repeated = await jsonRefuses('{"a":1,"a":2}', 'json.minify');
+check('a repeated key stops the reformat too', repeated.unchanged, JSON.stringify(repeated));
+check('and is named', repeated.told.includes('"a"') || repeated.told.includes('a'), repeated.told);
+
+const alsoSortKeys = await jsonRefuses('{"b":1,"id":123456789012345678901}', 'json.sortKeys');
+check('sorting keys stops at the same things', alsoSortKeys.unchanged, JSON.stringify(alsoSortKeys));
+
+const validating = await jsonRefuses('{"id":1e999}', 'json.validate');
+check('validating reports it rather than calling the file fine', validating.told.includes('1e999'), validating.told);
+
+// __proto__ is an ordinary key in JSON; rebuilding must not swallow it.
+await page.fill('#input', '{"z":1,"__proto__":{"keep":true},"a":2}');
+await page.waitForTimeout(150);
+await page.click('#btnTools');
+await page.waitForTimeout(250);
+await page.click('.tool-item[data-id="json.sortKeys"]');
+await page.waitForTimeout(400);
+check('sorting keys keeps __proto__', (await page.inputValue('#input')).includes('__proto__'), await page.inputValue('#input'));
 
 /* ---------- Opening a file: Shift_JIS with CRLF ---------- */
 
@@ -871,6 +915,51 @@ check('nothing errored anywhere in the run', errors.length === 0, errors.slice(0
 
 /* ---------- Autosaving a draft, and getting it back ---------- */
 
+/*
+ * Drafts written before 0.4 all sat under one key, "current", and carried no
+ * key of their own. Somebody updating with unsaved work has to be offered it,
+ * so the key is read from the store rather than from the record.
+ */
+const legacyContext = await browser.newContext(phone({ locale: 'en-US' }));
+const legacyPage = await legacyContext.newPage();
+await legacyPage.goto(BASE, { waitUntil: 'networkidle' });
+await legacyPage.waitForTimeout(600);
+await legacyPage.evaluate(async () => {
+  const db = await new Promise((resolve, reject) => {
+    const request = indexedDB.open('justtext', 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('drafts')) request.result.createObjectStore('drafts');
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  await new Promise((resolve) => {
+    const transaction = db.transaction('drafts', 'readwrite');
+    transaction.objectStore('drafts').put({
+      name: 'from-an-older-version.txt',
+      text: 'WORK FROM BEFORE THE UPDATE',
+      savedText: '',
+      encoding: 'utf-8',
+      newline: 'lf',
+      bom: false,
+      bytes: null,
+      untitled: false,
+      at: Date.now(),
+    }, 'current');
+    transaction.oncomplete = resolve;
+    transaction.onerror = resolve;
+  });
+  db.close();
+});
+await legacyPage.goto(BASE, { waitUntil: 'networkidle' });
+await legacyPage.waitForTimeout(1100);
+check('a draft from an older version is still offered', await legacyPage.locator('#draftDialog').isVisible());
+check('and it is named', (await legacyPage.textContent('.draft-name')) === 'from-an-older-version.txt', await legacyPage.textContent('.draft-name'));
+await legacyPage.click('.draft-pick');
+await legacyPage.waitForTimeout(500);
+check('and comes back whole', (await legacyPage.inputValue('#input')) === 'WORK FROM BEFORE THE UPDATE', await legacyPage.inputValue('#input'));
+await legacyContext.close();
+
 const draftContext = await browser.newContext(phone({ acceptDownloads: true, locale: 'en-US' }));
 const draftPage = await draftContext.newPage();
 const draftErrors = [];
@@ -886,8 +975,8 @@ await draftPage.waitForTimeout(2000); // give the autosave time to run
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
 check('leftover work is offered back', await draftPage.locator('#draftDialog').isVisible());
-check('and the dialog names the file', (await draftPage.textContent('#draftBody')).includes('untitled'), await draftPage.textContent('#draftBody'));
-await draftPage.click('#draftDialog button[value="restore"]');
+check('and the row names the file', (await draftPage.textContent('.draft-name')).includes('untitled'), await draftPage.textContent('.draft-name'));
+await draftPage.click('.draft-pick');
 await draftPage.waitForTimeout(400);
 check('the work comes back as it was', (await draftPage.inputValue('#input')) === 'half-written', await draftPage.inputValue('#input'));
 check('and is still unsaved', await draftPage.locator('#dirtyMark').isVisible());
@@ -898,7 +987,7 @@ await draftPage.fill('#input', 'written once more');
 await draftPage.waitForTimeout(2000);
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
-await draftPage.click('#draftDialog button[value="discard"]');
+await draftPage.click('#draftDiscardAll');
 await draftPage.waitForTimeout(300);
 check('after discarding, it starts empty', (await draftPage.inputValue('#input')) === '');
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
@@ -919,7 +1008,7 @@ await draftPage.waitForTimeout(2000);
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
 check('an emptied document is still offered back', await draftPage.locator('#draftDialog').isVisible());
-await draftPage.click('#draftDialog button[value="restore"]');
+await draftPage.click('.draft-pick');
 await draftPage.waitForTimeout(400);
 check('and comes back empty', (await draftPage.inputValue('#input')) === '');
 check('still marked unsaved', await draftPage.locator('#dirtyMark').isVisible());
@@ -934,7 +1023,7 @@ check('the restore dialog is up', await draftPage.locator('#draftDialog').isVisi
 await draftPage.waitForTimeout(3000); // longer than the autosave interval
 const draftStillThere = await readDraftTexts(draftPage);
 check('the draft survives while the question waits', draftStillThere.includes('消えては困る内容'), JSON.stringify(draftStillThere));
-await draftPage.click('#draftDialog button[value="restore"]');
+await draftPage.click('.draft-pick');
 await draftPage.waitForTimeout(400);
 check('and can be restored after the wait', (await draftPage.inputValue('#input')) === '消えては困る内容');
 
@@ -998,7 +1087,7 @@ if (BROWSER_NAME !== 'webkit') {
   await draftPage.goto(BASE, { waitUntil: 'networkidle' });
   await draftPage.waitForTimeout(900);
   check('the draft is still there afterwards', await draftPage.locator('#draftDialog').isVisible());
-  await draftPage.click('#draftDialog button[value="restore"]');
+  await draftPage.click('.draft-pick');
   await draftPage.waitForTimeout(400);
   check('and can be recovered on the next plain launch', (await draftPage.inputValue('#input')) === 'must survive the share');
 }
@@ -1007,15 +1096,18 @@ if (BROWSER_NAME !== 'webkit') {
  * Two tabs at once. Each writes under a key of its own, so neither can land on
  * the other's work — the failing case behind everything above.
  */
-const secondTab = await draftContext.newPage();
-await secondTab.goto(BASE, { waitUntil: 'networkidle' });
-await secondTab.waitForTimeout(900);
-await dismissDraft(secondTab);
-await secondTab.fill('#input', 'written in the second tab');
-await secondTab.waitForTimeout(2200);
-// The first tab is still open and still autosaving to its own key.
 await draftPage.fill('#input', 'written in the first tab');
 await draftPage.waitForTimeout(2200);
+
+const secondTab = await draftContext.newPage();
+await secondTab.goto(BASE, { waitUntil: 'networkidle' });
+await secondTab.waitForTimeout(1200);
+// The first tab is open and still autosaving, so its work is not left behind
+// and must not be offered here: discarding it would take away the only copy
+// that tab has until its next keystroke.
+check('a live tab\'s draft is not offered to another tab', !(await secondTab.locator('#draftDialog').isVisible()));
+await secondTab.fill('#input', 'written in the second tab');
+await secondTab.waitForTimeout(2200);
 const bothTabs = await readDraftTexts(secondTab);
 check(
   'two tabs keep drafts of their own',
@@ -1024,34 +1116,47 @@ check(
 );
 await secondTab.close();
 
-// Every draft is offered in its turn, so none is thrown away unasked. How many
-// there are to get through comes from the store rather than a fixed number,
-// which would only be a guess about how the autosaves interleaved.
+// With both tabs gone, everything waiting shows up together in one list.
 const waiting = (await readDraftTexts(draftPage)).length;
-let offeredInTurn = 0;
-for (let attempt = 0; attempt <= waiting; attempt++) {
-  await draftPage.goto(BASE, { waitUntil: 'networkidle' });
-  await draftPage.waitForTimeout(900);
-  if (!(await draftPage.locator('#draftDialog').isVisible())) break;
-  offeredInTurn++;
-  await draftPage.click('#draftDialog button[value="discard"]');
-  await draftPage.waitForTimeout(400);
-}
-check('each draft is offered in its turn', waiting >= 2 && offeredInTurn === waiting, `${offeredInTurn} of ${waiting}`);
-check('and the store is empty once they are all dealt with', (await readDraftTexts(draftPage)).length === 0);
+await draftPage.close();
+const listTab = await draftContext.newPage();
+listTab.on('pageerror', (e) => draftErrors.push(e.message));
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+check('the list shows every draft that is waiting', (await listTab.locator('#draftList .draft-row').count()) === waiting, `${await listTab.locator('#draftList .draft-row').count()} of ${waiting}`);
+check('each row names its file', ((await listTab.textContent('.draft-name')) ?? '').trim().length > 0);
+check('and shows a line of what is in it', ((await listTab.textContent('.draft-preview')) ?? '').trim().length > 0);
+
+// "Not now" is not a decision: everything stays exactly where it was.
+await listTab.click('#draftLater');
+await listTab.waitForTimeout(400);
+check('"not now" keeps them all', (await readDraftTexts(listTab)).length === waiting);
+
+// One row at a time can go, without touching the others.
+await listTab.reload({ waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+await listTab.click('#draftList .draft-row .draft-drop');
+await listTab.waitForTimeout(400);
+check('a single draft can be dropped on its own', (await readDraftTexts(listTab)).length === waiting - 1, JSON.stringify(await readDraftTexts(listTab)));
+
+await listTab.reload({ waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+await listTab.click('#draftDiscardAll');
+await listTab.waitForTimeout(400);
+check('and discarding all empties the store', (await readDraftTexts(listTab)).length === 0);
 
 // Work that has been saved leaves no draft behind.
-await draftPage.fill('#input', 'this one gets saved');
-await draftPage.waitForTimeout(200);
-await draftPage.click('#btnSave');
-await draftPage.waitForTimeout(250);
-await draftPage.fill('#saveName', 'saved.txt');
-const [draftDownload] = await Promise.all([draftPage.waitForEvent('download'), draftPage.click('#saveConfirm')]);
+await listTab.fill('#input', 'this one gets saved');
+await listTab.waitForTimeout(200);
+await listTab.click('#btnSave');
+await listTab.waitForTimeout(250);
+await listTab.fill('#saveName', 'saved.txt');
+const [draftDownload] = await Promise.all([listTab.waitForEvent('download'), listTab.click('#saveConfirm')]);
 await draftDownload.saveAs(join(WORK, 'saved.txt'));
-await draftPage.waitForTimeout(2000);
-await draftPage.goto(BASE, { waitUntil: 'networkidle' });
-await draftPage.waitForTimeout(700);
-check('saved work is never offered back', !(await draftPage.locator('#draftDialog').isVisible()));
+await listTab.waitForTimeout(2000);
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(700);
+check('saved work is never offered back', !(await listTab.locator('#draftDialog').isVisible()));
 check('autosaving errored nowhere', draftErrors.length === 0, draftErrors.join(' | '));
 await draftContext.close();
 

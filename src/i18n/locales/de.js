@@ -106,13 +106,15 @@ export default {
 
   /* Entwurf wiederherstellen */
   'draft.title': 'Nicht gespeicherte Arbeit',
-  'draft.body': 'Änderungen an {name} von {time} sind noch da. Wiederherstellen?',
+  'draft.lead': 'Arbeit vom letzten Mal ist noch da — {count} insgesamt. Wählen Sie aus, was zurückkommen soll; der Rest bleibt liegen.',
+  'draft.when': '{time} · {chars} Zeichen',
   'draft.restore': 'Wiederherstellen',
-  'draft.discard': 'Verwerfen',
+  'draft.later': 'Später',
+  'draft.discardAll': 'Alle verwerfen',
+  'draft.discardOne': 'Änderungen an {name} verwerfen',
   'draft.restored': 'Ihre nicht gespeicherten Änderungen wurden wiederhergestellt',
   'draft.tooLarge': 'Dieses Dokument ist zu groß, um einen Entwurf davon zu behalten. Bitte speichern Sie zwischendurch selbst.',
   'draft.failed': 'Der Entwurf konnte nicht geschrieben werden. Bitte speichern Sie zwischendurch selbst.',
-  'draft.more': '{count} weitere warten.',
 
   /* Clipboard */
   'copy.all': 'Gesamten Text kopiert ({chars} Zeichen)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'Das ist gültiges JSON',
   'json.error': 'JSON-Fehler: {detail}',
   'json.parseFailed': 'Konnte nicht als JSON gelesen werden: {detail}',
+  'json.numberUnsafe': 'Unverändert gelassen: {detail} lässt sich nicht neu schreiben, ohne den Wert zu ändern.',
+  'json.duplicateKeyUnsafe': 'Unverändert gelassen: Der Schlüssel „{detail}“ kommt in einem Objekt zweimal vor, und beim Neuschreiben ginge einer verloren.',
 
   /* Settings */
   'settings.title': 'Einstellungen',

@@ -458,6 +458,48 @@ let draftState = 'idle';
 /** Whether we have already said that the draft could not be written. */
 let draftProblemReported = false;
 
+/**
+ * How tabs tell each other which drafts are live.
+ *
+ * Without this, opening a second tab offers the first tab's work back as though
+ * it had been left behind, and discarding it takes away the only copy the first
+ * tab has until its next keystroke. Where BroadcastChannel is missing nothing
+ * is filtered, which is no worse than before.
+ */
+const DRAFT_CHANNEL = 'justtext.drafts';
+const LIVE_REPLY_MS = 250;
+
+const draftChannel = (() => {
+  if (typeof BroadcastChannel !== 'function') return null;
+  try {
+    const channel = new BroadcastChannel(DRAFT_CHANNEL);
+    channel.addEventListener('message', (e) => {
+      // Only a session that has a key of its own has anything to defend.
+      if (e.data?.type === 'who' && draftKey) channel.postMessage({ type: 'here', key: draftKey });
+    });
+    return channel;
+  } catch {
+    return null;
+  }
+})();
+
+/** The keys other open tabs are autosaving to right now. */
+async function keysHeldElsewhere() {
+  if (!draftChannel) return new Set();
+  const held = new Set();
+  const listen = (e) => {
+    if (e.data?.type === 'here' && typeof e.data.key === 'string') held.add(e.data.key);
+  };
+  draftChannel.addEventListener('message', listen);
+  try {
+    draftChannel.postMessage({ type: 'who' });
+    await new Promise((resolve) => setTimeout(resolve, LIVE_REPLY_MS));
+  } finally {
+    draftChannel.removeEventListener('message', listen);
+  }
+  return held;
+}
+
 /** A key nothing else is using. */
 function freshKey() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -579,40 +621,128 @@ function formatTime(at) {
 }
 
 /**
- * If work from last time is still around, ask whether to bring it back.
+ * A glimpse of the draft, short enough to sit in a list.
+ * Runs of whitespace collapse so that the first line of a JSON file — often
+ * just an opening brace — does not use up the whole preview.
+ */
+function draftPreview(text) {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  return flat.length > 60 ? `${flat.slice(0, 60)}…` : flat;
+}
+
+/** Puts the leftover work on screen, one row each, and waits for a choice. */
+function askWhichDraft(drafts) {
+  const dialog = $('#draftDialog');
+  const list = $('#draftList');
+  $('#draftBody').textContent = t('draft.lead', { count: formatNumber(drafts.length) });
+
+  return new Promise((resolve) => {
+    let settled = false;
+    // However the dialog goes away — a button, Escape, anything else — exactly
+    // one answer comes back. Leaving this unsettled would leave the session
+    // without a key, and so without any autosave at all.
+    const finish = (answer) => {
+      if (settled) return;
+      settled = true;
+      list.replaceChildren();
+      dialog.close();
+      resolve(answer);
+    };
+    dialog.addEventListener('close', () => finish({ action: 'later' }), { once: true });
+
+    list.replaceChildren(...drafts.map((draft) => {
+      const row = document.createElement('li');
+      row.className = 'draft-row';
+      row.dataset.key = draft.key;
+
+      const pick = document.createElement('button');
+      pick.type = 'button';
+      pick.className = 'draft-pick';
+      // The row is the button; say so out loud for anyone not seeing the layout.
+      pick.setAttribute('aria-label', `${t('draft.restore')}: ${draft.name || t('file.untitled')}`);
+      pick.addEventListener('click', () => finish({ action: 'restore', draft }));
+
+      const name = document.createElement('span');
+      name.className = 'draft-name';
+      name.textContent = draft.name || t('file.untitled');
+      const when = document.createElement('span');
+      when.className = 'draft-when';
+      when.textContent = t('draft.when', {
+        time: formatTime(draft.at),
+        chars: formatNumber(draft.text.length),
+      });
+      const preview = document.createElement('span');
+      preview.className = 'draft-preview';
+      preview.dir = 'ltr';
+      preview.textContent = draftPreview(draft.text);
+      pick.append(name, when, preview);
+
+      const drop = document.createElement('button');
+      drop.type = 'button';
+      drop.className = 'draft-drop';
+      drop.textContent = '✕';
+      drop.setAttribute('aria-label', t('draft.discardOne', { name: draft.name }));
+      drop.addEventListener('click', async () => {
+        await clearDraft(draft.key);
+        row.remove();
+        // Once the last row goes there is nothing left to ask about.
+        if (list.children.length === 0) finish({ action: 'later' });
+      });
+
+      row.append(pick, drop);
+      return row;
+    }));
+
+    $('#draftLater').onclick = () => finish({ action: 'later' });
+    $('#draftDiscardAll').onclick = async () => {
+      for (const draft of drafts) await clearDraft(draft.key);
+      finish({ action: 'discarded' });
+    };
+    dialog.showModal();
+  });
+}
+
+/**
+ * If work from last time is still around, show what there is and let the reader
+ * pick. Whatever is not chosen stays where it is, to be offered again next time
+ * — nothing is thrown away on the reader's behalf.
  *
- * Only the newest is offered. Any others stay where they are and come up on a
- * later launch, so nothing is thrown away on the reader's behalf.
- *
- * @returns {Promise<boolean>} whether it was restored
+ * @returns {Promise<boolean>} whether something was restored
  */
 async function offerDraftRestore() {
-  const drafts = await listDrafts();
-  const [draft, ...rest] = drafts;
+  // A draft another tab is still writing to is not left-behind work, and must
+  // not be offered: discarding it would take away that tab's only copy.
+  const held = await keysHeldElsewhere();
+  const drafts = (await listDrafts()).filter((draft) => !held.has(draft.key));
   // An empty document is a perfectly good edit, so only the draft itself
   // being absent counts as "nothing to restore".
-  if (!draft) {
+  if (drafts.length === 0) {
     draftKey = freshKey();
     return false;
   }
 
-  const body = t('draft.body', { name: draft.name, time: formatTime(draft.at) });
-  $('#draftBody').textContent = rest.length > 0
-    ? `${body} ${t('draft.more', { count: formatNumber(rest.length) })}`
-    : body;
-  const choice = await askDialog($('#draftDialog'));
+  const answer = await askWhichDraft(drafts);
   // Whatever the answer, this session writes under a key of its own from here.
-  // Taking the offered one over would mean holding a key another tab may still
-  // be autosaving to, and clearing it later as though the work were ours.
+  // Taking one of the offered keys over would mean holding a key another tab
+  // may still be autosaving to, and clearing it later as though it were ours.
   draftKey = freshKey();
-  if (choice !== 'restore') {
-    await clearDraft(draft.key);
-    return false;
-  }
+  if (answer.action !== 'restore') return false;
+
+  const draft = answer.draft;
   // Take the work over under this session's key before letting the old one go,
-  // so that a crash in between cannot lose it.
-  await saveDraft(draftKey, draft);
-  await clearDraft(draft.key);
+  // so that a crash in between cannot lose it. If that copy does not land, the
+  // original stays exactly where it is: trading a stored draft for nothing is
+  // the one outcome worth avoiding.
+  if (await saveDraft(draftKey, draft)) {
+    await clearDraft(draft.key);
+  } else {
+    draftKey = draft.key;
+    setDraftState('failed');
+    if (!draftProblemReported) {
+      draftProblemReported = true;
+      notify(t('draft.failed'), 'error');
+    }
+  }
 
   swapDocument(() => {
     doc = {

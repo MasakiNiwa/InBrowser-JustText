@@ -107,13 +107,15 @@ export default {
 
   /* Restoring a draft */
   'draft.title': 'Unsaved work from last time',
-  'draft.body': 'Edits to {name} from {time} are still here. Restore them?',
+  'draft.lead': 'Work from last time is still here — {count} in all. Pick one to bring back; the rest stay for later.',
+  'draft.when': '{time} · {chars} chars',
   'draft.restore': 'Restore',
-  'draft.discard': 'Discard',
+  'draft.later': 'Not now',
+  'draft.discardAll': 'Discard all',
+  'draft.discardOne': 'Discard the edits to {name}',
   'draft.restored': 'Restored your unsaved edits',
   'draft.tooLarge': 'This document is too large to keep a draft of. Please save it yourself now and then.',
   'draft.failed': 'The draft could not be written. Please save your work yourself now and then.',
-  'draft.more': '{count} more waiting.',
 
   /* Clipboard */
   'copy.all': 'Copied the whole document ({chars} characters)',
@@ -163,6 +165,8 @@ export default {
   'json.valid': 'This is valid JSON',
   'json.error': 'JSON error: {detail}',
   'json.parseFailed': 'Could not parse as JSON: {detail}',
+  'json.numberUnsafe': 'Left as it is: {detail} cannot be rewritten without changing its value.',
+  'json.duplicateKeyUnsafe': 'Left as it is: the key "{detail}" appears twice in one object, and rewriting would drop one.',
 
   /* Settings */
   'settings.title': 'Settings',

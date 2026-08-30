@@ -107,13 +107,15 @@ export default {
 
   /* استعادة مسودة */
   'draft.title': 'عمل غير محفوظ من المرة السابقة',
-  'draft.body': 'ما زالت تعديلات {name} من {time} موجودة. هل تستعيدها؟',
+  'draft.lead': 'ما زال هناك عمل من المرة السابقة — {count} في المجموع. اختر ما تريد استعادته؛ ويبقى الباقي لوقت لاحق.',
+  'draft.when': '{time} · {chars} حرفًا',
   'draft.restore': 'استعادة',
-  'draft.discard': 'تجاهل',
+  'draft.later': 'ليس الآن',
+  'draft.discardAll': 'تجاهل الكل',
+  'draft.discardOne': 'تجاهل تعديلات {name}',
   'draft.restored': 'تمت استعادة تعديلاتك غير المحفوظة',
   'draft.tooLarge': 'هذا المستند أكبر من أن نحتفظ له بمسودة. احفظ عملك بنفسك بين الحين والآخر.',
   'draft.failed': 'تعذّرت كتابة المسودة. احفظ عملك بنفسك بين الحين والآخر.',
-  'draft.more': 'تبقّى {count} غيرها.',
 
   /* Clipboard */
   'copy.all': 'تم نسخ النص كاملاً ({chars} محرفًا)',
@@ -161,6 +163,8 @@ export default {
   'json.valid': 'هذا JSON صحيح',
   'json.error': 'خطأ في JSON: {detail}',
   'json.parseFailed': 'تعذّر تحليله كـ JSON: {detail}',
+  'json.numberUnsafe': 'لم يتغيّر شيء: لا يمكن إعادة كتابة {detail} دون تغيير قيمته.',
+  'json.duplicateKeyUnsafe': 'لم يتغيّر شيء: المفتاح "{detail}" يظهر مرتين في الكائن نفسه، وإعادة الكتابة ستُسقط أحدهما.',
 
   /* Settings */
   'settings.title': 'الإعدادات',

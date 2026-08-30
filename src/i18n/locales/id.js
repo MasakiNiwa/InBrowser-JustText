@@ -106,13 +106,15 @@ export default {
 
   /* Memulihkan draf */
   'draft.title': 'Pekerjaan yang belum disimpan',
-  'draft.body': 'Suntingan pada {name} dari {time} masih ada. Pulihkan?',
+  'draft.lead': 'Masih ada pekerjaan dari sebelumnya — {count} seluruhnya. Pilih yang ingin dikembalikan; sisanya tetap tersimpan.',
+  'draft.when': '{time} · {chars} karakter',
   'draft.restore': 'Pulihkan',
-  'draft.discard': 'Buang',
+  'draft.later': 'Nanti saja',
+  'draft.discardAll': 'Hapus semua',
+  'draft.discardOne': 'Hapus perubahan pada {name}',
   'draft.restored': 'Suntingan yang belum disimpan telah dipulihkan',
   'draft.tooLarge': 'Dokumen ini terlalu besar untuk disimpan sebagai draf. Simpan sendiri sesekali.',
   'draft.failed': 'Draf tidak bisa ditulis. Simpan sendiri sesekali.',
-  'draft.more': '{count} lagi menunggu.',
 
   /* Clipboard */
   'copy.all': 'Seluruh teks disalin ({chars} karakter)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'JSON ini valid',
   'json.error': 'Galat JSON: {detail}',
   'json.parseFailed': 'Tidak bisa diurai sebagai JSON: {detail}',
+  'json.numberUnsafe': 'Tidak ada yang diubah: {detail} tidak dapat ditulis ulang tanpa mengubah nilainya.',
+  'json.duplicateKeyUnsafe': 'Tidak ada yang diubah: kunci "{detail}" muncul dua kali dalam satu objek, dan menulis ulang akan menghilangkan salah satunya.',
 
   /* Settings */
   'settings.title': 'Pengaturan',

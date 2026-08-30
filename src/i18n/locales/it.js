@@ -106,13 +106,15 @@ export default {
 
   /* Ripristino di una bozza */
   'draft.title': 'Lavoro non salvato',
-  'draft.body': 'Ci sono ancora modifiche a {name} del {time}. Ripristinarle?',
+  'draft.lead': 'C’è ancora del lavoro dell’ultima volta — {count} in tutto. Scegli cosa recuperare; il resto resta lì.',
+  'draft.when': '{time} · {chars} caratteri',
   'draft.restore': 'Ripristina',
-  'draft.discard': 'Scarta',
+  'draft.later': 'Non ora',
+  'draft.discardAll': 'Elimina tutto',
+  'draft.discardOne': 'Elimina le modifiche a {name}',
   'draft.restored': 'Le modifiche non salvate sono state ripristinate',
   'draft.tooLarge': 'Questo documento è troppo grande per tenerne una bozza. Salva tu stesso ogni tanto.',
   'draft.failed': 'Non è stato possibile scrivere la bozza. Salva tu stesso ogni tanto.',
-  'draft.more': 'Ne restano altre {count}.',
 
   /* Clipboard */
   'copy.all': 'Documento copiato ({chars} caratteri)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'Il JSON è valido',
   'json.error': 'Errore JSON: {detail}',
   'json.parseFailed': 'Impossibile interpretarlo come JSON: {detail}',
+  'json.numberUnsafe': 'Non è stato cambiato nulla: {detail} non può essere riscritto senza cambiarne il valore.',
+  'json.duplicateKeyUnsafe': 'Non è stato cambiato nulla: la chiave «{detail}» compare due volte nello stesso oggetto, e riscrivendo se ne perderebbe una.',
 
   /* Settings */
   'settings.title': 'Impostazioni',

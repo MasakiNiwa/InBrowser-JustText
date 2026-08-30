@@ -106,13 +106,15 @@ export default {
 
   /* Restaurar un borrador */
   'draft.title': 'Trabajo sin guardar',
-  'draft.body': 'Quedan cambios en {name} de {time}. ¿Restaurarlos?',
+  'draft.lead': 'Aún hay trabajo de la última vez: {count} en total. Elige cuál recuperar; el resto se queda para después.',
+  'draft.when': '{time} · {chars} caracteres',
   'draft.restore': 'Restaurar',
-  'draft.discard': 'Descartar',
+  'draft.later': 'Ahora no',
+  'draft.discardAll': 'Descartar todo',
+  'draft.discardOne': 'Descartar los cambios de {name}',
   'draft.restored': 'Se restauraron tus cambios sin guardar',
   'draft.tooLarge': 'Este documento es demasiado grande para guardar un borrador. Guarda tú mismo de vez en cuando.',
   'draft.failed': 'No se pudo guardar el borrador. Guarda tú mismo de vez en cuando.',
-  'draft.more': 'Quedan {count} más.',
 
   /* Clipboard */
   'copy.all': 'Documento copiado ({chars} caracteres)',
@@ -160,6 +162,8 @@ export default {
   'json.valid': 'Es JSON válido',
   'json.error': 'Error de JSON: {detail}',
   'json.parseFailed': 'No se pudo analizar como JSON: {detail}',
+  'json.numberUnsafe': 'No se ha cambiado nada: {detail} no puede reescribirse sin cambiar su valor.',
+  'json.duplicateKeyUnsafe': 'No se ha cambiado nada: la clave «{detail}» aparece dos veces en un mismo objeto y al reescribir se perdería una.',
 
   /* Settings */
   'settings.title': 'Ajustes',

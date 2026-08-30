@@ -106,13 +106,15 @@ export default {
 
   /* 復原草稿 */
   'draft.title': '還有上次未儲存的內容',
-  'draft.body': '{name}（{time}）的編輯內容還在，要復原嗎？',
+  'draft.lead': '上次的內容還在，共 {count} 份。選擇要還原的一份，其餘保留待下次。',
+  'draft.when': '{time} · {chars} 個字元',
   'draft.restore': '復原',
-  'draft.discard': '捨棄',
+  'draft.later': '暫不處理',
+  'draft.discardAll': '全部捨棄',
+  'draft.discardOne': '捨棄對 {name} 的修改',
   'draft.restored': '已復原上次未儲存的內容',
   'draft.tooLarge': '文件過大，無法自動儲存草稿。請自行不時儲存。',
   'draft.failed': '草稿儲存失敗。請自行不時儲存。',
-  'draft.more': '另有 {count} 份待處理。',
 
   /* Clipboard */
   'copy.all': '已複製全文（{chars} 個字元）',
@@ -160,6 +162,8 @@ export default {
   'json.valid': '這是有效的 JSON',
   'json.error': 'JSON 錯誤：{detail}',
   'json.parseFailed': '無法解析為 JSON：{detail}',
+  'json.numberUnsafe': '未作變更：{detail} 無法在不改變數值的情況下重寫。',
+  'json.duplicateKeyUnsafe': '未作變更：鍵「{detail}」在同一物件中出現兩次，重寫會丟失其中一個。',
 
   /* Settings */
   'settings.title': '設定',

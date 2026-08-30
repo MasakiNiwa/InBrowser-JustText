@@ -6,7 +6,7 @@
  *     and sends the browser on to the app with ?share=1.
  */
 
-const VERSION = 'v7';
+const VERSION = 'v8';
 const APP_CACHE = `justtext-app-${VERSION}`;
 const SHARE_CACHE = 'justtext-share';
 

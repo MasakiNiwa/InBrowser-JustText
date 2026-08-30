@@ -3,6 +3,37 @@
 Dates are release dates. The layout follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 A Japanese version of this file is kept at [CHANGELOG.ja.md](CHANGELOG.ja.md).
 
+## [0.4.1]
+
+### Fixed
+
+- A draft left by 0.3 was invisible to 0.4. Those were all stored under one key
+  and carried no key of their own, and the new listing skipped them — so anybody
+  updating with unsaved work could not get it back, though it was still there.
+  The key is now read from the store rather than from the record
+- The JSON commands could quietly change what a file said. Reformatting goes
+  through the browser's parser, which rounds a number too large for it to hold
+  and keeps only the last of a repeated key. They now stop instead, name what is
+  in the way and put the caret on it; **Validate** reports the same, so it can be
+  found before it matters
+- Sorting keys dropped `__proto__`. It is an ordinary key in JSON, but assigning
+  it to a plain object sets the prototype instead of a property, and it vanished
+  from the output
+- A draft another open tab was still writing to was offered as though it had been
+  left behind. Discarding it took away that tab's only backup until its next
+  keystroke. Open tabs now say which drafts are theirs, and those are left out
+- Restoring a draft deleted the original without checking that the copy had
+  landed. If only the copy failed, both were lost. The original now stays put
+  unless the copy is safely stored
+- The restore dialog left the session without a key — and so without any autosave
+  — if it was closed by anything other than its own buttons
+
+### Changed
+
+- Leftover drafts are shown in one list, with the file name, when each was last
+  touched and a glimpse of what is in it. Restore one, drop one, drop them all,
+  or leave them for later, rather than being asked about one per launch
+
 ## [0.4.0]
 
 ### Added
