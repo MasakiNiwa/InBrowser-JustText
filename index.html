@@ -224,6 +224,21 @@
     <label class="chk chk-row"><input type="checkbox" id="setKeybar"><span data-i18n="settings.keybar">Show the Tab and symbol row</span></label>
     <label class="chk chk-row"><input type="checkbox" id="setInsertSpaces"><span data-i18n="settings.insertSpaces">Insert spaces with the Tab key</span></label>
     <label class="chk chk-row"><input type="checkbox" id="setAutoIndent"><span data-i18n="settings.autoIndent">Keep the indent on a new line</span></label>
+
+    <h3 class="field-heading" data-i18n="settings.privacy">Unsaved work on this device</h3>
+    <label class="chk chk-row"><input type="checkbox" id="setAutosave"><span data-i18n="settings.autosave">Keep a copy of unsaved work</span></label>
+    <label class="field-row">
+      <span class="field-label" data-i18n="settings.draftKeep">Keep it for</span>
+      <select id="setDraftKeep" class="field">
+        <option value="1" data-i18n="settings.keep1">1 day</option>
+        <option value="7" data-i18n="settings.keep7">7 days</option>
+        <option value="30" data-i18n="settings.keep30">30 days</option>
+        <option value="90" data-i18n="settings.keep90">90 days</option>
+      </select>
+    </label>
+    <div class="field-row">
+      <button type="button" class="btn warn" id="clearDrafts" data-i18n="settings.clearDrafts">Delete every copy now</button>
+    </div>
     <div class="sheet-actions">
       <button type="button" class="btn" id="settingsClose" data-i18n="settings.close">Close</button>
     </div>

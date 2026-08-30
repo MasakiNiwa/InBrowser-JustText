@@ -7,6 +7,7 @@ export default {
   'header.file': 'Berkas saat ini',
   'header.dirty': 'Ada perubahan yang belum disimpan',
   'header.dirtyKept': 'Perubahan belum disimpan, tersimpan di perangkat ini',
+  'header.dirtyOff': 'Perubahan belum disimpan — tidak disimpan, sesuai pilihan Anda',
   'header.settings': 'Pengaturan',
   'header.help': 'Bantuan',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Nanti saja',
   'draft.discardAll': 'Hapus semua',
   'draft.discardOne': 'Hapus perubahan pada {name}',
+  'draft.undoDiscard': 'Tetap simpan perubahan pada {name}',
   'draft.restored': 'Suntingan yang belum disimpan telah dipulihkan',
+  'draft.noneWaiting': 'Tidak ada yang bisa dikembalikan',
   'draft.tooLarge': 'Dokumen ini terlalu besar untuk disimpan sebagai draf. Simpan sendiri sesekali.',
   'draft.failed': 'Draf tidak bisa ditulis. Simpan sendiri sesekali.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Ke baris',
   'cmd.app.reopen': 'Buka ulang dengan pengodean lain',
   'cmd.app.copy': 'Salin semua',
+  'cmd.app.drafts': 'Pekerjaan yang belum disimpan di perangkat ini',
   'json.formatted': 'JSON dirapikan',
   'json.minified': 'JSON dipadatkan',
   'json.sorted': 'Kunci telah diurutkan',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Sisipkan spasi dengan tombol Tab',
   'settings.autoIndent': 'Pertahankan indentasi di baris baru',
+  'settings.privacy': 'Pekerjaan yang belum disimpan di perangkat ini',
+  'settings.autosave': 'Simpan salinan pekerjaan yang belum disimpan',
+  'settings.draftKeep': 'Simpan selama',
+  'settings.keep1': '1 hari',
+  'settings.keep7': '7 hari',
+  'settings.keep30': '30 hari',
+  'settings.keep90': '90 hari',
+  'settings.clearDrafts': 'Hapus semua salinan sekarang',
+  'settings.clearDraftsConfirm': 'Hapus semua salinan pekerjaan yang belum disimpan di perangkat ini? Tindakan ini tidak bisa dibatalkan.',
+  'settings.clearDraftsDone': 'Semua salinan di perangkat ini telah dihapus',
   'settings.close': 'Tutup',
 
   /* Reopen with another encoding */

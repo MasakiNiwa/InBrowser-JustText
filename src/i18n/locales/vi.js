@@ -7,6 +7,7 @@ export default {
   'header.file': 'Tệp hiện tại',
   'header.dirty': 'Có thay đổi chưa lưu',
   'header.dirtyKept': 'Thay đổi chưa lưu, đã giữ trên thiết bị này',
+  'header.dirtyOff': 'Thay đổi chưa lưu — không được giữ, theo lựa chọn của bạn',
   'header.settings': 'Cài đặt',
   'header.help': 'Trợ giúp',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Để sau',
   'draft.discardAll': 'Bỏ tất cả',
   'draft.discardOne': 'Bỏ các thay đổi của {name}',
+  'draft.undoDiscard': 'Vẫn giữ các thay đổi của {name}',
   'draft.restored': 'Đã khôi phục các thay đổi chưa lưu',
+  'draft.noneWaiting': 'Không có gì để khôi phục',
   'draft.tooLarge': 'Tài liệu này quá lớn để giữ bản nháp. Hãy tự lưu thỉnh thoảng.',
   'draft.failed': 'Không ghi được bản nháp. Hãy tự lưu thỉnh thoảng.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Tới dòng',
   'cmd.app.reopen': 'Mở lại bằng bảng mã khác',
   'cmd.app.copy': 'Sao chép tất cả',
+  'cmd.app.drafts': 'Phần chưa lưu trên thiết bị này',
   'json.formatted': 'Đã định dạng JSON',
   'json.minified': 'Đã rút gọn JSON',
   'json.sorted': 'Đã sắp xếp khoá',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Chèn dấu cách bằng phím Tab',
   'settings.autoIndent': 'Giữ thụt lề khi xuống dòng',
+  'settings.privacy': 'Phần chưa lưu trên thiết bị này',
+  'settings.autosave': 'Giữ một bản sao của phần chưa lưu',
+  'settings.draftKeep': 'Giữ trong',
+  'settings.keep1': '1 ngày',
+  'settings.keep7': '7 ngày',
+  'settings.keep30': '30 ngày',
+  'settings.keep90': '90 ngày',
+  'settings.clearDrafts': 'Xoá mọi bản sao ngay',
+  'settings.clearDraftsConfirm': 'Xoá mọi bản sao của phần chưa lưu trên thiết bị này? Không thể hoàn tác.',
+  'settings.clearDraftsDone': 'Đã xoá mọi bản sao trên thiết bị này',
   'settings.close': 'Đóng',
 
   /* Reopen with another encoding */

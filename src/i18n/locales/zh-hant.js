@@ -7,6 +7,7 @@ export default {
   'header.file': '目前檔案',
   'header.dirty': '有未儲存的變更',
   'header.dirtyKept': '有未儲存的變更，已在本裝置留存',
+  'header.dirtyOff': '有未儲存的變更 — 依您的設定未做留存',
   'header.settings': '設定',
   'header.help': '說明',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': '暫不處理',
   'draft.discardAll': '全部捨棄',
   'draft.discardOne': '捨棄對 {name} 的修改',
+  'draft.undoDiscard': '仍然保留對 {name} 的修改',
   'draft.restored': '已復原上次未儲存的內容',
+  'draft.noneWaiting': '沒有可以還原的內容',
   'draft.tooLarge': '文件過大，無法自動儲存草稿。請自行不時儲存。',
   'draft.failed': '草稿儲存失敗。請自行不時儲存。',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': '跳至指定行',
   'cmd.app.reopen': '換一種編碼重新開啟',
   'cmd.app.copy': '複製全文',
+  'cmd.app.drafts': '本裝置上未儲存的內容',
   'json.formatted': '已格式化 JSON',
   'json.minified': '已壓縮 JSON',
   'json.sorted': '已排序鍵名',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': '定位字元',
   'settings.insertSpaces': '按 Tab 鍵輸入空格',
   'settings.autoIndent': '換行時保留縮排',
+  'settings.privacy': '本裝置上未儲存的內容',
+  'settings.autosave': '留存未儲存內容的副本',
+  'settings.draftKeep': '保留時長',
+  'settings.keep1': '1 天',
+  'settings.keep7': '7 天',
+  'settings.keep30': '30 天',
+  'settings.keep90': '90 天',
+  'settings.clearDrafts': '立即刪除全部副本',
+  'settings.clearDraftsConfirm': '刪除本裝置上留存的所有未儲存內容副本？此操作無法復原。',
+  'settings.clearDraftsDone': '已刪除本裝置上的所有副本',
   'settings.close': '關閉',
 
   /* Reopen with another encoding */

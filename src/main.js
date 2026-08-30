@@ -131,7 +131,11 @@ function updateDraftIndicator() {
   const kept = draftState === 'kept';
   const problem = draftState === 'failed' || draftState === 'tooLarge';
   mark.dataset.draft = problem ? 'unkept' : draftState;
-  const label = kept ? t('header.dirtyKept') : problem ? t(`draft.${draftState}`) : t('header.dirty');
+  const label = kept
+    ? t('header.dirtyKept')
+    : problem ? t(`draft.${draftState}`)
+      : draftState === 'off' ? t('header.dirtyOff')
+        : t('header.dirty');
   mark.setAttribute('aria-label', label);
   mark.title = label;
 }
@@ -432,8 +436,9 @@ const DRAFT_BYTES_LIMIT = 2 * 1024 * 1024;
 /** Above this the text itself is too large to keep a draft of. */
 const DRAFT_TEXT_LIMIT = 4 * 1024 * 1024;
 
-/** A draft nobody has come back for is dropped after this long. */
-const DRAFT_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+/** How long a draft nobody has come back for is kept, per the settings. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+const draftKeepMs = () => settings.draftKeepDays * DAY_MS;
 
 /**
  * True while the editor content is being swapped programmatically.
@@ -552,6 +557,12 @@ async function writeDraft() {
  */
 async function syncDraft() {
   if (!draftKey) return;
+  if (!settings.autosave) {
+    // Turned off: leave nothing of this session behind.
+    await clearDraft(draftKey);
+    setDraftState('off');
+    return;
+  }
   if (isDirty()) {
     await writeDraft();
   } else {
@@ -630,7 +641,14 @@ function draftPreview(text) {
   return flat.length > 60 ? `${flat.slice(0, 60)}…` : flat;
 }
 
-/** Puts the leftover work on screen, one row each, and waits for a choice. */
+/**
+ * Puts the leftover work on screen, one row each, and waits for a choice.
+ *
+ * Discarding is deferred: the ✕ and "Discard all" only mark rows, and nothing
+ * actually leaves storage until the dialog closes. A mis-tap on a phone is
+ * therefore always one more tap away from being undone, with the row still
+ * there to show what it would have taken.
+ */
 function askWhichDraft(drafts) {
   const dialog = $('#draftDialog');
   const list = $('#draftList');
@@ -638,6 +656,8 @@ function askWhichDraft(drafts) {
 
   return new Promise((resolve) => {
     let settled = false;
+    const marked = new Set();
+
     // However the dialog goes away — a button, Escape, anything else — exactly
     // one answer comes back. Leaving this unsettled would leave the session
     // without a key, and so without any autosave at all.
@@ -646,11 +666,11 @@ function askWhichDraft(drafts) {
       settled = true;
       list.replaceChildren();
       dialog.close();
-      resolve(answer);
+      resolve({ ...answer, discard: [...marked] });
     };
     dialog.addEventListener('close', () => finish({ action: 'later' }), { once: true });
 
-    list.replaceChildren(...drafts.map((draft) => {
+    const rows = drafts.map((draft) => {
       const row = document.createElement('li');
       row.className = 'draft-row';
       row.dataset.key = draft.key;
@@ -680,23 +700,31 @@ function askWhichDraft(drafts) {
       const drop = document.createElement('button');
       drop.type = 'button';
       drop.className = 'draft-drop';
-      drop.textContent = '✕';
-      drop.setAttribute('aria-label', t('draft.discardOne', { name: draft.name }));
-      drop.addEventListener('click', async () => {
-        await clearDraft(draft.key);
-        row.remove();
-        // Once the last row goes there is nothing left to ask about.
-        if (list.children.length === 0) finish({ action: 'later' });
-      });
+      drop.addEventListener('click', () => setMarked(!marked.has(draft.key)));
+
+      /** Marks or unmarks this row, without touching storage either way. */
+      function setMarked(on) {
+        if (on) marked.add(draft.key);
+        else marked.delete(draft.key);
+        row.classList.toggle('discarding', on);
+        pick.disabled = on;
+        drop.textContent = on ? '↺' : '✕';
+        drop.setAttribute(
+          'aria-label',
+          t(on ? 'draft.undoDiscard' : 'draft.discardOne', { name: draft.name || t('file.untitled') }),
+        );
+      }
+      setMarked(false);
 
       row.append(pick, drop);
-      return row;
-    }));
+      return { row, setMarked };
+    });
 
+    list.replaceChildren(...rows.map((entry) => entry.row));
     $('#draftLater').onclick = () => finish({ action: 'later' });
-    $('#draftDiscardAll').onclick = async () => {
-      for (const draft of drafts) await clearDraft(draft.key);
-      finish({ action: 'discarded' });
+    $('#draftDiscardAll').onclick = () => {
+      // Marks everything rather than deleting it, so this too can be taken back.
+      for (const entry of rows) entry.setMarked(true);
     };
     dialog.showModal();
   });
@@ -709,10 +737,9 @@ function askWhichDraft(drafts) {
  *
  * @returns {Promise<boolean>} whether something was restored
  */
-async function offerDraftRestore() {
+async function offerDraftRestore(held) {
   // A draft another tab is still writing to is not left-behind work, and must
   // not be offered: discarding it would take away that tab's only copy.
-  const held = await keysHeldElsewhere();
   const drafts = (await listDrafts()).filter((draft) => !held.has(draft.key));
   // An empty document is a perfectly good edit, so only the draft itself
   // being absent counts as "nothing to restore".
@@ -722,13 +749,20 @@ async function offerDraftRestore() {
   }
 
   const answer = await askWhichDraft(drafts);
+  // The rows marked for discard go now, once the dialog is closed on them.
+  for (const key of answer.discard) await clearDraft(key);
   // Whatever the answer, this session writes under a key of its own from here.
   // Taking one of the offered keys over would mean holding a key another tab
   // may still be autosaving to, and clearing it later as though it were ours.
   draftKey = freshKey();
   if (answer.action !== 'restore') return false;
 
-  const draft = answer.draft;
+  await adoptDraft(answer.draft);
+  return true;
+}
+
+/** Makes a stored draft the document being edited, and takes over its storage. */
+async function adoptDraft(draft) {
   // Take the work over under this session's key before letting the old one go,
   // so that a crash in between cannot lose it. If that copy does not land, the
   // original stays exactly where it is: trading a stored draft for nothing is
@@ -795,7 +829,30 @@ const APP_COMMANDS = [
   { id: 'app.goto', label: 'cmd.app.goto', run: () => openGotoDialog() },
   { id: 'app.reopen', label: 'cmd.app.reopen', run: () => openReopenDialog() },
   { id: 'app.copy', label: 'cmd.app.copy', run: () => copyToClipboard() },
+  { id: 'app.drafts', label: 'cmd.app.drafts', run: () => openDraftManager() },
 ];
+
+/**
+ * The same list of leftover work, reachable at any time rather than only on the
+ * next launch. Restoring from here replaces what is open, so unsaved changes
+ * are confirmed first, exactly as opening a file does.
+ */
+async function openDraftManager() {
+  const held = await keysHeldElsewhere();
+  // This session's own draft is live too, and is not leftover work.
+  held.add(draftKey);
+  const drafts = (await listDrafts()).filter((draft) => !held.has(draft.key));
+  if (drafts.length === 0) {
+    notify(t('draft.noneWaiting'));
+    return;
+  }
+
+  const answer = await askWhichDraft(drafts);
+  for (const key of answer.discard) await clearDraft(key);
+  if (answer.action !== 'restore') return;
+  if (!confirmDiscard('file.discardOpen')) return;
+  await adoptDraft(answer.draft);
+}
 
 function toolButton(cmd) {
   const button = document.createElement('button');
@@ -882,6 +939,8 @@ function openSettingsDialog() {
   $('#setKeybar').checked = settings.keybar;
   $('#setInsertSpaces').checked = settings.insertSpaces;
   $('#setAutoIndent').checked = settings.autoIndent;
+  $('#setAutosave').checked = settings.autosave;
+  $('#setDraftKeep').value = String(settings.draftKeepDays);
   $('#settingsDialog').showModal();
 }
 
@@ -980,10 +1039,24 @@ $('#setTabSize').addEventListener('change', (e) => {
   settings.tabSize = Number(e.target.value);
   applySettings();
 });
+$('#setDraftKeep').addEventListener('change', (e) => {
+  settings.draftKeepDays = Number(e.target.value);
+  applySettings();
+});
+
+$('#clearDrafts').addEventListener('click', async () => {
+  if (!window.confirm(t('settings.clearDraftsConfirm'))) return;
+  // Everything, this session's own copy included: the point is to leave nothing.
+  for (const draft of await listDrafts()) await clearDraft(draft.key);
+  setDraftState(settings.autosave ? 'idle' : 'off');
+  notify(t('settings.clearDraftsDone'));
+});
+
 for (const [id, key] of [
   ['#setWrap', 'wrap'],
   ['#setGutter', 'gutter'],
   ['#setKeybar', 'keybar'],
+  ['#setAutosave', 'autosave'],
   ['#setInsertSpaces', 'insertSpaces'],
   ['#setAutoIndent', 'autoIndent'],
 ]) {
@@ -992,6 +1065,14 @@ for (const [id, key] of [
     applySettings();
   });
 }
+
+// Turning the autosave off takes effect at once: the copy this session holds
+// goes now, rather than lingering until the next keystroke.
+$('#setAutosave').addEventListener('change', () => {
+  scheduleDraftSync.cancel();
+  syncDraft();
+});
+
 for (const [id, delta] of [['#fontSmaller', -1], ['#fontLarger', 1]]) {
   $(id).addEventListener('click', () => {
     settings.fontSize = Math.max(10, Math.min(28, settings.fontSize + delta));
@@ -1054,16 +1135,24 @@ async function boot() {
     }
   }
 
+  // Which drafts other open tabs are still writing to. Asked once, and used
+  // both to spare them from expiry and to keep them out of the offer.
+  const held = await keysHeldElsewhere();
+  if (!settings.autosave) setDraftState('off');
+
+  // Clear out drafts nobody ever came back for — before showing the rest, not
+  // after. The list promises that whatever is not chosen stays, and it has to
+  // be true: expiring something the reader had just decided to keep would make
+  // a liar of it.
+  await dropDraftsBefore(Date.now() - draftKeepMs(), held);
+
   // A shared file is an explicit request for that file, so a leftover draft is
   // not raised here. This session takes a key of its own instead, leaving what
   // is stored to be offered on the next plain launch — editing or saving the
   // shared file cannot reach it.
   if (openedFromShare) draftKey = freshKey();
-  else await offerDraftRestore();
+  else await offerDraftRestore(held);
   updateDraftIndicator();
-
-  // Clear out drafts nobody ever came back for.
-  dropDraftsBefore(Date.now() - DRAFT_KEEP_MS);
 
   // "Open with this app", chosen against the installed PWA.
   if ('launchQueue' in window && typeof LaunchParams !== 'undefined' && 'files' in LaunchParams.prototype) {

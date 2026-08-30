@@ -59,8 +59,11 @@ const check = (name, ok, detail = '') => {
 async function dismissDraft(target) {
   const visible = await target.locator('#draftDialog').isVisible().catch(() => false);
   if (!visible) return;
+  // Discarding only marks the rows now; closing the dialog is what applies it.
   await target.click('#draftDiscardAll');
-  await target.waitForTimeout(250);
+  await target.waitForTimeout(150);
+  await target.click('#draftLater');
+  await target.waitForTimeout(300);
 }
 
 /**
@@ -987,8 +990,11 @@ await draftPage.fill('#input', 'written once more');
 await draftPage.waitForTimeout(2000);
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
+// Marking without closing the dialog leaves everything alone, so close it.
 await draftPage.click('#draftDiscardAll');
-await draftPage.waitForTimeout(300);
+await draftPage.waitForTimeout(200);
+await draftPage.click('#draftLater');
+await draftPage.waitForTimeout(400);
 check('after discarding, it starts empty', (await draftPage.inputValue('#input')) === '');
 await draftPage.goto(BASE, { waitUntil: 'networkidle' });
 await draftPage.waitForTimeout(700);
@@ -1136,14 +1142,152 @@ check('"not now" keeps them all', (await readDraftTexts(listTab)).length === wai
 await listTab.reload({ waitUntil: 'networkidle' });
 await listTab.waitForTimeout(1300);
 await listTab.click('#draftList .draft-row .draft-drop');
-await listTab.waitForTimeout(400);
+await listTab.click('#draftLater');
+await listTab.waitForTimeout(600);
 check('a single draft can be dropped on its own', (await readDraftTexts(listTab)).length === waiting - 1, JSON.stringify(await readDraftTexts(listTab)));
 
 await listTab.reload({ waitUntil: 'networkidle' });
 await listTab.waitForTimeout(1300);
 await listTab.click('#draftDiscardAll');
-await listTab.waitForTimeout(400);
-check('and discarding all empties the store', (await readDraftTexts(listTab)).length === 0);
+await listTab.click('#draftLater');
+await listTab.waitForTimeout(600);
+check('and discarding all empties the store', (await readDraftTexts(listTab)).length === 0, JSON.stringify(await readDraftTexts(listTab)));
+
+/*
+ * How long a copy is kept is the reader's to set, and it is honoured before
+ * anything is shown — never after. Expiring a draft the reader had just been
+ * shown and chosen to keep would make a liar of the dialog.
+ */
+const seedDrafts = (target, rows) => target.evaluate(async (list) => {
+  const db = await new Promise((resolve) => {
+    const request = indexedDB.open('justtext', 1);
+    request.onsuccess = () => resolve(request.result);
+  });
+  for (const [key, name, text, ageDays] of list) {
+    await new Promise((resolve) => {
+      const transaction = db.transaction('drafts', 'readwrite');
+      transaction.objectStore('drafts').put({
+        key, name, text, savedText: '', encoding: 'utf-8', newline: 'lf', bom: false,
+        bytes: null, untitled: false, at: Date.now() - ageDays * 86400000,
+      }, key);
+      transaction.oncomplete = resolve;
+      transaction.onerror = resolve;
+    });
+  }
+  db.close();
+}, rows);
+
+const emptyDraftStore = (target) => target.evaluate(async () => {
+  const db = await new Promise((resolve) => {
+    const request = indexedDB.open('justtext', 1);
+    request.onsuccess = () => resolve(request.result);
+  });
+  await new Promise((resolve) => {
+    const transaction = db.transaction('drafts', 'readwrite');
+    transaction.objectStore('drafts').clear();
+    transaction.oncomplete = resolve;
+    transaction.onerror = resolve;
+  });
+  db.close();
+});
+
+await emptyDraftStore(listTab);
+await seedDrafts(listTab, [
+  ['expired', 'ancient.txt', 'PAST ITS KEEPING', 31],
+  ['current', 'recent.txt', 'STILL WELL WITHIN', 1],
+]);
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+check('an expired copy is gone before anything is offered', (await listTab.locator('#draftList .draft-row').count()) === 1, `${await listTab.locator('#draftList .draft-row').count()} rows`);
+await listTab.click('#draftLater');
+await listTab.waitForTimeout(600);
+check('and "not now" keeps everything that was shown', (await readDraftTexts(listTab)).join() === 'STILL WELL WITHIN', JSON.stringify(await readDraftTexts(listTab)));
+
+// A copy another tab is still writing to is spared whatever its age.
+await seedDrafts(listTab, [['stale-live', 'held.txt', 'HELD BY A LIVE TAB', 40]]);
+const holder = await draftContext.newPage();
+holder.on('pageerror', (e) => draftErrors.push(e.message));
+await holder.goto(BASE, { waitUntil: 'networkidle' });
+await holder.waitForTimeout(1300);
+await dismissDraft(holder);
+// Make that tab own the aged key by restoring it, then keep it open.
+await seedDrafts(holder, [['stale-live', 'held.txt', 'HELD BY A LIVE TAB', 40]]);
+await holder.reload({ waitUntil: 'networkidle' });
+await holder.waitForTimeout(1400);
+const holderSaw = await holder.locator('#draftDialog').isVisible();
+if (holderSaw) {
+  await holder.click('.draft-pick');
+  await holder.waitForTimeout(600);
+}
+await holder.fill('#input', 'HELD BY A LIVE TAB, STILL GOING');
+await holder.waitForTimeout(2200);
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1400);
+check(
+  "a live tab's copy is not expired out from under it",
+  (await readDraftTexts(listTab)).some((text) => text.startsWith('HELD BY A LIVE TAB')),
+  JSON.stringify(await readDraftTexts(listTab)),
+);
+await holder.close();
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+await dismissDraft(listTab);
+
+/*
+ * Discarding is deferred. On a phone the ✕ is easy to hit by accident, so
+ * nothing leaves storage until the dialog is closed on it.
+ */
+await seedDrafts(listTab, [['undo-me', 'mistap.txt', 'ALMOST LOST', 0]]);
+await listTab.goto(BASE, { waitUntil: 'networkidle' });
+await listTab.waitForTimeout(1300);
+await listTab.click('#draftList .draft-row .draft-drop');
+await listTab.waitForTimeout(250);
+check('the ✕ only marks the row', (await readDraftTexts(listTab)).includes('ALMOST LOST'));
+check('and the row shows it is going', await listTab.locator('#draftList .draft-row.discarding').count() === 1);
+await listTab.click('#draftList .draft-row .draft-drop');
+await listTab.waitForTimeout(250);
+check('tapping again takes it back', (await listTab.locator('#draftList .draft-row.discarding').count()) === 0);
+await listTab.click('#draftDiscardAll');
+await listTab.waitForTimeout(250);
+check('"discard all" marks rather than deletes', (await readDraftTexts(listTab)).includes('ALMOST LOST'));
+await listTab.click('#draftLater');
+await listTab.waitForTimeout(700);
+check('and the marks are applied on closing', (await readDraftTexts(listTab)).length === 0, JSON.stringify(await readDraftTexts(listTab)));
+
+/* The same list, reachable from the tools menu without restarting. */
+await seedDrafts(listTab, [['from-tools', 'from-tools.txt', 'REACHED FROM THE TOOLS MENU', 0]]);
+await listTab.click('#btnTools');
+await listTab.waitForTimeout(300);
+await listTab.click('.tool-item[data-id="app.drafts"]');
+await listTab.waitForTimeout(700);
+check('the drafts can be opened from the tools menu', await listTab.locator('#draftDialog').isVisible());
+await listTab.click('.draft-pick');
+await listTab.waitForTimeout(700);
+check('and restored there and then', (await listTab.inputValue('#input')) === 'REACHED FROM THE TOOLS MENU', await listTab.inputValue('#input'));
+
+/* Keeping copies at all is the reader's choice, and so is deleting them now. */
+await listTab.fill('#input', 'SOMETHING UNSAVED');
+await listTab.waitForTimeout(2200);
+check('a copy is kept while that is switched on', (await readDraftTexts(listTab)).length > 0);
+await listTab.click('#btnSettings');
+await listTab.waitForTimeout(300);
+await listTab.uncheck('#setAutosave');
+await listTab.waitForTimeout(800);
+check('switching it off clears what was kept', (await readDraftTexts(listTab)).length === 0);
+check('and the mark says nothing is being kept', (await listTab.getAttribute('#dirtyMark', 'data-draft')) === 'off');
+await listTab.check('#setAutosave');
+await listTab.waitForTimeout(500);
+await listTab.selectOption('#setDraftKeep', '7');
+await listTab.waitForTimeout(300);
+check('the keeping time can be changed', (await listTab.inputValue('#setDraftKeep')) === '7');
+listTab.once('dialog', (d) => d.accept());
+await listTab.click('#clearDrafts');
+await listTab.waitForTimeout(800);
+check('and everything can be deleted on the spot', (await readDraftTexts(listTab)).length === 0);
+await listTab.click('#settingsClose');
+await listTab.waitForTimeout(300);
+await listTab.evaluate(() => { document.querySelector('#input').value = ''; });
+
 
 // Work that has been saved leaves no draft behind.
 await listTab.fill('#input', 'this one gets saved');

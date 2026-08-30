@@ -224,7 +224,9 @@ function exactValueOf(literal) {
   while (end > 0 && digits[end - 1] === '0') end--;
   digits = digits.slice(0, end);
 
-  if (digits === '') return '0';
+  // Zero keeps its sign: JavaScript can tell -0 from 0, and writing one out as
+  // the other would be a change like any other.
+  if (digits === '') return `${sign}0`;
   return `${sign}${digits}e${point}`;
 }
 

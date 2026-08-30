@@ -16,6 +16,8 @@ export const DEFAULTS = {
   tabSize: 2,
   insertSpaces: true,
   autoIndent: true,
+  autosave: true, // keep a copy of unsaved work on the device
+  draftKeepDays: 30, // how long an unclaimed copy is kept
 };
 
 export function loadSettings() {

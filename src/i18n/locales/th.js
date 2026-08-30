@@ -7,6 +7,7 @@ export default {
   'header.file': 'ไฟล์ปัจจุบัน',
   'header.dirty': 'มีการแก้ไขที่ยังไม่ได้บันทึก',
   'header.dirtyKept': 'มีการแก้ไขที่ยังไม่บันทึก เก็บไว้ในเครื่องนี้แล้ว',
+  'header.dirtyOff': 'มีการแก้ไขที่ยังไม่บันทึก — ไม่ได้เก็บไว้ ตามที่คุณตั้งไว้',
   'header.settings': 'การตั้งค่า',
   'header.help': 'วิธีใช้',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'ไว้ก่อน',
   'draft.discardAll': 'ทิ้งทั้งหมด',
   'draft.discardOne': 'ทิ้งการแก้ไขของ {name}',
+  'draft.undoDiscard': 'เก็บการแก้ไขของ {name} ไว้ตามเดิม',
   'draft.restored': 'กู้คืนการแก้ไขที่ยังไม่ได้บันทึกแล้ว',
+  'draft.noneWaiting': 'ไม่มีสิ่งที่ต้องกู้คืน',
   'draft.tooLarge': 'เอกสารนี้ใหญ่เกินกว่าจะเก็บฉบับร่างไว้ได้ กรุณาบันทึกเองเป็นระยะ',
   'draft.failed': 'บันทึกฉบับร่างไม่สำเร็จ กรุณาบันทึกเองเป็นระยะ',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'ไปที่บรรทัด',
   'cmd.app.reopen': 'เปิดใหม่ด้วยการเข้ารหัสอื่น',
   'cmd.app.copy': 'คัดลอกทั้งหมด',
+  'cmd.app.drafts': 'งานที่ยังไม่บันทึกในเครื่องนี้',
   'json.formatted': 'จัดรูปแบบ JSON แล้ว',
   'json.minified': 'ย่อ JSON แล้ว',
   'json.sorted': 'เรียงคีย์แล้ว',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'แท็บ',
   'settings.insertSpaces': 'ใส่ช่องว่างด้วยปุ่ม Tab',
   'settings.autoIndent': 'คงการเยื้องไว้เมื่อขึ้นบรรทัดใหม่',
+  'settings.privacy': 'งานที่ยังไม่บันทึกในเครื่องนี้',
+  'settings.autosave': 'เก็บสำเนางานที่ยังไม่บันทึก',
+  'settings.draftKeep': 'เก็บไว้เป็นเวลา',
+  'settings.keep1': '1 วัน',
+  'settings.keep7': '7 วัน',
+  'settings.keep30': '30 วัน',
+  'settings.keep90': '90 วัน',
+  'settings.clearDrafts': 'ลบสำเนาทั้งหมดทันที',
+  'settings.clearDraftsConfirm': 'ลบสำเนางานที่ยังไม่บันทึกทั้งหมดในเครื่องนี้หรือไม่ การลบนี้ย้อนกลับไม่ได้',
+  'settings.clearDraftsDone': 'ลบสำเนาทั้งหมดในเครื่องนี้แล้ว',
   'settings.close': 'ปิด',
 
   /* Reopen with another encoding */

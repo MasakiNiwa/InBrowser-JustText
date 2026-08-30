@@ -7,6 +7,7 @@ export default {
   'header.file': 'Fichier en cours',
   'header.dirty': 'Modifications non enregistrées',
   'header.dirtyKept': 'Modifications non enregistrées, conservées sur cet appareil',
+  'header.dirtyOff': 'Modifications non enregistrées — non conservées, comme demandé',
   'header.settings': 'Paramètres',
   'header.help': 'Aide',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Plus tard',
   'draft.discardAll': 'Tout supprimer',
   'draft.discardOne': 'Supprimer les modifications de {name}',
+  'draft.undoDiscard': 'Conserver finalement les modifications de {name}',
   'draft.restored': 'Vos modifications non enregistrées ont été restaurées',
+  'draft.noneWaiting': 'Il n’y a rien à rétablir',
   'draft.tooLarge': 'Ce document est trop volumineux pour en garder un brouillon. Pensez à enregistrer vous-même.',
   'draft.failed': 'Le brouillon n’a pas pu être écrit. Pensez à enregistrer vous-même.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Aller à la ligne',
   'cmd.app.reopen': 'Rouvrir avec un autre encodage',
   'cmd.app.copy': 'Tout copier',
+  'cmd.app.drafts': 'Travail non enregistré sur cet appareil',
   'json.formatted': 'JSON formaté',
   'json.minified': 'JSON minifié',
   'json.sorted': 'Clés triées',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tabulation',
   'settings.insertSpaces': 'Insérer des espaces avec la touche Tab',
   'settings.autoIndent': 'Conserver le retrait à la ligne suivante',
+  'settings.privacy': 'Travail non enregistré sur cet appareil',
+  'settings.autosave': 'Conserver une copie du travail non enregistré',
+  'settings.draftKeep': 'La conserver pendant',
+  'settings.keep1': '1 jour',
+  'settings.keep7': '7 jours',
+  'settings.keep30': '30 jours',
+  'settings.keep90': '90 jours',
+  'settings.clearDrafts': 'Tout supprimer maintenant',
+  'settings.clearDraftsConfirm': 'Supprimer toutes les copies de travail non enregistré gardées sur cet appareil ? C’est irréversible.',
+  'settings.clearDraftsDone': 'Toutes les copies gardées sur cet appareil ont été supprimées',
   'settings.close': 'Fermer',
 
   /* Reopen with another encoding */

@@ -569,6 +569,24 @@ body {
 }
 .draft-drop:hover { border-color: var(--danger); color: var(--danger); }
 
+/* Marked for discard, but nothing has gone yet: the ✕ becomes an undo. */
+.draft-row.discarding .draft-pick {
+  opacity: 0.5;
+  text-decoration: line-through;
+  cursor: default;
+}
+.draft-row.discarding .draft-drop { border-color: var(--danger); color: var(--danger); }
+
+/* A heading inside a settings sheet, marking off a group of rows. */
+.field-heading {
+  margin: 16px 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+}
+
 /* The characters that cannot be saved. */
 .loss-chars {
   margin: 0;

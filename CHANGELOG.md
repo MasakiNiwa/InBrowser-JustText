@@ -3,6 +3,29 @@
 Dates are release dates. The layout follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 A Japanese version of this file is kept at [CHANGELOG.ja.md](CHANGELOG.ja.md).
 
+## [0.5.0]
+
+### Added
+
+- **Unsaved work on this device** in the tools menu opens the same list of
+  leftover copies, so getting at them no longer means restarting
+- Settings for what is kept: switch the copies off altogether, choose how long
+  they are kept (1, 7, 30 or 90 days), or delete every copy on the device now.
+  With them off, the dot beside the file name says so and nothing is written
+
+### Fixed
+
+- The dialog said what it did not do. A copy past its keeping time was deleted
+  moments after being offered, so choosing "Not now" on one did not keep it.
+  Expiry now runs *before* anything is shown, which makes the promise true, and
+  a copy another open tab is still using is spared whatever its age
+- Discarding took effect on the tap. On a phone the ✕ is easy to hit by
+  accident, so it and "Discard all" now only mark rows — nothing leaves storage
+  until the dialog is closed on them, and tapping again takes it back
+- `-0` was treated as safe to reformat, but JavaScript can tell it from `0` and
+  writes it out as `0`. It is now refused like any other number that would not
+  survive the trip
+
 ## [0.4.1]
 
 ### Fixed

@@ -7,6 +7,7 @@ export default {
   'header.file': 'Aktuelle Datei',
   'header.dirty': 'Nicht gespeicherte Änderungen',
   'header.dirtyKept': 'Nicht gespeicherte Änderungen, auf diesem Gerät gesichert',
+  'header.dirtyOff': 'Nicht gespeicherte Änderungen — werden wunschgemäß nicht gesichert',
   'header.settings': 'Einstellungen',
   'header.help': 'Hilfe',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Später',
   'draft.discardAll': 'Alle verwerfen',
   'draft.discardOne': 'Änderungen an {name} verwerfen',
+  'draft.undoDiscard': 'Änderungen an {name} doch behalten',
   'draft.restored': 'Ihre nicht gespeicherten Änderungen wurden wiederhergestellt',
+  'draft.noneWaiting': 'Es gibt nichts zurückzuholen',
   'draft.tooLarge': 'Dieses Dokument ist zu groß, um einen Entwurf davon zu behalten. Bitte speichern Sie zwischendurch selbst.',
   'draft.failed': 'Der Entwurf konnte nicht geschrieben werden. Bitte speichern Sie zwischendurch selbst.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Gehe zu Zeile',
   'cmd.app.reopen': 'Mit anderer Kodierung neu öffnen',
   'cmd.app.copy': 'Alles kopieren',
+  'cmd.app.drafts': 'Nicht gespeicherte Arbeit auf diesem Gerät',
   'json.formatted': 'JSON formatiert',
   'json.minified': 'JSON minimiert',
   'json.sorted': 'Schlüssel sortiert',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tabulator',
   'settings.insertSpaces': 'Mit der Tabulatortaste Leerzeichen einfügen',
   'settings.autoIndent': 'Einzug in die neue Zeile übernehmen',
+  'settings.privacy': 'Nicht gespeicherte Arbeit auf diesem Gerät',
+  'settings.autosave': 'Kopie nicht gespeicherter Arbeit sichern',
+  'settings.draftKeep': 'Aufbewahren für',
+  'settings.keep1': '1 Tag',
+  'settings.keep7': '7 Tage',
+  'settings.keep30': '30 Tage',
+  'settings.keep90': '90 Tage',
+  'settings.clearDrafts': 'Jetzt alle löschen',
+  'settings.clearDraftsConfirm': 'Alle auf diesem Gerät gesicherten Kopien nicht gespeicherter Arbeit löschen? Das lässt sich nicht rückgängig machen.',
+  'settings.clearDraftsDone': 'Alle auf diesem Gerät gesicherten Kopien wurden gelöscht',
   'settings.close': 'Schließen',
 
   /* Reopen with another encoding */

@@ -7,6 +7,7 @@ export default {
   'header.file': 'Archivo actual',
   'header.dirty': 'Cambios sin guardar',
   'header.dirtyKept': 'Cambios sin guardar, conservados en este dispositivo',
+  'header.dirtyOff': 'Cambios sin guardar: no se conservan, como pediste',
   'header.settings': 'Ajustes',
   'header.help': 'Ayuda',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Ahora no',
   'draft.discardAll': 'Descartar todo',
   'draft.discardOne': 'Descartar los cambios de {name}',
+  'draft.undoDiscard': 'Conservar después de todo los cambios de {name}',
   'draft.restored': 'Se restauraron tus cambios sin guardar',
+  'draft.noneWaiting': 'No hay nada que recuperar',
   'draft.tooLarge': 'Este documento es demasiado grande para guardar un borrador. Guarda tú mismo de vez en cuando.',
   'draft.failed': 'No se pudo guardar el borrador. Guarda tú mismo de vez en cuando.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Ir a la línea',
   'cmd.app.reopen': 'Reabrir con otra codificación',
   'cmd.app.copy': 'Copiar todo',
+  'cmd.app.drafts': 'Trabajo sin guardar en este dispositivo',
   'json.formatted': 'JSON formateado',
   'json.minified': 'JSON minificado',
   'json.sorted': 'Claves ordenadas',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tabulación',
   'settings.insertSpaces': 'Insertar espacios con la tecla Tab',
   'settings.autoIndent': 'Mantener la sangría en la línea nueva',
+  'settings.privacy': 'Trabajo sin guardar en este dispositivo',
+  'settings.autosave': 'Conservar una copia del trabajo sin guardar',
+  'settings.draftKeep': 'Conservarla durante',
+  'settings.keep1': '1 día',
+  'settings.keep7': '7 días',
+  'settings.keep30': '30 días',
+  'settings.keep90': '90 días',
+  'settings.clearDrafts': 'Eliminar todas ahora',
+  'settings.clearDraftsConfirm': '¿Eliminar todas las copias de trabajo sin guardar de este dispositivo? No se puede deshacer.',
+  'settings.clearDraftsDone': 'Se han eliminado todas las copias de este dispositivo',
   'settings.close': 'Cerrar',
 
   /* Reopen with another encoding */

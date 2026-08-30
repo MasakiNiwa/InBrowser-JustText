@@ -165,12 +165,27 @@ document is too large, or storage is unavailable.
   writes over work you have not been asked about, and a copy another open tab is still
   using is never offered — discarding it would take away that tab's only backup
 - Everything waiting is shown in one list, with the file name, when it was last touched
-  and a glimpse of what is in it. Restore one, drop one, drop them all, or leave them for
-  later; anything never claimed is dropped after 30 days
+  and a glimpse of what is in it. Restore one, drop one, drop them all, or leave them
+  for later. **Nothing is deleted until you close the dialog**, so a mis-tap on the ✕ is
+  always one tap away from being undone
+- The same list is in the tools menu under **Unsaved work on this device**, so you do not
+  have to restart to get at it
+- Copies older than the keeping time are removed on the next launch, *before* anything is
+  offered — so whatever the list shows, "Not now" really does keep. A copy another tab is
+  still using is spared whatever its age
 - Where storage is unavailable (private browsing, no quota) it quietly gives up.
   It is a safety net, not a substitute for saving
 
 <p><img src="docs/screenshot-drafts.png" alt="The list of leftover drafts" width="300"></p>
+
+### If you would rather it kept nothing
+
+Settings has a section for this. You can switch the copies off altogether, set how long
+they are kept (1, 7, 30 or 90 days), and delete every copy on the device on the spot. With
+the copies off, the dot beside the file name says so, and nothing of yours is written to
+storage.
+
+<p><img src="docs/screenshot-privacy.png" alt="The settings for unsaved work" width="300"></p>
 
 ## JSON and your data
 
@@ -179,6 +194,8 @@ a number too large for it to hold is rounded, and where a key appears twice in o
 only the last survives. Silently rewriting somebody's config file that way would be worse
 than doing nothing, so the commands stop instead, say what is in the way, and put the
 caret on it. **Validate** reports the same thing, so you can find out before it matters.
+
+The same goes for `-0`, which JavaScript can tell from `0` but writes out as `0`.
 
 `__proto__` is an ordinary key in JSON, and it is kept as one.
 
