@@ -8,6 +8,7 @@ export default {
   'header.file': 'الملف الحالي',
   'header.dirty': 'تغييرات غير محفوظة',
   'header.dirtyKept': 'تغييرات غير محفوظة، مُحتفَظ بها على هذا الجهاز',
+  'header.dirtyOff': 'تغييرات غير محفوظة — لا يُحتفَظ بها، كما طلبت',
   'header.settings': 'الإعدادات',
   'header.help': 'المساعدة',
 
@@ -113,7 +114,9 @@ export default {
   'draft.later': 'ليس الآن',
   'draft.discardAll': 'تجاهل الكل',
   'draft.discardOne': 'تجاهل تعديلات {name}',
+  'draft.undoDiscard': 'الإبقاء على تعديلات {name} بعد كل شيء',
   'draft.restored': 'تمت استعادة تعديلاتك غير المحفوظة',
+  'draft.noneWaiting': 'لا شيء في انتظار الاستعادة',
   'draft.tooLarge': 'هذا المستند أكبر من أن نحتفظ له بمسودة. احفظ عملك بنفسك بين الحين والآخر.',
   'draft.failed': 'تعذّرت كتابة المسودة. احفظ عملك بنفسك بين الحين والآخر.',
 
@@ -157,6 +160,7 @@ export default {
   'cmd.app.goto': 'الانتقال إلى سطر',
   'cmd.app.reopen': 'إعادة الفتح بترميز آخر',
   'cmd.app.copy': 'نسخ الكل',
+  'cmd.app.drafts': 'العمل غير المحفوظ على هذا الجهاز',
   'json.formatted': 'تم تنسيق JSON',
   'json.minified': 'تم ضغط JSON',
   'json.sorted': 'تم ترتيب المفاتيح',
@@ -184,6 +188,16 @@ export default {
   'keybar.tab': 'جدولة',
   'settings.insertSpaces': 'إدراج مسافات بمفتاح Tab',
   'settings.autoIndent': 'الحفاظ على الإزاحة في السطر الجديد',
+  'settings.privacy': 'العمل غير المحفوظ على هذا الجهاز',
+  'settings.autosave': 'الاحتفاظ بنسخة من العمل غير المحفوظ',
+  'settings.draftKeep': 'مدة الاحتفاظ بها',
+  'settings.keep1': 'يوم واحد',
+  'settings.keep7': '7 أيام',
+  'settings.keep30': '30 يومًا',
+  'settings.keep90': '90 يومًا',
+  'settings.clearDrafts': 'حذف كل النسخ الآن',
+  'settings.clearDraftsConfirm': 'حذف كل نسخ العمل غير المحفوظ المُحتفَظ بها على هذا الجهاز؟ لا يمكن التراجع عن ذلك.',
+  'settings.clearDraftsDone': 'حُذفت كل النسخ على هذا الجهاز',
   'settings.close': 'إغلاق',
 
   /* Reopen with another encoding */

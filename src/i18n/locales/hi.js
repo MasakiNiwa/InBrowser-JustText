@@ -7,6 +7,7 @@ export default {
   'header.file': 'वर्तमान फ़ाइल',
   'header.dirty': 'बिना सहेजे बदलाव',
   'header.dirtyKept': 'बिना सहेजे बदलाव, इस डिवाइस पर रखे गए',
+  'header.dirtyOff': 'बिना सहेजे बदलाव — आपके कहे अनुसार रखे नहीं जा रहे',
   'header.settings': 'सेटिंग',
   'header.help': 'मदद',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'अभी नहीं',
   'draft.discardAll': 'सब हटाएँ',
   'draft.discardOne': '{name} के बदलाव हटाएँ',
+  'draft.undoDiscard': '{name} के बदलाव आख़िर रख लें',
   'draft.restored': 'बिना सहेजे बदलाव वापस ले आए',
+  'draft.noneWaiting': 'वापस लाने के लिए कुछ नहीं है',
   'draft.tooLarge': 'यह दस्तावेज़ इतना बड़ा है कि इसका ड्राफ़्ट नहीं रखा जा सकता। बीच-बीच में खुद सहेजते रहें।',
   'draft.failed': 'ड्राफ़्ट नहीं लिखा जा सका। बीच-बीच में खुद सहेजते रहें।',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'पंक्ति पर जाएँ',
   'cmd.app.reopen': 'दूसरी एन्कोडिंग से दोबारा खोलें',
   'cmd.app.copy': 'सब कुछ कॉपी करें',
+  'cmd.app.drafts': 'इस डिवाइस पर बिना सहेजा काम',
   'json.formatted': 'JSON सजा दिया गया',
   'json.minified': 'JSON छोटा कर दिया गया',
   'json.sorted': 'कुंजियाँ क्रम में लगा दीं',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'टैब',
   'settings.insertSpaces': 'Tab कुंजी से स्पेस डालें',
   'settings.autoIndent': 'नई पंक्ति में हाशिया बनाए रखें',
+  'settings.privacy': 'इस डिवाइस पर बिना सहेजा काम',
+  'settings.autosave': 'बिना सहेजे काम की एक प्रति रखें',
+  'settings.draftKeep': 'इतने समय तक रखें',
+  'settings.keep1': '1 दिन',
+  'settings.keep7': '7 दिन',
+  'settings.keep30': '30 दिन',
+  'settings.keep90': '90 दिन',
+  'settings.clearDrafts': 'अभी सारी प्रतियाँ हटाएँ',
+  'settings.clearDraftsConfirm': 'इस डिवाइस पर रखी बिना सहेजे काम की सारी प्रतियाँ हटाएँ? यह वापस नहीं लिया जा सकता।',
+  'settings.clearDraftsDone': 'इस डिवाइस की सारी प्रतियाँ हटा दी गईं',
   'settings.close': 'बंद करें',
 
   /* Reopen with another encoding */

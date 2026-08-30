@@ -7,6 +7,7 @@ export default {
   'header.file': 'File corrente',
   'header.dirty': 'Modifiche non salvate',
   'header.dirtyKept': 'Modifiche non salvate, conservate su questo dispositivo',
+  'header.dirtyOff': 'Modifiche non salvate — non conservate, come richiesto',
   'header.settings': 'Impostazioni',
   'header.help': 'Guida',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'Non ora',
   'draft.discardAll': 'Elimina tutto',
   'draft.discardOne': 'Elimina le modifiche a {name}',
+  'draft.undoDiscard': 'Conserva comunque le modifiche a {name}',
   'draft.restored': 'Le modifiche non salvate sono state ripristinate',
+  'draft.noneWaiting': 'Non c’è nulla da recuperare',
   'draft.tooLarge': 'Questo documento è troppo grande per tenerne una bozza. Salva tu stesso ogni tanto.',
   'draft.failed': 'Non è stato possibile scrivere la bozza. Salva tu stesso ogni tanto.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': 'Vai alla riga',
   'cmd.app.reopen': 'Riapri con un’altra codifica',
   'cmd.app.copy': 'Copia tutto',
+  'cmd.app.drafts': 'Lavoro non salvato su questo dispositivo',
   'json.formatted': 'JSON formattato',
   'json.minified': 'JSON minificato',
   'json.sorted': 'Chiavi ordinate',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': 'Tabulazione',
   'settings.insertSpaces': 'Inserisci spazi con il tasto Tab',
   'settings.autoIndent': 'Mantieni il rientro nella riga nuova',
+  'settings.privacy': 'Lavoro non salvato su questo dispositivo',
+  'settings.autosave': 'Conserva una copia del lavoro non salvato',
+  'settings.draftKeep': 'Conservala per',
+  'settings.keep1': '1 giorno',
+  'settings.keep7': '7 giorni',
+  'settings.keep30': '30 giorni',
+  'settings.keep90': '90 giorni',
+  'settings.clearDrafts': 'Elimina tutto ora',
+  'settings.clearDraftsConfirm': 'Eliminare tutte le copie di lavoro non salvato tenute su questo dispositivo? Non si può annullare.',
+  'settings.clearDraftsDone': 'Tutte le copie su questo dispositivo sono state eliminate',
   'settings.close': 'Chiudi',
 
   /* Reopen with another encoding */

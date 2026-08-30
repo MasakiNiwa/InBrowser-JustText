@@ -117,10 +117,16 @@ export async function listDrafts() {
 /**
  * Deletes drafts older than the cut-off, so that one nobody ever came back for
  * does not sit in storage indefinitely.
- * @returns {Promise<number>} how many were dropped
+ *
+ * @param {number} cutoff drafts last touched before this are dropped
+ * @param {Set<string>} [keep] keys to leave alone whatever their age — the ones
+ *   another open tab is still writing to
+ * @returns {Promise<string[]>} the keys that were dropped
  */
-export async function dropDraftsBefore(cutoff) {
-  const stale = (await listDrafts()).filter((draft) => (draft.at ?? 0) < cutoff);
+export async function dropDraftsBefore(cutoff, keep = new Set()) {
+  const stale = (await listDrafts()).filter(
+    (draft) => (draft.at ?? 0) < cutoff && !keep.has(draft.key),
+  );
   for (const draft of stale) await clearDraft(draft.key);
-  return stale.length;
+  return stale.map((draft) => draft.key);
 }

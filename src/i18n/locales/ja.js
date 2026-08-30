@@ -7,6 +7,7 @@ export default {
   'header.file': '編集中のファイル',
   'header.dirty': '未保存の変更あり',
   'header.dirtyKept': '未保存の変更あり（この端末に控えを保存済み）',
+  'header.dirtyOff': '未保存の変更あり（設定により控えは取っていません）',
   'header.settings': '設定',
   'header.help': '使い方',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': 'あとで',
   'draft.discardAll': 'すべて破棄',
   'draft.discardOne': '{name} の編集内容を破棄',
+  'draft.undoDiscard': '{name} の編集内容をやはり残す',
   'draft.restored': '前回の編集内容を復元しました',
+  'draft.noneWaiting': '取り戻せる内容はありません',
   'draft.tooLarge': '大きすぎるため、編集内容の自動保存ができません。こまめに保存してください。',
   'draft.failed': '編集内容の自動保存ができませんでした。こまめに保存してください。',
 
@@ -157,6 +160,7 @@ export default {
   'cmd.app.goto': '行へ移動',
   'cmd.app.reopen': '文字コードを指定して開き直す',
   'cmd.app.copy': '全文をコピー',
+  'cmd.app.drafts': 'この端末に残っている未保存の内容',
 
   'json.formatted': 'JSON を整形しました',
   'json.minified': 'JSON を最小化しました',
@@ -185,6 +189,16 @@ export default {
   'keybar.tab': 'タブ',
   'settings.insertSpaces': 'Tab キーでスペースを入力',
   'settings.autoIndent': '改行時にインデントを引き継ぐ',
+  'settings.privacy': 'この端末に残す未保存の内容',
+  'settings.autosave': '未保存の内容の控えを取る',
+  'settings.draftKeep': '控えを保持する期間',
+  'settings.keep1': '1 日',
+  'settings.keep7': '7 日',
+  'settings.keep30': '30 日',
+  'settings.keep90': '90 日',
+  'settings.clearDrafts': '控えをすべて削除',
+  'settings.clearDraftsConfirm': 'この端末に残っている未保存の内容の控えをすべて削除しますか？ 元に戻せません。',
+  'settings.clearDraftsDone': 'この端末の控えをすべて削除しました',
   'settings.close': '閉じる',
 
   /* Reopen with another encoding */

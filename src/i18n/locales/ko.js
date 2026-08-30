@@ -7,6 +7,7 @@ export default {
   'header.file': '현재 파일',
   'header.dirty': '저장하지 않은 변경 사항',
   'header.dirtyKept': '저장하지 않은 변경 사항, 이 기기에 보관됨',
+  'header.dirtyOff': '저장하지 않은 변경 사항 — 설정에 따라 보관하지 않음',
   'header.settings': '설정',
   'header.help': '도움말',
 
@@ -112,7 +113,9 @@ export default {
   'draft.later': '나중에',
   'draft.discardAll': '모두 버리기',
   'draft.discardOne': '{name}의 변경 내용 버리기',
+  'draft.undoDiscard': '{name}의 변경 내용을 그대로 두기',
   'draft.restored': '저장하지 않았던 편집 내용을 되살렸습니다',
+  'draft.noneWaiting': '되살릴 내용이 없습니다',
   'draft.tooLarge': '문서가 너무 커서 임시 저장을 할 수 없습니다. 가끔 직접 저장해 주세요.',
   'draft.failed': '임시 저장에 실패했습니다. 가끔 직접 저장해 주세요.',
 
@@ -156,6 +159,7 @@ export default {
   'cmd.app.goto': '줄로 이동',
   'cmd.app.reopen': '다른 인코딩으로 다시 열기',
   'cmd.app.copy': '전체 복사',
+  'cmd.app.drafts': '이 기기에 남은 저장하지 않은 내용',
   'json.formatted': 'JSON을 정리했습니다',
   'json.minified': 'JSON을 압축했습니다',
   'json.sorted': '키를 정렬했습니다',
@@ -183,6 +187,16 @@ export default {
   'keybar.tab': '탭',
   'settings.insertSpaces': 'Tab 키로 공백 넣기',
   'settings.autoIndent': '줄을 바꿀 때 들여쓰기 이어가기',
+  'settings.privacy': '이 기기에 남기는 저장하지 않은 내용',
+  'settings.autosave': '저장하지 않은 내용의 사본 보관',
+  'settings.draftKeep': '보관 기간',
+  'settings.keep1': '1일',
+  'settings.keep7': '7일',
+  'settings.keep30': '30일',
+  'settings.keep90': '90일',
+  'settings.clearDrafts': '지금 모두 삭제',
+  'settings.clearDraftsConfirm': '이 기기에 보관된 저장하지 않은 내용의 사본을 모두 삭제할까요? 되돌릴 수 없습니다.',
+  'settings.clearDraftsDone': '이 기기의 사본을 모두 삭제했습니다',
   'settings.close': '닫기',
 
   /* Reopen with another encoding */

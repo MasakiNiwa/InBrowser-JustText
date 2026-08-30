@@ -8,6 +8,7 @@ export default {
   'header.file': 'Current file',
   'header.dirty': 'Unsaved changes',
   'header.dirtyKept': 'Unsaved changes, kept on this device',
+  'header.dirtyOff': 'Unsaved changes — not being kept, as you asked',
   'header.settings': 'Settings',
   'header.help': 'Help',
 
@@ -113,7 +114,9 @@ export default {
   'draft.later': 'Not now',
   'draft.discardAll': 'Discard all',
   'draft.discardOne': 'Discard the edits to {name}',
+  'draft.undoDiscard': 'Keep the edits to {name} after all',
   'draft.restored': 'Restored your unsaved edits',
+  'draft.noneWaiting': 'Nothing is waiting to be brought back',
   'draft.tooLarge': 'This document is too large to keep a draft of. Please save it yourself now and then.',
   'draft.failed': 'The draft could not be written. Please save your work yourself now and then.',
 
@@ -158,6 +161,7 @@ export default {
   'cmd.app.goto': 'Go to line',
   'cmd.app.reopen': 'Reopen with another encoding',
   'cmd.app.copy': 'Copy everything',
+  'cmd.app.drafts': 'Unsaved work on this device',
 
   'json.formatted': 'Formatted the JSON',
   'json.minified': 'Minified the JSON',
@@ -186,6 +190,16 @@ export default {
   'keybar.tab': 'Tab',
   'settings.insertSpaces': 'Insert spaces with the Tab key',
   'settings.autoIndent': 'Keep the indent on a new line',
+  'settings.privacy': 'Unsaved work on this device',
+  'settings.autosave': 'Keep a copy of unsaved work',
+  'settings.draftKeep': 'Keep it for',
+  'settings.keep1': '1 day',
+  'settings.keep7': '7 days',
+  'settings.keep30': '30 days',
+  'settings.keep90': '90 days',
+  'settings.clearDrafts': 'Delete every copy now',
+  'settings.clearDraftsConfirm': 'Delete every copy of unsaved work held on this device? This cannot be undone.',
+  'settings.clearDraftsDone': 'Deleted every copy held on this device',
   'settings.close': 'Close',
 
   /* Reopen with another encoding */

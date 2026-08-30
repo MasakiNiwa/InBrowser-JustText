@@ -196,7 +196,7 @@ test('indents and outdents', () => {
  */
 
 test('a number literal that survives a double is recognised', () => {
-  for (const literal of ['0', '-0', '1', '1.0', '1e0', '100', '1e2', '1.50', '0.1',
+  for (const literal of ['0', '0.0', '1', '1.0', '1e0', '100', '1e2', '1.50', '0.1',
     '-12345', '3.14159', '9007199254740992', '1e308', '-1.7976931348623157e308']) {
     assert.equal(numberSurvives(literal), true, literal);
   }
@@ -210,6 +210,10 @@ test('and one that does not is caught', () => {
     '1e999', // overflows to Infinity, which is written out as null
     '-1e999',
     '1e-999', // underflows to zero
+    // JavaScript can tell -0 from 0, but writes both out as 0.
+    '-0',
+    '-0.0',
+    '-0e0',
   ]) {
     assert.equal(numberSurvives(literal), false, literal);
   }
